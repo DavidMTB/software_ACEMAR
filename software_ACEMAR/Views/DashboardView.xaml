@@ -1,0 +1,289 @@
+<UserControl x:Class="software_ACEMAR.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:software_ACEMAR.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="750" d:DesignWidth="1100"
+             Background="{DynamicResource BackgroundBrush}">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- FILA 0: TARJETAS KPI DE RESUMEN INTELIGENTE -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- KPI 1: Total Productos -->
+            <Border Grid.Column="0" Background="#FFFFFF" CornerRadius="10" Padding="16" BorderBrush="#DCE3D6" BorderThickness="1">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.06" Color="#1E2514" />
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="Total de Productos" FontSize="13" Foreground="#556049" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding TotalProductos}" FontSize="30" FontWeight="ExtraBold" Foreground="#354318" Margin="0,4,0,0" />
+                    <TextBlock Text="Registrados en almacén" FontSize="12" Foreground="#889876" Margin="0,2,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- KPI 2: Alerta Stock Bajo / Crítico (Destacado) -->
+            <Border Grid.Column="2" Background="#FFF5F5" CornerRadius="10" Padding="16" BorderBrush="#FFCDD2" BorderThickness="1.5">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.10" Color="#D32F2F" />
+                </Border.Effect>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="⚠️ " FontSize="14" VerticalAlignment="Center" />
+                        <TextBlock Text="Stock Bajo / Crítico" FontSize="13" Foreground="#C62828" FontWeight="Bold" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding TotalProductosBajoStock}" FontSize="30" FontWeight="ExtraBold" Foreground="#D32F2F" Margin="0,4,0,0" />
+                    <TextBlock Text="StockActual ≤ StockMinimo" FontSize="12" Foreground="#E57373" FontWeight="SemiBold" Margin="0,2,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- KPI 3: Valor Total Inventario -->
+            <Border Grid.Column="4" Background="#FFFFFF" CornerRadius="10" Padding="16" BorderBrush="#DCE3D6" BorderThickness="1">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.06" Color="#1E2514" />
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="Valorización de Inventario" FontSize="13" Foreground="#556049" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding ValorTotalInventario, StringFormat={}S/ {0:N2}}" FontSize="28" FontWeight="ExtraBold" Foreground="#4A5D23" Margin="0,4,0,0" />
+                    <TextBlock Text="Calculado a precio actual" FontSize="12" Foreground="#889876" Margin="0,2,0,0" />
+                </StackPanel>
+            </Border>
+
+            <!-- KPI 4: Botón de Refresco y Ocupación CuMax -->
+            <Border Grid.Column="6" Background="#F8FAF5" CornerRadius="10" Padding="16" BorderBrush="#DCE3D6" BorderThickness="1">
+                <Grid>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Ocupación CuMax Promedio" FontSize="13" Foreground="#556049" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding PromedioOcupacionCuMax, StringFormat={}{0:0.0} %}" FontSize="24" FontWeight="Bold" Foreground="#354318" Margin="0,2,0,4" />
+                        <Button Content="🔄 Actualizar Datos" 
+                                Command="{Binding CargarInventarioCommand}" 
+                                FontSize="12" 
+                                FontWeight="Bold" 
+                                Padding="10,5" 
+                                Background="#E8EEDF" 
+                                Foreground="#354318" 
+                                BorderBrush="#C5D1BC" 
+                                BorderThickness="1" 
+                                Cursor="Hand" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- FILA 1: TABLA PRINCIPAL DE INVENTARIO CON ALERTA VISUAL (StockActual <= StockMinimo) -->
+        <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="10" BorderBrush="#DCE3D6" BorderThickness="1" Padding="20" Margin="0,0,0,16">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.08" Color="#1E2514" />
+            </Border.Effect>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Cabecera de la tabla y filtro rápido -->
+                <Grid Grid.Row="0" Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Monitoreo de Existencias y Almacén" FontSize="20" FontWeight="Bold" Foreground="#1E2514" />
+                        <TextBlock Text="Las filas con StockActual ≤ StockMinimo se colorean en rojo de alerta." FontSize="13" Foreground="#556049" Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <!-- Buscador en inventario -->
+                    <Border Grid.Column="1" Background="#F8FAF5" CornerRadius="8" BorderBrush="#C5D1BC" BorderThickness="1" Width="300" Padding="8,4">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="26" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="🔍" VerticalAlignment="Center" FontSize="14" Foreground="#4A5D23" />
+                            <TextBox Grid.Column="1" 
+                                     Text="{Binding FiltroTexto, UpdateSourceTrigger=PropertyChanged}" 
+                                     FontSize="14" 
+                                     Foreground="#1E2514" 
+                                     BorderThickness="0" 
+                                     Background="Transparent" 
+                                     VerticalContentAlignment="Center" />
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- DataGrid con Lógica Visual de Alerta (Fila en rojo claro si EsStockBajo == True) -->
+                <DataGrid Grid.Row="1" 
+                          ItemsSource="{Binding Inventario}" 
+                          SelectedItem="{Binding ProductoSeleccionado}"
+                          AutoGenerateColumns="False" 
+                          CanUserAddRows="False" 
+                          CanUserDeleteRows="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="#E8EEDF"
+                          Background="#FFFFFF"
+                          BorderBrush="#DCE3D6"
+                          BorderThickness="1"
+                          RowHeight="44"
+                          FontSize="14">
+
+                    <!-- ESTILO DE FILA CON TRIGGER DE ALERTA DE STOCK (Paso 4) -->
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="SnapsToDevicePixels" Value="True" />
+                            <Style.Triggers>
+                                <!-- Si EsStockBajo == true, pintar la fila de rojo claro y texto de alto contraste -->
+                                <DataTrigger Binding="{Binding EsStockBajo}" Value="True">
+                                    <Setter Property="Background" Value="#FFEBEE" />
+                                    <Setter Property="Foreground" Value="#B71C1C" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                    <Setter Property="ToolTip" Value="⚠️ ALERTA: El stock actual es menor o igual al stock mínimo configurado." />
+                                </DataTrigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#E8EEDF" />
+                                    <Setter Property="Foreground" Value="#1E2514" />
+                                    <Setter Property="BorderBrush" Value="#4A5D23" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Código" Binding="{Binding Codigo}" Width="90" FontWeight="Bold" />
+                        <DataGridTextColumn Header="Nombre del Producto" Binding="{Binding Nombre}" Width="*" />
+                        <DataGridTextColumn Header="Categoría" Binding="{Binding Categoria}" Width="130" />
+                        
+                        <!-- Stock Actual destacado -->
+                        <DataGridTemplateColumn Header="Stock Actual" Width="110" SortMemberPath="StockActual">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0">
+                                        <TextBlock Text="{Binding StockActual, StringFormat={}{0:0.##}}" FontWeight="Bold" FontSize="15" />
+                                        <TextBlock Text="{Binding UnidadMedida, StringFormat={} {0}}" FontSize="12" Margin="4,0,0,0" VerticalAlignment="Bottom" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="Stock Mínimo" Binding="{Binding StockMinimo, StringFormat={}{0:0.##}}" Width="110" />
+                        <DataGridTextColumn Header="CuMax (Cap. Máx)" Binding="{Binding CuMax, StringFormat={}{0:0.##}}" Width="130" />
+                        <DataGridTextColumn Header="Precio Unit." Binding="{Binding PrecioUnitario, StringFormat={}S/ {0:N2}}" Width="110" FontWeight="Bold" />
+
+                        <!-- Estado con Badge e Ícono de Alerta -->
+                        <DataGridTemplateColumn Header="Estado / Alerta" Width="150">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <!-- Cuando Stock Actual <= Stock Mínimo -->
+                                        <Border Background="#D32F2F" CornerRadius="12" Padding="10,4"
+                                                Visibility="{Binding EsStockBajo, Converter={x:Static local:Converters.BooleanToVisibility}}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="⚠️" Margin="0,0,4,0" FontSize="12" />
+                                                <TextBlock Text="STOCK BAJO" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Cuando Stock Actual > Stock Mínimo -->
+                                        <Border Background="#E8F5E9" CornerRadius="12" Padding="10,4"
+                                                Visibility="{Binding EsStockBajo, Converter={x:Static local:Converters.InverseBooleanToVisibility}}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="✓" Foreground="#2E7D32" FontWeight="Bold" Margin="0,0,4,0" FontSize="12" />
+                                                <TextBlock Text="ABASTECIDO" Foreground="#2E7D32" FontWeight="Bold" FontSize="11" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+
+        <!-- FILA 2: PANEL DE INGRESO DE MERCADERÍA CON VALIDACIÓN DE CUMAX (REGLA INV-02) -->
+        <Border Grid.Row="2" Background="#FFFFFF" CornerRadius="10" BorderBrush="#DCE3D6" BorderThickness="1" Padding="16">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.06" Color="#1E2514" />
+            </Border.Effect>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="120" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Icono de Ingreso -->
+                <Border Grid.Column="0" Background="#E8EEDF" CornerRadius="8" Width="48" Height="48">
+                    <TextBlock Text="📦" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+
+                <!-- Información del Producto Seleccionado -->
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <TextBlock Text="Ingreso de Mercadería al Almacén (Validación CuMax - Regla INV-02)" FontSize="15" FontWeight="Bold" Foreground="#1E2514" />
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                        <TextBlock Text="Producto Seleccionado: " FontSize="13" Foreground="#556049" />
+                        <TextBlock Text="{Binding ProductoSeleccionado.Nombre, FallbackValue='(Seleccione un producto de la tabla)'}" 
+                                   FontWeight="Bold" Foreground="#354318" FontSize="13" />
+                        <TextBlock Text=" | Stock Actual: " FontSize="13" Foreground="#556049" Margin="8,0,0,0" />
+                        <TextBlock Text="{Binding ProductoSeleccionado.StockActual, FallbackValue='-', StringFormat={}{0:0.##}}" FontWeight="Bold" Foreground="#354318" FontSize="13" />
+                        <TextBlock Text=" | Capacidad Máx (CuMax): " FontSize="13" Foreground="#556049" Margin="8,0,0,0" />
+                        <TextBlock Text="{Binding ProductoSeleccionado.CuMax, FallbackValue='-', StringFormat={}{0:0.##}}" FontWeight="Bold" Foreground="#4A5D23" FontSize="13" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Input Cantidad a Ingresar -->
+                <TextBlock Grid.Column="4" Text="Cantidad a Ingresar:" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" Foreground="#1E2514" />
+                <TextBox Grid.Column="5" 
+                         Text="{Binding CantidadIngresoTexto, UpdateSourceTrigger=PropertyChanged}" 
+                         FontSize="18" 
+                         FontWeight="Bold" 
+                         VerticalContentAlignment="Center" 
+                         HorizontalContentAlignment="Center"
+                         Background="#F8FAF5" 
+                         BorderBrush="#4A5D23" 
+                         BorderThickness="1.5" 
+                         Padding="4" 
+                         Height="40" />
+
+                <!-- Botón Registrar Ingreso (dispara regla INV-02 si supera CuMax) -->
+                <Button Grid.Column="7" 
+                        Content="📥 REGISTRAR INGRESO" 
+                        Command="{Binding RegistrarIngresoCommand}" 
+                        FontSize="14" 
+                        FontWeight="Bold" 
+                        Padding="18,10" 
+                        Background="#4A5D23" 
+                        Foreground="#FFFFFF" 
+                        BorderThickness="0" 
+                        Cursor="Hand" 
+                        Height="40" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

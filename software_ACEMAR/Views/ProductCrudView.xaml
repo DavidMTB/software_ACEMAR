@@ -1,0 +1,286 @@
+<UserControl x:Class="software_ACEMAR.Views.ProductCrudView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:software_ACEMAR.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="750" d:DesignWidth="1100"
+             Background="{DynamicResource BackgroundBrush}">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <!-- Panel Superior de Actualización Masiva de Precios -->
+            <RowDefinition Height="Auto" />
+            <!-- Cuerpo Principal con Tabla y Formulario -->
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- PANEL SUPERIOR: ACTUALIZACIÓN MASIVA DE PRECIOS -->
+        <Border Grid.Row="0" Background="#F4F7EF" CornerRadius="10" Padding="16" BorderBrush="#C5D1BC" BorderThickness="1.5" Margin="0,0,0,16">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="1" Opacity="0.06" Color="#1E2514" />
+            </Border.Effect>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="160" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="16" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Background="#4A5D23" Width="44" Height="44" CornerRadius="8">
+                    <TextBlock Text="📈" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <TextBlock Text="Actualización Masiva de Precios" FontSize="16" FontWeight="Bold" Foreground="#1E2514" />
+                    <TextBlock Text="Aumenta o reduce precios porcentualmente por categoría o en todo el catálogo" FontSize="12" Foreground="#556049" />
+                </StackPanel>
+
+                <!-- Categoría -->
+                <TextBlock Grid.Column="4" Text="Categoría:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Foreground="#1E2514" />
+                <ComboBox Grid.Column="5" 
+                          ItemsSource="{Binding CategoriasDisponibles}" 
+                          SelectedItem="{Binding CategoriaAumento}" 
+                          Height="38" 
+                          FontSize="13" 
+                          VerticalContentAlignment="Center" 
+                          Background="#FFFFFF" />
+
+                <!-- Porcentaje -->
+                <TextBlock Grid.Column="7" Text="% Cambio:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Foreground="#1E2514" />
+                <TextBox Grid.Column="8" 
+                         Text="{Binding PorcentajeAumentoTexto, UpdateSourceTrigger=PropertyChanged}" 
+                         Height="38" 
+                         FontSize="15" 
+                         FontWeight="Bold" 
+                         VerticalContentAlignment="Center" 
+                         HorizontalContentAlignment="Center" 
+                         Background="#FFFFFF" 
+                         BorderBrush="#4A5D23" 
+                         BorderThickness="1.5" />
+
+                <!-- Botón Aplicar -->
+                <Button Grid.Column="10" 
+                        Content="⚡ APLICAR PRECIOS" 
+                        Command="{Binding AplicarAumentoMasivoCommand}" 
+                        Height="38" 
+                        Padding="16,0" 
+                        FontSize="13" 
+                        FontWeight="Bold" 
+                        Background="#4A5D23" 
+                        Foreground="#FFFFFF" 
+                        Cursor="Hand" />
+            </Grid>
+        </Border>
+
+        <!-- CUERPO PRINCIPAL: TABLA DE PRODUCTOS Y FORMULARIO CRUD -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" MinWidth="480" />
+                <ColumnDefinition Width="20" />
+                <ColumnDefinition Width="2*" MinWidth="380" />
+            </Grid.ColumnDefinitions>
+
+            <!-- TABLA DE PRODUCTOS (LISTA Y ACCIONES) -->
+            <Border Grid.Column="0" Background="#FFFFFF" CornerRadius="10" BorderBrush="#DCE3D6" BorderThickness="1" Padding="16">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.08" Color="#1E2514" />
+                </Border.Effect>
+
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Cabecera y Buscador -->
+                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="260" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Inventario General de Productos" FontSize="18" FontWeight="Bold" Foreground="#1E2514" />
+                            <TextBlock Text="Seleccione una fila para editar o usar las acciones rápidas" FontSize="12" Foreground="#556049" />
+                        </StackPanel>
+
+                        <Border Grid.Column="1" Background="#F8FAF5" CornerRadius="6" BorderBrush="#C5D1BC" BorderThickness="1" Padding="6,2">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="🔍" VerticalAlignment="Center" FontSize="13" Foreground="#4A5D23" />
+                                <TextBox Grid.Column="1" 
+                                         Text="{Binding BusquedaTexto, UpdateSourceTrigger=PropertyChanged}" 
+                                         BorderThickness="0" 
+                                         Background="Transparent" 
+                                         FontSize="13" 
+                                         VerticalContentAlignment="Center" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- DataGrid de Productos -->
+                    <DataGrid Grid.Row="1" 
+                              ItemsSource="{Binding Productos}" 
+                              SelectedItem="{Binding ProductoSeleccionado}"
+                              AutoGenerateColumns="False" 
+                              CanUserAddRows="False" 
+                              CanUserDeleteRows="False"
+                              IsReadOnly="True"
+                              SelectionMode="Single"
+                              GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#EEF2E8"
+                              Background="#FFFFFF"
+                              BorderBrush="#DCE3D6"
+                              BorderThickness="1"
+                              RowHeight="40"
+                              FontSize="13">
+                        
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Código" Binding="{Binding Codigo}" Width="85" FontWeight="Bold" />
+                            <DataGridTextColumn Header="Nombre" Binding="{Binding Nombre}" Width="*" />
+                            <DataGridTextColumn Header="Categoría" Binding="{Binding Categoria}" Width="110" />
+                            <DataGridTextColumn Header="Precio" Binding="{Binding PrecioUnitario, StringFormat={}S/ {0:N2}}" Width="90" FontWeight="Bold" />
+                            <DataGridTextColumn Header="Stock" Binding="{Binding StockActual, StringFormat={}{0:0.##}}" Width="75" />
+                            <DataGridTextColumn Header="Unidad" Binding="{Binding UnidadMedida}" Width="75" />
+
+                            <!-- Botón Eliminar -->
+                            <DataGridTemplateColumn Header="Acción" Width="60">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="🗑️" 
+                                                Command="{Binding DataContext.EliminarProductoCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                CommandParameter="{Binding}" 
+                                                Background="Transparent" 
+                                                BorderThickness="0" 
+                                                FontSize="13" 
+                                                Cursor="Hand" 
+                                                ToolTip="Eliminar Producto" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+
+            <!-- FORMULARIO CREAR / EDITAR PRODUCTO -->
+            <Border Grid.Column="2" Background="#FFFFFF" CornerRadius="10" BorderBrush="#DCE3D6" BorderThickness="1" Padding="20">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.08" Color="#1E2514" />
+                </Border.Effect>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <StackPanel Margin="0,0,0,16">
+                            <TextBlock Text="{Binding EsModoEdicion, Converter={x:Static local:Converters.BooleanToVisibility}, FallbackValue='Nuevo Producto'}" 
+                                       FontSize="18" FontWeight="Bold" Foreground="#354318" />
+                            <TextBlock Text="Complete los datos del producto ferretero" FontSize="12" Foreground="#556049" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <!-- Código -->
+                        <TextBlock Text="Código del Producto:" FontSize="13" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding FormCodigo, UpdateSourceTrigger=PropertyChanged}" 
+                                 FontSize="14" Padding="8,6" Background="#F8FAF5" Margin="0,0,0,12" />
+
+                        <!-- Nombre -->
+                        <TextBlock Text="Nombre / Descripción:" FontSize="13" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding FormNombre, UpdateSourceTrigger=PropertyChanged}" 
+                                 FontSize="14" Padding="8,6" Background="#F8FAF5" Margin="0,0,0,12" />
+
+                        <!-- Categoría y Unidad -->
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Categoría:" FontSize="13" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,4" />
+                                <TextBox Text="{Binding FormCategoria, UpdateSourceTrigger=PropertyChanged}" 
+                                         FontSize="14" Padding="8,6" Background="#F8FAF5" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Unidad de Medida:" FontSize="13" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,4" />
+                                <ComboBox ItemsSource="{Binding UnidadesMedida}" 
+                                          SelectedItem="{Binding FormUnidad}" 
+                                          Height="34" FontSize="13" VerticalContentAlignment="Center" Background="#F8FAF5" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Precio Unitario -->
+                        <TextBlock Text="Precio Unitario (S/):" FontSize="13" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding FormPrecio, UpdateSourceTrigger=PropertyChanged}" 
+                                 FontSize="16" FontWeight="Bold" Foreground="#4A5D23" Padding="8,6" Background="#F8FAF5" Margin="0,0,0,12" />
+
+                        <!-- Stock Actual, Stock Mínimo y CuMax -->
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Stock Act.:" FontSize="12" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,4" />
+                                <TextBox Text="{Binding FormStockActual, UpdateSourceTrigger=PropertyChanged}" 
+                                         FontSize="14" HorizontalContentAlignment="Center" Padding="6" Background="#F8FAF5" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Stock Mín.:" FontSize="12" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,4" />
+                                <TextBox Text="{Binding FormStockMinimo, UpdateSourceTrigger=PropertyChanged}" 
+                                         FontSize="14" HorizontalContentAlignment="Center" Padding="6" Background="#F8FAF5" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="CuMax:" FontSize="12" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,4" />
+                                <TextBox Text="{Binding FormCuMax, UpdateSourceTrigger=PropertyChanged}" 
+                                         FontSize="14" HorizontalContentAlignment="Center" Padding="6" Background="#F8FAF5" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Botones Guardar y Limpiar -->
+                        <Button Content="💾 GUARDAR PRODUCTO" 
+                                Command="{Binding GuardarProductoCommand}" 
+                                FontSize="15" FontWeight="Bold" 
+                                Padding="14" 
+                                Background="#4A5D23" 
+                                Foreground="#FFFFFF" 
+                                BorderThickness="0" 
+                                Cursor="Hand" 
+                                Margin="0,0,0,10" />
+
+                        <Button Content="🔄 Limpiar / Nuevo Registro" 
+                                Command="{Binding LimpiarFormularioCommand}" 
+                                FontSize="13" 
+                                FontWeight="SemiBold" 
+                                Padding="10" 
+                                Background="#E8EEDF" 
+                                Foreground="#354318" 
+                                BorderBrush="#C5D1BC" 
+                                BorderThickness="1" 
+                                Cursor="Hand" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

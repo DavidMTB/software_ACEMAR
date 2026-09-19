@@ -1,0 +1,36 @@
+## Ignorar artefactos de compilación .NET / WPF
+bin/
+obj/
+
+## Base de datos SQLite local (no versionar datos de producción)
+*.db
+*.db-shm
+*.db-wal
+
+## Archivos de usuario de Visual Studio / Rider
+*.user
+*.suo
+.vs/
+.idea/
+*.userprefs
+
+## NuGet
+packages/
+*.nupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## MSBuild / .NET CLI
+*.binlog
+
+## Logs de ejecución
+*.log
+run_log.txt
+
+## Archivos de publicación / deploy
+publish/
+
+## OS
+Thumbs.db
+.DS_Store

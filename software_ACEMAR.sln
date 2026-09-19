@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "software_ACEMAR", "software_ACEMAR\software_ACEMAR.csproj", "{AFAFCF68-7576-460F-8D18-9444B5A70980}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "software_ACEMAR.Tests", "software_ACEMAR.Tests\software_ACEMAR.Tests.csproj", "{F1D1DD34-180C-4BD3-90B1-664C956BEDFE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AFAFCF68-7576-460F-8D18-9444B5A70980}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFAFCF68-7576-460F-8D18-9444B5A70980}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFAFCF68-7576-460F-8D18-9444B5A70980}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFAFCF68-7576-460F-8D18-9444B5A70980}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1D1DD34-180C-4BD3-90B1-664C956BEDFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1D1DD34-180C-4BD3-90B1-664C956BEDFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1D1DD34-180C-4BD3-90B1-664C956BEDFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1D1DD34-180C-4BD3-90B1-664C956BEDFE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
