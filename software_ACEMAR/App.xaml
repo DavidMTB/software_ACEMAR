@@ -15,11 +15,11 @@
         <Color x:Key="PrimaryColor">#4A5D23</Color>
         <Color x:Key="PrimaryDarkColor">#354318</Color>
         <Color x:Key="PrimaryLightColor">#61792F</Color>
-        <Color x:Key="BackgroundColor">#FFFFFF</Color>
-        <Color x:Key="SurfaceColor">#F8FAF5</Color>
-        <Color x:Key="BorderColor">#DCE3D6</Color>
+        <Color x:Key="BackgroundColor">#F4F6F0</Color>
+        <Color x:Key="SurfaceColor">#FFFFFF</Color>
+        <Color x:Key="BorderColor">#DCDEC8</Color>
         <Color x:Key="TextDarkColor">#1E2514</Color>
-        <Color x:Key="TextMutedColor">#556049</Color>
+        <Color x:Key="TextMutedColor">#5C664C</Color>
         <Color x:Key="AlertRedColor">#D32F2F</Color>
         <Color x:Key="AlertRedBgColor">#FFEBEE</Color>
 
@@ -66,14 +66,13 @@
         <!-- ESTILOS GLOBALES DE CONTROLES (ALTO CONTRASTE) -->
         <!-- ============================================== -->
         
-        <!-- Estilo base para TextBlock (Mínimo 12pt/16px para mostrador) -->
+        <!-- Estilo base para TextBlock -->
         <Style TargetType="TextBlock">
             <Setter Property="FontFamily" Value="Segoe UI, Roboto, Helvetica, Arial" />
             <Setter Property="FontSize" Value="14" />
-            <Setter Property="Foreground" Value="{StaticResource TextDarkBrush}" />
         </Style>
 
-        <!-- Estilo para Botones Planos y Modernos -->
+        <!-- Estilo para Botones Planos y Modernos con herencia de Foreground -->
         <Style TargetType="Button">
             <Setter Property="FontFamily" Value="Segoe UI, Roboto, Helvetica, Arial" />
             <Setter Property="FontSize" Value="14" />
@@ -91,7 +90,10 @@
                                 Background="{TemplateBinding Background}" 
                                 BorderBrush="{TemplateBinding BorderBrush}" 
                                 BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="6" 
+                                CornerRadius="8" 
+                                TextElement.Foreground="{TemplateBinding Foreground}"
+                                TextElement.FontSize="{TemplateBinding FontSize}"
+                                TextElement.FontWeight="{TemplateBinding FontWeight}"
                                 SnapsToDevicePixels="True">
                             <ContentPresenter HorizontalAlignment="Center" 
                                               VerticalAlignment="Center" 
@@ -99,10 +101,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Opacity" Value="0.90" />
+                                <Setter TargetName="border" Property="Opacity" Value="0.92" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="border" Property="Opacity" Value="0.75" />
+                                <Setter TargetName="border" Property="Opacity" Value="0.80" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="border" Property="Opacity" Value="0.45" />

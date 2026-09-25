@@ -62,6 +62,12 @@ namespace software_ACEMAR.Data
             modelBuilder.Entity<Venta>()
                 .Property(v => v.Total).HasPrecision(18, 2);
 
+            modelBuilder.Entity<Venta>()
+                .HasOne(v => v.ClienteCredito)
+                .WithMany()
+                .HasForeignKey(v => v.ClienteCreditoId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             modelBuilder.Entity<DetalleVenta>()
                 .Property(d => d.Cantidad).HasPrecision(18, 2);
             modelBuilder.Entity<DetalleVenta>()

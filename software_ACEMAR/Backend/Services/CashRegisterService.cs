@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using software_ACEMAR.Data;
 using software_ACEMAR.Models;
 
@@ -30,40 +33,52 @@ namespace software_ACEMAR.Services
     public interface ICashRegisterService
     {
         ResumenCaja ObtenerResumenDelDia(DateTime fecha, decimal montoApertura);
+        Task<ResumenCaja> ObtenerResumenDelDiaAsync(DateTime fecha, decimal montoApertura, CancellationToken cancellationToken = default);
+
         bool GuardarArqueoCaja(ArqueoCaja arqueo, out string error);
+        Task<(bool Exito, string Error)> GuardarArqueoCajaAsync(ArqueoCaja arqueo, CancellationToken cancellationToken = default);
+
         List<ArqueoCaja> ObtenerHistorialArqueos();
+        Task<List<ArqueoCaja>> ObtenerHistorialArqueosAsync(CancellationToken cancellationToken = default);
     }
 
     public class CashRegisterService : ICashRegisterService
     {
         public ResumenCaja ObtenerResumenDelDia(DateTime fecha, decimal montoApertura)
         {
+            return ObtenerResumenDelDiaAsync(fecha, montoApertura).GetAwaiter().GetResult();
+        }
+
+        public async Task<ResumenCaja> ObtenerResumenDelDiaAsync(DateTime fecha, decimal montoApertura, CancellationToken cancellationToken = default)
+        {
             var inicio = fecha.Date;
             var fin = fecha.Date.AddDays(1);
 
-            using var context = new AppDbContext();
+            await using var context = new AppDbContext();
 
-            // 1. Ventas del día (en memoria con AsEnumerable para evitar limitaciones de SQLite)
-            var ventasDelDia = context.Ventas
+            // 1. Ventas del día optimizadas con AsNoTracking
+            var ventasDelDia = await context.Ventas
+                .AsNoTracking()
                 .Where(v => v.Fecha >= inicio && v.Fecha < fin)
-                .AsEnumerable()
-                .ToList();
+                .ToListAsync(cancellationToken);
 
-            // 2. Abonos del día
-            var abonosDelDia = context.AbonosCredito
+            // 2. Abonos del día optimizados con AsNoTracking
+            var abonosDelDia = await context.AbonosCredito
+                .AsNoTracking()
                 .Where(a => a.Fecha >= inicio && a.Fecha < fin)
-                .AsEnumerable()
-                .ToList();
+                .ToListAsync(cancellationToken);
 
-            // Cargar clientes para nombres de abonos
-            var clientesDict = context.ClientesCredito.ToDictionary(c => c.Id, c => c.Nombre);
+            // Cargar diccionario de clientes para nombres de abonos
+            var clientesDict = await context.ClientesCredito
+                .AsNoTracking()
+                .ToDictionaryAsync(c => c.Id, c => c.Nombre, cancellationToken);
 
             var resumen = new ResumenCaja
             {
                 Fecha = fecha.Date,
                 MontoApertura = montoApertura,
-                TotalVentasEfectivo = Math.Round(ventasDelDia.Where(v => v.TipoVenta != "Credito").Sum(v => v.Total), 2),
-                TotalVentasCredito = Math.Round(ventasDelDia.Where(v => v.TipoVenta == "Credito").Sum(v => v.Total), 2),
+                TotalVentasEfectivo = Math.Round(ventasDelDia.Where(v => v.TipoVenta != TipoVentaConsts.Credito).Sum(v => v.Total), 2),
+                TotalVentasCredito = Math.Round(ventasDelDia.Where(v => v.TipoVenta == TipoVentaConsts.Credito).Sum(v => v.Total), 2),
                 TotalAbonosEfectivo = Math.Round(abonosDelDia.Sum(a => a.Monto), 2)
             };
 
@@ -72,7 +87,7 @@ namespace software_ACEMAR.Services
 
             foreach (var v in ventasDelDia)
             {
-                bool esCredito = v.TipoVenta == "Credito";
+                bool esCredito = v.TipoVenta == TipoVentaConsts.Credito;
                 movimientos.Add(new MovimientoCaja
                 {
                     FechaHora = v.Fecha,
@@ -104,29 +119,40 @@ namespace software_ACEMAR.Services
 
         public bool GuardarArqueoCaja(ArqueoCaja arqueo, out string error)
         {
-            error = string.Empty;
+            var (exito, err) = GuardarArqueoCajaAsync(arqueo).GetAwaiter().GetResult();
+            error = err;
+            return exito;
+        }
+
+        public async Task<(bool Exito, string Error)> GuardarArqueoCajaAsync(ArqueoCaja arqueo, CancellationToken cancellationToken = default)
+        {
             try
             {
-                using var context = new AppDbContext();
+                await using var context = new AppDbContext();
                 arqueo.FechaHoraRegistro = DateTime.Now;
-                context.ArqueosCaja.Add(arqueo);
-                context.SaveChanges();
-                return true;
+                await context.ArqueosCaja.AddAsync(arqueo, cancellationToken);
+                await context.SaveChangesAsync(cancellationToken);
+                return (true, string.Empty);
             }
             catch (Exception ex)
             {
-                error = $"Error al registrar el arqueo de caja: {ex.Message}";
-                return false;
+                return (false, $"Error al registrar el arqueo de caja: {ex.Message}");
             }
         }
 
         public List<ArqueoCaja> ObtenerHistorialArqueos()
         {
-            using var context = new AppDbContext();
-            return context.ArqueosCaja
+            return ObtenerHistorialArqueosAsync().GetAwaiter().GetResult();
+        }
+
+        public async Task<List<ArqueoCaja>> ObtenerHistorialArqueosAsync(CancellationToken cancellationToken = default)
+        {
+            await using var context = new AppDbContext();
+            return await context.ArqueosCaja
+                .AsNoTracking()
                 .OrderByDescending(a => a.FechaHoraRegistro)
                 .Take(30)
-                .ToList();
+                .ToListAsync(cancellationToken);
         }
     }
 }

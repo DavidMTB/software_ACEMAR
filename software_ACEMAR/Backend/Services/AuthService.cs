@@ -1,5 +1,8 @@
 using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using software_ACEMAR.Data;
 using software_ACEMAR.Models;
 
@@ -13,6 +16,7 @@ namespace software_ACEMAR.Services
         void CambiarRol(string rol);
         bool PuedeAccederCreditos(out string mensajeError);
         bool IniciarSesionAdmin(string usuario, string password, out string error);
+        Task<(bool Exito, string Error)> IniciarSesionAdminAsync(string usuario, string password, CancellationToken cancellationToken = default);
         void CerrarSesionAdmin();
     }
 
@@ -24,7 +28,7 @@ namespace software_ACEMAR.Services
 
         public AuthService()
         {
-            // Inicializar por defecto como Vendedor para que se note la autenticación, o Admin
+            // Inicializar por defecto como Administrador para acceso completo
             _usuarioActual = new Usuario
             {
                 Id = 1,
@@ -51,16 +55,19 @@ namespace software_ACEMAR.Services
 
         public bool IniciarSesionAdmin(string usuario, string password, out string error)
         {
-            error = string.Empty;
+            var (exito, err) = IniciarSesionAdminAsync(usuario, password).GetAwaiter().GetResult();
+            error = err;
+            return exito;
+        }
 
+        public async Task<(bool Exito, string Error)> IniciarSesionAdminAsync(string usuario, string password, CancellationToken cancellationToken = default)
+        {
             if (string.IsNullOrWhiteSpace(usuario) || string.IsNullOrWhiteSpace(password))
             {
-                error = "Debe ingresar el nombre de usuario y la contraseña.";
-                return false;
+                return (false, "Debe ingresar el nombre de usuario y la contraseña.");
             }
 
-            // Credenciales requeridas por el cliente:
-            // nombre: Gerente, password: acemar
+            // Credenciales requeridas: usuario 'Gerente', password 'acemar'
             bool credencialValida = false;
             string nombreCompleto = "Gerente General ACEMAR";
 
@@ -70,14 +77,15 @@ namespace software_ACEMAR.Services
             }
             else
             {
-                // También verificar contra la base de datos local SQLite
                 try
                 {
-                    using var context = new AppDbContext();
-                    var userDb = context.Usuarios.FirstOrDefault(u => 
-                        u.NombreUsuario.ToLower() == usuario.Trim().ToLower() && 
-                        u.Password == password &&
-                        u.Rol == "Administrador");
+                    await using var context = new AppDbContext();
+                    var userDb = await context.Usuarios
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(u => 
+                            u.NombreUsuario.ToLower() == usuario.Trim().ToLower() && 
+                            u.Password == password &&
+                            u.Rol == "Administrador", cancellationToken);
 
                     if (userDb != null)
                     {
@@ -93,8 +101,7 @@ namespace software_ACEMAR.Services
 
             if (!credencialValida)
             {
-                error = "Credenciales incorrectas. Verifique el usuario (Gerente) y la contraseña.";
-                return false;
+                return (false, "Credenciales incorrectas. Verifique el usuario (Gerente) y la contraseña.");
             }
 
             _usuarioActual = new Usuario
@@ -107,7 +114,7 @@ namespace software_ACEMAR.Services
             };
 
             OnUsuarioCambiado?.Invoke();
-            return true;
+            return (true, string.Empty);
         }
 
         public void CerrarSesionAdmin()

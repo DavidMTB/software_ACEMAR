@@ -79,8 +79,26 @@ namespace software_ACEMAR.ViewModels
         public ViewModelBase CurrentViewModel
         {
             get => _currentViewModel;
-            set => SetField(ref _currentViewModel, value);
+            set
+            {
+                if (SetField(ref _currentViewModel, value))
+                {
+                    OnPropertyChanged(nameof(IsPosActive));
+                    OnPropertyChanged(nameof(IsDashboardActive));
+                    OnPropertyChanged(nameof(IsProductCrudActive));
+                    OnPropertyChanged(nameof(IsCreditsActive));
+                    OnPropertyChanged(nameof(IsProformasActive));
+                    OnPropertyChanged(nameof(IsCashRegisterActive));
+                }
+            }
         }
+
+        public bool IsPosActive => CurrentViewModel is PosViewModel;
+        public bool IsDashboardActive => CurrentViewModel is DashboardViewModel;
+        public bool IsProductCrudActive => CurrentViewModel is ProductCrudViewModel;
+        public bool IsCreditsActive => CurrentViewModel is CreditsViewModel;
+        public bool IsProformasActive => CurrentViewModel is ProformasViewModel;
+        public bool IsCashRegisterActive => CurrentViewModel is CashRegisterViewModel;
 
         public string TituloVistaActual
         {
