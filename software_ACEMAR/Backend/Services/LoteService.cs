@@ -113,18 +113,19 @@ namespace software_ACEMAR.Services
                 // Actualizar StockActual del producto
                 producto.StockActual = CalcularStockTotalConCtx(ctx, lote.ProductoId);
 
-                // Sincronizar el PrecioUnitario del producto con el precio del lote FIFO activo
-                var loteActivoVigente = await ctx.LotesProducto
+                // Regla PVP vs Reposición: El PVP del producto se actualiza al precio MÁXIMO entre los lotes activos.
+                // Si entra un lote con costo más alto, el PVP sube. Si entra más barato, se conserva el mayor hasta que se agote.
+                var lotesActivos = await ctx.LotesProducto
                     .Where(l => l.ProductoId == lote.ProductoId && l.Estado == "Activo" && l.CantidadDisponible > 0)
-                    .OrderBy(l => l.FechaIngreso)
-                    .FirstOrDefaultAsync();
+                    .ToListAsync();
 
-                if (loteActivoVigente != null)
+                if (lotesActivos.Any())
                 {
-                    producto.PrecioUnitario = loteActivoVigente.PrecioVenta;
+                    decimal maxPrecioVenta = lotesActivos.Max(l => l.PrecioVenta);
+                    producto.PrecioUnitario = maxPrecioVenta;
 
                     var dictPrecios = producto.ObtenerPreciosPorUnidad();
-                    dictPrecios[lote.UnidadMedida] = loteActivoVigente.PrecioVenta;
+                    dictPrecios[lote.UnidadMedida] = maxPrecioVenta;
                     producto.GuardarPreciosPorUnidad(dictPrecios);
                 }
 
@@ -235,13 +236,12 @@ namespace software_ACEMAR.Services
         public decimal ObtenerPrecioVigenteProducto(int productoId)
         {
             using var ctx = new AppDbContext();
-            var lote = ctx.LotesProducto
+            var lotesActivos = ctx.LotesProducto
                           .Where(l => l.ProductoId == productoId && l.Estado == "Activo" && l.CantidadDisponible > 0)
-                          .OrderBy(l => l.FechaIngreso)
-                          .FirstOrDefault();
+                          .ToList();
 
-            if (lote != null)
-                return lote.PrecioVenta;
+            if (lotesActivos.Any())
+                return lotesActivos.Max(l => l.PrecioVenta);
 
             // Fallback: precio del producto
             return ctx.Productos.Where(p => p.Id == productoId)

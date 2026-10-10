@@ -288,7 +288,9 @@ namespace software_ACEMAR.ViewModels
             string unidad = string.IsNullOrWhiteSpace(UnidadMedidaSeleccionada) ? ProductoSeleccionado.UnidadMedida : UnidadMedidaSeleccionada;
             decimal factor = ProductoSeleccionado.ObtenerFactorParaUnidad(unidad);
 
-            var itemExistente = TicketActual.FirstOrDefault(t => t.ProductoId == ProductoSeleccionado.Id);
+            var itemExistente = TicketActual.FirstOrDefault(t => 
+                t.ProductoId == ProductoSeleccionado.Id && 
+                string.Equals(t.UnidadMedida?.Trim(), unidad.Trim(), StringComparison.OrdinalIgnoreCase));
 
             decimal cantBaseExistente = 0m;
             foreach (var itemTicket in TicketActual.Where(t => t.ProductoId == ProductoSeleccionado.Id))
@@ -333,7 +335,6 @@ namespace software_ACEMAR.ViewModels
             if (itemExistente != null)
             {
                 itemExistente.Cantidad += cantidad;
-                itemExistente.UnidadMedida = unidad;
                 itemExistente.PrecioUnitario = precioUnitarioFinal;
                 int index = TicketActual.IndexOf(itemExistente);
                 TicketActual.RemoveAt(index);
@@ -395,18 +396,29 @@ namespace software_ACEMAR.ViewModels
                 return;
             }
 
-            // Validar stock disponible y alerta de stock mínimo para todos los ítems antes de procesar
-            foreach (var item in TicketActual)
+            // Validar stock disponible y alerta de stock mínimo agrupando por producto
+            var requeridosPorProducto = TicketActual
+                .GroupBy(item => item.ProductoId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Sum(item =>
+                    {
+                        var prod = _inventoryService.ObtenerPorId(item.ProductoId);
+                        decimal factor = prod?.ObtenerFactorParaUnidad(item.UnidadMedida) ?? 1.0m;
+                        return item.Cantidad * factor;
+                    })
+                );
+
+            foreach (var kvp in requeridosPorProducto)
             {
-                var prod = _inventoryService.ObtenerPorId(item.ProductoId);
+                var prod = _inventoryService.ObtenerPorId(kvp.Key);
                 if (prod != null)
                 {
-                    decimal factorItem = prod.ObtenerFactorParaUnidad(item.UnidadMedida);
-                    decimal cantBaseRequerida = item.Cantidad * factorItem;
+                    decimal cantBaseRequerida = kvp.Value;
 
                     if (cantBaseRequerida > prod.StockActual)
                     {
-                        MessageBox.Show($"Stock insuficiente para '{prod.Nombre}'. Disponible: {prod.StockActual:0.##} {prod.UnidadMedida} (se requieren {cantBaseRequerida:0.##} {prod.UnidadMedida} para {item.Cantidad:0.##} {item.UnidadMedida}).", "Error al Procesar Venta", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show($"Stock insuficiente para '{prod.Nombre}'. Disponible: {prod.StockActual:0.##} {prod.UnidadMedida} (se requieren {cantBaseRequerida:0.##} {prod.UnidadMedida} en total para las unidades solicitadas).", "Error al Procesar Venta", MessageBoxButton.OK, MessageBoxImage.Warning);
                         return;
                     }
 

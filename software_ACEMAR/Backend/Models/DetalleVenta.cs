@@ -35,6 +35,11 @@ namespace software_ACEMAR.Models
         public decimal PrecioUnitario { get; set; }
 
         /// <summary>
+        /// Costo de compra unitario real para esta unidad de medida (para cálculo exacto de utilidad bruta FIFO).
+        /// </summary>
+        public decimal CostoUnitarioCompra { get; set; }
+
+        /// <summary>
         /// Subtotal calculado. Es NotMapped pero se almacena el valor al crear la venta
         /// a través de PrecioUnitario * Cantidad. No se persiste como columna independiente.
         /// </summary>

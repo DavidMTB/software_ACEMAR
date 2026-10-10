@@ -107,11 +107,15 @@ namespace software_ACEMAR.Services
                 {
                     foreach (var d in v.Detalles)
                     {
-                        decimal costoUnit = d.PrecioUnitario * 0.70m;
-                        if (d.LoteProductoId.HasValue)
+                        decimal costoUnit = d.CostoUnitarioCompra;
+                        if (costoUnit <= 0 && d.LoteProductoId.HasValue)
                         {
                             var lote = await context.LotesProducto.AsNoTracking().FirstOrDefaultAsync(l => l.Id == d.LoteProductoId.Value, cancellationToken);
                             if (lote != null && lote.CostoCompra > 0) costoUnit = lote.CostoCompra;
+                        }
+                        if (costoUnit <= 0)
+                        {
+                            costoUnit = d.PrecioUnitario * 0.70m;
                         }
                         costoVentasTotal += (d.Cantidad * costoUnit);
                     }

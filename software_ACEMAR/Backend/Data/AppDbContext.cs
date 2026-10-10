@@ -127,6 +127,8 @@ namespace software_ACEMAR.Data
                 .Property(d => d.Cantidad).HasPrecision(18, 2);
             modelBuilder.Entity<DetalleVenta>()
                 .Property(d => d.PrecioUnitario).HasPrecision(18, 2);
+            modelBuilder.Entity<DetalleVenta>()
+                .Property(d => d.CostoUnitarioCompra).HasPrecision(18, 2);
 
             // DetalleVenta → LoteProducto (opcional, retrocompatible)
             modelBuilder.Entity<DetalleVenta>()
@@ -303,9 +305,10 @@ namespace software_ACEMAR.Data
             AddColumnIfMissing("Productos", "PreciosPorUnidad", "TEXT NULL");
             AddColumnIfMissing("Productos", "FactoresPorUnidad", "TEXT NULL");
 
-            // DetalleVenta: LoteProductoId, UnidadMedida
+            // DetalleVenta: LoteProductoId, UnidadMedida, CostoUnitarioCompra
             AddColumnIfMissing("DetallesVenta", "LoteProductoId", "INTEGER NULL REFERENCES LotesProducto(Id) ON DELETE SET NULL");
             AddColumnIfMissing("DetallesVenta", "UnidadMedida", "TEXT NOT NULL DEFAULT 'Unidad'");
+            AddColumnIfMissing("DetallesVenta", "CostoUnitarioCompra", "TEXT NOT NULL DEFAULT '0'");
 
             // DetalleProforma: UnidadMedida
             AddColumnIfMissing("DetallesProforma", "UnidadMedida", "TEXT NOT NULL DEFAULT 'Unidad'");

@@ -102,6 +102,8 @@ namespace software_ACEMAR.Services
                     .Where(p => productoIds.Contains(p.Id))
                     .ToDictionaryAsync(p => p.Id, cancellationToken);
 
+                var nuevosDetalles = new List<DetalleVenta>();
+
                 foreach (var item in venta.Detalles)
                 {
                     item.Producto      = null;
@@ -143,15 +145,6 @@ namespace software_ACEMAR.Services
                         {
                             if (cantidadBasePendiente <= 0) break;
 
-                            if (!item.LoteProductoId.HasValue)
-                            {
-                                item.LoteProductoId = lote.Id;
-                                if (item.PrecioUnitario <= 0)
-                                {
-                                    item.PrecioUnitario = lote.PrecioVenta * factor;
-                                }
-                            }
-
                             decimal aConsumir = Math.Min(cantidadBasePendiente, lote.CantidadDisponible);
                             lote.CantidadDisponible -= aConsumir;
                             cantidadBasePendiente -= aConsumir;
@@ -161,6 +154,37 @@ namespace software_ACEMAR.Services
                                 lote.CantidadDisponible = 0;
                                 lote.Estado = "Agotado";
                             }
+
+                            decimal cantPresentacionConsumida = aConsumir / factor;
+                            decimal costoUnitarioPresentacion = lote.CostoCompra * factor;
+
+                            nuevosDetalles.Add(new DetalleVenta
+                            {
+                                ProductoId = item.ProductoId,
+                                ProductoNombre = item.ProductoNombre,
+                                UnidadMedida = item.UnidadMedida,
+                                Cantidad = cantPresentacionConsumida,
+                                PrecioUnitario = item.PrecioUnitario,
+                                CostoUnitarioCompra = costoUnitarioPresentacion,
+                                LoteProductoId = lote.Id
+                            });
+                        }
+
+                        if (cantidadBasePendiente > 0)
+                        {
+                            decimal cantPresentacionConsumida = cantidadBasePendiente / factor;
+                            decimal costoUnitarioPresentacion = item.PrecioUnitario * 0.70m;
+
+                            nuevosDetalles.Add(new DetalleVenta
+                            {
+                                ProductoId = item.ProductoId,
+                                ProductoNombre = item.ProductoNombre,
+                                UnidadMedida = item.UnidadMedida,
+                                Cantidad = cantPresentacionConsumida,
+                                PrecioUnitario = item.PrecioUnitario,
+                                CostoUnitarioCompra = costoUnitarioPresentacion,
+                                LoteProductoId = null
+                            });
                         }
 
                         producto.StockActual = Math.Max(0m, producto.StockActual - cantidadBaseTotal);
@@ -175,19 +199,31 @@ namespace software_ACEMAR.Services
                         }
 
                         producto.StockActual -= cantidadBaseTotal;
+
+                        nuevosDetalles.Add(new DetalleVenta
+                        {
+                            ProductoId = item.ProductoId,
+                            ProductoNombre = item.ProductoNombre,
+                            UnidadMedida = item.UnidadMedida,
+                            Cantidad = item.Cantidad,
+                            PrecioUnitario = item.PrecioUnitario,
+                            CostoUnitarioCompra = item.CostoUnitarioCompra > 0 ? item.CostoUnitarioCompra : Math.Round(item.PrecioUnitario * 0.70m, 2),
+                            LoteProductoId = null
+                        });
                     }
 
-                    // Sincronizar el PrecioUnitario del producto con el precio del siguiente lote FIFO activo
-                    var siguienteLoteActivo = await context.LotesProducto
+                    // Sincronizar el PrecioUnitario del producto con el precio de venta MÁXIMO de los lotes activos restantes
+                    var lotesActivosRestantes = await context.LotesProducto
                         .Where(l => l.ProductoId == item.ProductoId && l.Estado == "Activo" && l.CantidadDisponible > 0)
-                        .OrderBy(l => l.FechaIngreso)
-                        .FirstOrDefaultAsync(cancellationToken);
+                        .ToListAsync(cancellationToken);
 
-                    if (siguienteLoteActivo != null)
+                    if (lotesActivosRestantes.Any())
                     {
-                        producto.PrecioUnitario = siguienteLoteActivo.PrecioVenta;
+                        producto.PrecioUnitario = lotesActivosRestantes.Max(l => l.PrecioVenta);
                     }
                 }
+
+                venta.Detalles = nuevosDetalles;
 
                 // ── Fecha y ticket ───────────────────────────────────────────────
                 venta.ClienteCredito = null;
@@ -262,14 +298,13 @@ namespace software_ACEMAR.Services
         public decimal ObtenerPrecioVigente(int productoId)
         {
             using var ctx = new AppDbContext();
-            var lote = ctx.LotesProducto
+            var lotesActivos = ctx.LotesProducto
                          .Where(l => l.ProductoId == productoId
                                   && l.Estado == "Activo"
                                   && l.CantidadDisponible > 0)
-                         .OrderBy(l => l.FechaIngreso)
-                         .FirstOrDefault();
+                         .ToList();
 
-            if (lote != null) return lote.PrecioVenta;
+            if (lotesActivos.Any()) return lotesActivos.Max(l => l.PrecioVenta);
 
             return ctx.Productos
                       .Where(p => p.Id == productoId)
