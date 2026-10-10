@@ -46,7 +46,9 @@ namespace software_ACEMAR.Services
             QuestPDF.Settings.UseSystemFonts = true;
             QuestPDF.Settings.ThrowOnMissingFontFamilies = false;
 
-            _documentFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Boletas");
+            string rutaDocumentos = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            _documentFolder = Path.Combine(rutaDocumentos, "ACEMAR_Comprobantes");
+            
             if (!Directory.Exists(_documentFolder))
             {
                 Directory.CreateDirectory(_documentFolder);
