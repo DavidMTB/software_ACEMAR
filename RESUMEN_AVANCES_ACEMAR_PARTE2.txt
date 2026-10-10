@@ -1,0 +1,46 @@
+================================================================================
+          RESUMEN DE AVANCES Y NUEVAS FUNCIONALIDADES - PARTE 2
+                     SISTEMA FERRETERÍA ACEMAR
+================================================================================
+
+8. MEDICIÓN Y DESCUENTO AUTOMÁTICO DE STOCK POR CONVERSIÓN DE UNIDADES
+--------------------------------------------------------------------------------
+- Implementación de reglas de equivalencia y conversión entre unidades de venta (ej. Venta por Metro vs. Venta por Volquetada en agregados como arena o piedra).
+- Descuento automático y proporcional en el stock principal cuando se comercializa una unidad mayor (ej. si 1 Volquetada = 4 Metros, vender 1 Volquetada descuenta automáticamente 4 Metros del stock físico restante).
+
+9. REDISEÑO PROFESIONAL DE COMPROBANTES Y DOCUMENTOS (PDF & TICKET)
+--------------------------------------------------------------------------------
+- Boleta de Venta Electrónica (PDF A4): Formato ejecutivo adaptado a normas SUNAT (RUC 20601234567, Serie B001, desglose de Op. Gravada e IGV 18%, código QR de verificación, diseño elegante).
+- Ticket Térmico (80mm): Maquetación optimizada para impresoras de ticket de 80mm con tipografía de alta legibilidad, detalle claro de ítems, totales y pie de página.
+- Proforma / Cotización (PDF A4): Rediseño visual alineado a la misma identidad corporativa de la boleta de venta, especificando vigencia y condiciones de oferta.
+- Dato Oficial de Contacto: Actualización unificada del teléfono principal de la ferretería al número real 94301837 en todos los documentos impresos y digitales.
+
+10. REPORTE CONTABLE EN EXCEL MULTIPESTAÑA (.XLSX) CON CLOSEDXML
+--------------------------------------------------------------------------------
+- Exportación profesional de la caja diaria y contabilidad a archivos Microsoft Excel (.xlsx) con 5 pestañas integradas:
+  * RESUMEN: Indicadores principales y totales generales.
+  * VENTAS: Registro correlativo de comprobantes y clientes.
+  * DETALLE DE VENTAS: Desglose ítem por ítem comercializado.
+  * COMPRAS Y LOTES: Movimientos de abastecimiento de mercadería.
+  * MOVIMIENTOS DE CAJA: Entradas y salidas de efectivo.
+- Formato visual corporativo: Encabezados en paleta azul/gris, formato de moneda explícito (S/ #,##0.00), autofiltros habilitados y fórmulas dinámicas de suma (=SUM(...)).
+
+11. MODALIDAD DE PAGO DIGITAL EN POS (YAPE / PLIN / TRANSFERENCIA)
+--------------------------------------------------------------------------------
+- Incorporada la opción de pago "Al Contado (Yape / Plin / Transferencia)" en el módulo del Punto de Venta (POS).
+- Diferenciación exacta del arqueo de caja entre dinero en efectivo físico y dinero ingresado por billeteras digitales / transferencias bancarias.
+
+12. SEGURIDAD Y PERFIL INICIAL DE VENDEDOR
+--------------------------------------------------------------------------------
+- Configuración de la aplicación para iniciar por defecto en modo Vendedor (fijando el nombre del operador a "Vendedor").
+- Restricción de acceso a configuraciones de gerencia, costos de compra o reportes sensibles sin la clave de autenticación del Administrador.
+
+13. TERMINOLOGÍA SIMPLIFICADA Y TOOLTIPS EN DASHBOARD
+--------------------------------------------------------------------------------
+- Revisión completa de los paneles de control (Dashboards) para usar términos comerciales directos y fáciles de entender por el personal.
+- Incorporación de ToolTip (globos informativos al pasar el cursor) en todas las tarjetas de métricas, botones de acceso directo, gráficos y listas del sistema.
+
+================================================================================
+Fecha de Emisión: 2026-10-08
+Sistema: Ferretería & Almacén ACEMAR v2.0
+================================================================================

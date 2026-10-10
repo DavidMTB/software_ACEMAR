@@ -201,32 +201,88 @@
                         <TextBox Text="{Binding FormNombre, UpdateSourceTrigger=PropertyChanged}" 
                                  FontSize="13" Padding="6,4" Background="#F8FAF5" Margin="0,0,0,8" />
 
-                        <!-- Categoría y Unidad -->
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="8" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
+                        <!-- Categoría -->
+                        <TextBlock Text="Categoría:" FontSize="12" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,2" />
+                        <TextBox Text="{Binding FormCategoria, UpdateSourceTrigger=PropertyChanged}" 
+                                 FontSize="13" Padding="6,4" Background="#F8FAF5" Margin="0,0,0,8" />
 
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Categoría:" FontSize="12" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,2" />
-                                <TextBox Text="{Binding FormCategoria, UpdateSourceTrigger=PropertyChanged}" 
-                                         FontSize="13" Padding="6,4" Background="#F8FAF5" />
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Unidad de Medida:" FontSize="12" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,2" />
-                                <ComboBox ItemsSource="{Binding UnidadesMedida}" 
-                                          SelectedItem="{Binding FormUnidad}" 
-                                          Height="30" FontSize="12" VerticalContentAlignment="Center" Background="#F8FAF5" />
-                            </StackPanel>
-                        </Grid>
-
-                        <!-- Precio Unitario -->
-                        <TextBlock Text="Precio Unitario (S/):" FontSize="12" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,2" />
+                        <!-- Precio Base Principal -->
+                        <TextBlock Text="Precio Base (S/):" FontSize="12" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,2" />
                         <TextBox Text="{Binding FormPrecio, UpdateSourceTrigger=PropertyChanged}" 
                                  FontSize="15" FontWeight="Bold" Foreground="#4A5D23" Padding="6,4" Background="#F8FAF5" Margin="0,0,0,8" />
+
+                        <!-- Configuración de Unidades de Medida y Precios Específicos -->
+                        <!-- Configuración de Unidades de Medida y Precios Específicos -->
+                        <Expander Header="📐 UNIDADES DE MEDIDA Y PRECIOS POR UNIDAD" 
+                                  IsExpanded="True" 
+                                  FontSize="11" 
+                                  FontWeight="Bold" 
+                                  Foreground="#354318" 
+                                  Margin="0,0,0,10">
+                            <Border Background="#F4F7EF" CornerRadius="6" BorderBrush="#DCE3D6" BorderThickness="1" Padding="8" Margin="0,4,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Seleccione unidades habilitadas, asigne su precio y factor de equivalencia en stock base:" 
+                                               FontSize="10" Foreground="#556049" Margin="0,0,0,6" TextWrapping="Wrap" />
+
+                                    <ScrollViewer MaxHeight="160" VerticalScrollBarVisibility="Auto">
+                                        <ItemsControl ItemsSource="{Binding ListaUnidadesPrecios}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Grid Margin="0,2,0,2">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="60" />
+                                                            <ColumnDefinition Width="4" />
+                                                            <ColumnDefinition Width="50" />
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <CheckBox Grid.Column="0" 
+                                                                  IsChecked="{Binding EstaSeleccionada, Mode=TwoWay}" 
+                                                                  VerticalAlignment="Center" Margin="0,0,6,0" />
+
+                                                        <TextBlock Grid.Column="1" 
+                                                                   Text="{Binding NombreUnidad}" 
+                                                                   FontSize="11" FontWeight="SemiBold" Foreground="#1E2514" VerticalAlignment="Center" />
+
+                                                        <TextBox Grid.Column="2" 
+                                                                 Text="{Binding PrecioTexto, UpdateSourceTrigger=PropertyChanged}" 
+                                                                 FontSize="11" FontWeight="Bold" Foreground="#2A3814" 
+                                                                 ToolTip="Precio de venta (S/)"
+                                                                 Padding="4,2" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Background="#FFFFFF" />
+
+                                                        <TextBox Grid.Column="4" 
+                                                                 Text="{Binding FactorTexto, UpdateSourceTrigger=PropertyChanged}" 
+                                                                 FontSize="11" Foreground="#444444" 
+                                                                 ToolTip="Equivalencia en stock base (Ej: Volquetada = 4 Metros, Lata = 0.1)"
+                                                                 Padding="3,2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Background="#FFFFFF" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                    <!-- Agregar nueva unidad personalizada -->
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="4" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBox Grid.Column="0" 
+                                                 Text="{Binding NuevaUnidadNombre, UpdateSourceTrigger=PropertyChanged}" 
+                                                 FontSize="11" Padding="4,2" Background="#FFFFFF" 
+                                                 ToolTip="Escriba el nombre de una nueva unidad (ej: Cajón, Atado, Balde)" />
+
+                                        <Button Grid.Column="2" 
+                                                Content="➕ Agregar" 
+                                                Command="{Binding AgregarNuevaUnidadCommand}" 
+                                                FontSize="11" FontWeight="Bold" Padding="8,2" 
+                                                Background="#4A5D23" Foreground="#FFFFFF" BorderThickness="0" Cursor="Hand" />
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
 
                         <!-- Stock Actual, Stock Mínimo y CuMax -->
                         <Grid Margin="0,0,0,12">
@@ -239,9 +295,14 @@
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Stock Act:" FontSize="11" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,2" />
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                    <TextBlock Text="Stock Act:" FontSize="11" FontWeight="Bold" Foreground="#1E2514" />
+                                    <TextBlock Text=" (Lotes)" FontSize="9" Foreground="#666666" VerticalAlignment="Center" />
+                                </StackPanel>
                                 <TextBox Text="{Binding FormStockActual, UpdateSourceTrigger=PropertyChanged}" 
-                                         FontSize="13" HorizontalContentAlignment="Center" Padding="4" Background="#F8FAF5" />
+                                         IsReadOnly="True"
+                                         ToolTip="El stock se incrementa únicamente al registrar un nuevo lote en 'Lotes &amp; Vencimientos'."
+                                         FontSize="13" HorizontalContentAlignment="Center" Padding="4" Background="#EAECE4" Foreground="#555555" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">

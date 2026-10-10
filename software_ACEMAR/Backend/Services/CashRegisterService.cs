@@ -12,7 +12,7 @@ namespace software_ACEMAR.Services
     public class MovimientoCaja
     {
         public DateTime FechaHora { get; set; }
-        public string Tipo { get; set; } = string.Empty; // "Venta Efectivo", "Venta Fiado", "Abono Cobrado"
+        public string Tipo { get; set; } = string.Empty; // "Venta Efectivo", "Venta Fiado", "Abono Cobrado", "Gasto Lote"
         public string Documento { get; set; } = string.Empty;
         public string Detalle { get; set; } = string.Empty;
         public decimal Monto { get; set; }
@@ -22,11 +22,16 @@ namespace software_ACEMAR.Services
     public class ResumenCaja
     {
         public DateTime Fecha { get; set; }
+        public DateTime? FechaHasta { get; set; }
         public decimal MontoApertura { get; set; }
         public decimal TotalVentasEfectivo { get; set; }
+        public decimal TotalVentasDigital { get; set; }
         public decimal TotalVentasCredito { get; set; }
         public decimal TotalAbonosEfectivo { get; set; }
-        public decimal TotalEfectivoCaja => MontoApertura + TotalVentasEfectivo + TotalAbonosEfectivo;
+        public decimal TotalGastosLotes { get; set; }
+        public decimal TotalCostoVentas { get; set; }
+        public decimal UtilidadBruta => (TotalVentasEfectivo + TotalVentasDigital + TotalVentasCredito) - TotalCostoVentas;
+        public decimal TotalEfectivoCaja => MontoApertura + TotalVentasEfectivo + TotalAbonosEfectivo - TotalGastosLotes;
         public List<MovimientoCaja> Movimientos { get; set; } = new();
     }
 
@@ -34,6 +39,9 @@ namespace software_ACEMAR.Services
     {
         ResumenCaja ObtenerResumenDelDia(DateTime fecha, decimal montoApertura);
         Task<ResumenCaja> ObtenerResumenDelDiaAsync(DateTime fecha, decimal montoApertura, CancellationToken cancellationToken = default);
+
+        ResumenCaja ObtenerResumenPorRango(DateTime fechaDesde, DateTime fechaHasta, decimal montoApertura);
+        Task<ResumenCaja> ObtenerResumenPorRangoAsync(DateTime fechaDesde, DateTime fechaHasta, decimal montoApertura, CancellationToken cancellationToken = default);
 
         bool GuardarArqueoCaja(ArqueoCaja arqueo, out string error);
         Task<(bool Exito, string Error)> GuardarArqueoCajaAsync(ArqueoCaja arqueo, CancellationToken cancellationToken = default);
@@ -46,26 +54,44 @@ namespace software_ACEMAR.Services
     {
         public ResumenCaja ObtenerResumenDelDia(DateTime fecha, decimal montoApertura)
         {
-            return ObtenerResumenDelDiaAsync(fecha, montoApertura).GetAwaiter().GetResult();
+            return ObtenerResumenPorRango(fecha.Date, fecha.Date, montoApertura);
         }
 
         public async Task<ResumenCaja> ObtenerResumenDelDiaAsync(DateTime fecha, decimal montoApertura, CancellationToken cancellationToken = default)
         {
-            var inicio = fecha.Date;
-            var fin = fecha.Date.AddDays(1);
+            return await ObtenerResumenPorRangoAsync(fecha.Date, fecha.Date, montoApertura, cancellationToken);
+        }
+
+        public ResumenCaja ObtenerResumenPorRango(DateTime fechaDesde, DateTime fechaHasta, decimal montoApertura)
+        {
+            return ObtenerResumenPorRangoAsync(fechaDesde, fechaHasta, montoApertura).GetAwaiter().GetResult();
+        }
+
+        public async Task<ResumenCaja> ObtenerResumenPorRangoAsync(DateTime fechaDesde, DateTime fechaHasta, decimal montoApertura, CancellationToken cancellationToken = default)
+        {
+            var inicio = fechaDesde.Date;
+            var fin = fechaHasta.Date.AddDays(1);
 
             await using var context = new AppDbContext();
 
-            // 1. Ventas del día optimizadas con AsNoTracking
-            var ventasDelDia = await context.Ventas
+            // 1. Ventas del rango con sus detalles
+            var ventasDelRango = await context.Ventas
                 .AsNoTracking()
+                .Include(v => v.Detalles)
                 .Where(v => v.Fecha >= inicio && v.Fecha < fin)
                 .ToListAsync(cancellationToken);
 
-            // 2. Abonos del día optimizados con AsNoTracking
-            var abonosDelDia = await context.AbonosCredito
+            // 2. Abonos del rango
+            var abonosDelRango = await context.AbonosCredito
                 .AsNoTracking()
                 .Where(a => a.Fecha >= inicio && a.Fecha < fin)
+                .ToListAsync(cancellationToken);
+
+            // 3. Nuevos lotes de compra en el rango (Gastos de inversión)
+            var lotesDelRango = await context.LotesProducto
+                .AsNoTracking()
+                .Include(l => l.Producto)
+                .Where(l => l.FechaIngreso >= inicio && l.FechaIngreso < fin)
                 .ToListAsync(cancellationToken);
 
             // Cargar diccionario de clientes para nombres de abonos
@@ -73,25 +99,50 @@ namespace software_ACEMAR.Services
                 .AsNoTracking()
                 .ToDictionaryAsync(c => c.Id, c => c.Nombre, cancellationToken);
 
+            // Calcular Costo de Ventas (COGS)
+            decimal costoVentasTotal = 0;
+            foreach (var v in ventasDelRango)
+            {
+                if (v.Detalles != null)
+                {
+                    foreach (var d in v.Detalles)
+                    {
+                        decimal costoUnit = d.PrecioUnitario * 0.70m;
+                        if (d.LoteProductoId.HasValue)
+                        {
+                            var lote = await context.LotesProducto.AsNoTracking().FirstOrDefaultAsync(l => l.Id == d.LoteProductoId.Value, cancellationToken);
+                            if (lote != null && lote.CostoCompra > 0) costoUnit = lote.CostoCompra;
+                        }
+                        costoVentasTotal += (d.Cantidad * costoUnit);
+                    }
+                }
+            }
+
+            decimal totalGastosLotes = lotesDelRango.Sum(l => l.CantidadInicial * l.CostoCompra);
+
             var resumen = new ResumenCaja
             {
-                Fecha = fecha.Date,
+                Fecha = fechaDesde.Date,
+                FechaHasta = fechaHasta.Date,
                 MontoApertura = montoApertura,
-                TotalVentasEfectivo = Math.Round(ventasDelDia.Where(v => v.TipoVenta != TipoVentaConsts.Credito).Sum(v => v.Total), 2),
-                TotalVentasCredito = Math.Round(ventasDelDia.Where(v => v.TipoVenta == TipoVentaConsts.Credito).Sum(v => v.Total), 2),
-                TotalAbonosEfectivo = Math.Round(abonosDelDia.Sum(a => a.Monto), 2)
+                TotalVentasEfectivo = Math.Round(ventasDelRango.Where(v => v.TipoVenta == TipoVentaConsts.Efectivo).Sum(v => v.Total), 2),
+                TotalVentasDigital = Math.Round(ventasDelRango.Where(v => v.TipoVenta == "Digital" || v.TipoVenta == "Yape" || v.TipoVenta == "Plin" || v.TipoVenta == "Transferencia").Sum(v => v.Total), 2),
+                TotalVentasCredito = Math.Round(ventasDelRango.Where(v => v.TipoVenta == TipoVentaConsts.Credito).Sum(v => v.Total), 2),
+                TotalAbonosEfectivo = Math.Round(abonosDelRango.Sum(a => a.Monto), 2),
+                TotalGastosLotes = Math.Round(totalGastosLotes, 2),
+                TotalCostoVentas = Math.Round(costoVentasTotal, 2)
             };
 
             // Construir lista cronológica de movimientos
             var movimientos = new List<MovimientoCaja>();
 
-            foreach (var v in ventasDelDia)
+            foreach (var v in ventasDelRango)
             {
                 bool esCredito = v.TipoVenta == TipoVentaConsts.Credito;
                 movimientos.Add(new MovimientoCaja
                 {
                     FechaHora = v.Fecha,
-                    Tipo = esCredito ? "Venta a Crédito (Fiado)" : "Venta en Mostrador (Efectivo)",
+                    Tipo = esCredito ? "Venta a Crédito (Fiado)" : $"Venta {v.TipoVenta}",
                     Documento = v.NumeroTicket,
                     Detalle = esCredito ? $"Cliente: {v.ClienteNombre ?? "Fiado"}" : $"Atendido por: {v.UsuarioVendedor}",
                     Monto = v.Total,
@@ -99,7 +150,7 @@ namespace software_ACEMAR.Services
                 });
             }
 
-            foreach (var a in abonosDelDia)
+            foreach (var a in abonosDelRango)
             {
                 string nombreCliente = clientesDict.TryGetValue(a.ClienteCreditoId, out var nom) ? nom : "Cliente";
                 movimientos.Add(new MovimientoCaja
@@ -110,6 +161,21 @@ namespace software_ACEMAR.Services
                     Detalle = $"{nombreCliente} ({a.Observaciones})",
                     Monto = a.Monto,
                     EsIngresoFisico = true
+                });
+            }
+
+            foreach (var l in lotesDelRango)
+            {
+                string nomProd = l.Producto?.Nombre ?? $"Producto #{l.ProductoId}";
+                decimal gastoMonto = l.CantidadInicial * l.CostoCompra;
+                movimientos.Add(new MovimientoCaja
+                {
+                    FechaHora = l.FechaIngreso,
+                    Tipo = "Gasto Compra Lote",
+                    Documento = $"LOT-{l.Id:D4}",
+                    Detalle = $"Lote {nomProd} ({l.CantidadInicial:0.##} {l.UnidadMedida} @ S/ {l.CostoCompra:N2}/u)",
+                    Monto = gastoMonto,
+                    EsIngresoFisico = false
                 });
             }
 

@@ -206,12 +206,14 @@
                     <Grid Grid.Row="4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="6" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="6" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
                         <Button Grid.Column="0" 
-                                Content="🛒 CONVERTIR A VENTA EN CAJA" 
+                                Content="🛒 CONVERTIR A VENTA" 
                                 Click="BtnConvertir_Click"
                                 FontSize="12" 
                                 FontWeight="Bold" 
@@ -222,6 +224,19 @@
                                 Cursor="Hand" />
 
                         <Button Grid.Column="2" 
+                                Content="📄 PDF" 
+                                Command="{Binding VerProformaPdfCommand}" 
+                                FontSize="12" 
+                                FontWeight="SemiBold" 
+                                Height="36" 
+                                Padding="10,0"
+                                Background="#E8EEDF" 
+                                Foreground="#354318" 
+                                BorderBrush="#C5D1BC" 
+                                BorderThickness="1" 
+                                Cursor="Hand" />
+
+                        <Button Grid.Column="4" 
                                 Content="❌ Anular" 
                                 Command="{Binding AnularProformaCommand}" 
                                 FontSize="12" 

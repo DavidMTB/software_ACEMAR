@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -11,30 +12,44 @@ namespace software_ACEMAR.ViewModels
     public class DashboardViewModel : ViewModelBase
     {
         private readonly IInventoryService _inventoryService;
+        private readonly ISalesService _salesService;
+
+        public event Action<string>? OnNavegarSolicitado;
 
         private Producto? _productoSeleccionado;
         private string _cantidadIngresoTexto = string.Empty;
         private string _filtroTexto = string.Empty;
 
-        // KPIs
+        // KPIs Inventario
         private int _totalProductos;
         private int _totalProductosBajoStock;
         private decimal _valorTotalInventario;
         private decimal _promedioOcupacionCuMax;
 
+        // KPIs Ventas
+        private decimal _ventasDelDiaTotal;
+        private decimal _ventasEfectivoTotal;
+        private decimal _ventasCreditoTotal;
+        private int _totalTransaccionesHoy;
+
         public ObservableCollection<Producto> Inventario { get; } = new();
+        public ObservableCollection<Producto> ProductosBajoStockLista { get; } = new();
+        public ObservableCollection<Venta> VentasRecientes { get; } = new();
 
         public ICommand CargarInventarioCommand { get; }
         public ICommand RegistrarIngresoCommand { get; }
         public ICommand LimpiarFiltroCommand { get; }
+        public ICommand NavegarALotesCommand { get; }
 
-        public DashboardViewModel(IInventoryService inventoryService)
+        public DashboardViewModel(IInventoryService inventoryService, ISalesService salesService)
         {
             _inventoryService = inventoryService;
+            _salesService = salesService;
 
             CargarInventarioCommand = new RelayCommand(CargarInventario);
             RegistrarIngresoCommand = new RelayCommand(EjecutarIngresoMercaderia);
             LimpiarFiltroCommand = new RelayCommand(() => FiltroTexto = string.Empty);
+            NavegarALotesCommand = new RelayCommand(() => OnNavegarSolicitado?.Invoke("Lotes"));
 
             CargarInventario();
         }
@@ -87,15 +102,56 @@ namespace software_ACEMAR.ViewModels
             set => SetField(ref _promedioOcupacionCuMax, value);
         }
 
+        public decimal VentasDelDiaTotal
+        {
+            get => _ventasDelDiaTotal;
+            set => SetField(ref _ventasDelDiaTotal, value);
+        }
+
+        public decimal VentasEfectivoTotal
+        {
+            get => _ventasEfectivoTotal;
+            set => SetField(ref _ventasEfectivoTotal, value);
+        }
+
+        public decimal VentasCreditoTotal
+        {
+            get => _ventasCreditoTotal;
+            set => SetField(ref _ventasCreditoTotal, value);
+        }
+
+        public int TotalTransaccionesHoy
+        {
+            get => _totalTransaccionesHoy;
+            set => SetField(ref _totalTransaccionesHoy, value);
+        }
+
         public void CargarInventario()
         {
             var todos = _inventoryService.ObtenerTodos();
 
             Inventario.Clear();
+            ProductosBajoStockLista.Clear();
             foreach (var p in todos)
             {
                 Inventario.Add(p);
+                if (p.EsStockBajo)
+                {
+                    ProductosBajoStockLista.Add(p);
+                }
             }
+
+            var ventasHoy = _salesService.ObtenerVentasPorFecha(DateTime.Today, DateTime.Today);
+            VentasRecientes.Clear();
+            foreach (var v in ventasHoy.Take(10))
+            {
+                VentasRecientes.Add(v);
+            }
+
+            VentasDelDiaTotal = Math.Round(ventasHoy.Sum(v => v.Total), 2);
+            VentasEfectivoTotal = Math.Round(ventasHoy.Where(v => v.TipoVenta == "Efectivo").Sum(v => v.Total), 2);
+            VentasCreditoTotal = Math.Round(ventasHoy.Where(v => v.TipoVenta == "Credito").Sum(v => v.Total), 2);
+            TotalTransaccionesHoy = ventasHoy.Count;
 
             ActualizarKpis(todos);
         }
@@ -110,7 +166,7 @@ namespace software_ACEMAR.ViewModels
             }
         }
 
-        private void ActualizarKpis(System.Collections.Generic.List<Producto> productos)
+        private void ActualizarKpis(List<Producto> productos)
         {
             TotalProductos = productos.Count;
             TotalProductosBajoStock = productos.Count(p => p.EsStockBajo);
@@ -129,38 +185,8 @@ namespace software_ACEMAR.ViewModels
 
         private void EjecutarIngresoMercaderia()
         {
-            if (ProductoSeleccionado == null)
-            {
-                MessageBox.Show("Seleccione un producto del inventario para registrar el ingreso.", "Ingreso de Mercadería", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-
-            if (!decimal.TryParse(CantidadIngresoTexto.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal cantidad)
-                && !decimal.TryParse(CantidadIngresoTexto, out cantidad))
-            {
-                MessageBox.Show("Ingrese una cantidad numérica válida a ingresar.", "Formato Inválido", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            if (cantidad <= 0)
-            {
-                MessageBox.Show("La cantidad a ingresar debe ser mayor a cero.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            // Regla INV-02 (CuMax):
-            // Al ingresar nueva mercadería al almacén, si stock_actual + ingreso > CuMax, lanzar un MessageBox:
-            // "Límite físico de almacenamiento superado"
-            if (!_inventoryService.RegistrarIngresoMercaderia(ProductoSeleccionado.Id, cantidad, out string mensajeError))
-            {
-                MessageBox.Show(mensajeError, "Alerta de Capacidad de Almacén", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            MessageBox.Show($"Ingreso registrado con éxito.\nProducto: {ProductoSeleccionado.Nombre}\nCantidad ingresada: +{cantidad} {ProductoSeleccionado.UnidadMedida}", "Operación Exitosa", MessageBoxButton.OK, MessageBoxImage.Information);
-
-            CantidadIngresoTexto = string.Empty;
-            CargarInventario();
+            MessageBox.Show("Todo ingreso de stock debe realizarse registrando un nuevo lote en la pestaña 'Lotes & Vencimientos' para garantizar el control FIFO y contabilidad de costos.", "Ingreso por Lotes Requerido", MessageBoxButton.OK, MessageBoxImage.Information);
+            OnNavegarSolicitado?.Invoke("Lotes");
         }
     }
 }

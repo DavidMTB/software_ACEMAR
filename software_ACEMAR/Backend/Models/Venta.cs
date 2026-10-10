@@ -10,7 +10,7 @@ namespace software_ACEMAR.Models
     public static class TipoVentaConsts
     {
         public const string Efectivo = "Efectivo";
-        public const string Credito = "Credito";
+        public const string Credito  = "Credito";
     }
 
     /// <summary>
@@ -51,6 +51,19 @@ namespace software_ACEMAR.Models
 
         // Colección de renglones / productos vendidos
         public List<DetalleVenta> Detalles { get; set; } = new();
+
+        // ── Campos de auditoría de modificación ──────────────────────────
+
+        /// <summary>Indica si esta venta fue modificada después de procesarse.</summary>
+        public bool FueModificada { get; set; } = false;
+
+        /// <summary>Fecha en que se realizó la última modificación, si aplica.</summary>
+        public DateTime? FechaModificacion { get; set; }
+
+        /// <summary>Registros de auditoría de todos los cambios realizados a esta venta.</summary>
+        public List<VentaAuditoria> Auditorias { get; set; } = new();
+
+        // ─────────────────────────────────────────────────────────────────
 
         /// <summary>
         /// Recalcula el total de la venta sumando los subtotales redondeados de sus detalles.

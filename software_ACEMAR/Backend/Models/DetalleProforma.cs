@@ -12,6 +12,10 @@ namespace software_ACEMAR.Models
         public Producto? Producto { get; set; }
 
         public string ProductoNombre { get; set; } = string.Empty;
+
+        /// <summary>Unidad de medida seleccionada en esta línea de la proforma.</summary>
+        public string UnidadMedida { get; set; } = "Unidad";
+
         public decimal Cantidad { get; set; }
         public decimal PrecioUnitario { get; set; }
         public decimal Subtotal => Math.Round(Cantidad * PrecioUnitario, 2);

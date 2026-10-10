@@ -7,17 +7,15 @@
         xmlns:vm="clr-namespace:software_ACEMAR.ViewModels"
         xmlns:views="clr-namespace:software_ACEMAR.Views"
         mc:Ignorable="d"
-        Title="Ferretería ACEMAR - Sistema Integrado de Control y Punto de Venta" 
-        Height="720" Width="1240"
-        MinHeight="540" MinWidth="900"
+        Title="Ferretería ACEMAR - Sistema Integrado de Control, Inventario por Lotes y Punto de Venta" 
+        Height="740" Width="1280"
+        MinHeight="560" MinWidth="960"
         WindowStartupLocation="CenterScreen"
         Background="#F4F6F0"
         AutomationProperties.Name="Ventana Principal Ferretería ACEMAR"
-        AutomationProperties.HelpText="Sistema de gestión integral para punto de venta, inventario, créditos y arqueo de caja">
+        AutomationProperties.HelpText="Sistema de gestión integral para punto de venta, inventario FIFO por lotes, crédito, proveedores y auditoría de ventas">
 
-    <Window.DataContext>
-        <vm:MainViewModel />
-    </Window.DataContext>
+
 
     <Window.Resources>
         <!-- Converters para navegación y visibilidad -->
@@ -25,6 +23,41 @@
         <views:ActiveTabBorderConverter x:Key="ActiveBorderConv" />
         <views:ActiveTabForegroundConverter x:Key="ActiveFgConv" />
         <views:ActiveTabIconForegroundConverter x:Key="ActiveIconFgConv" />
+
+        <!-- DataTemplates implícitos para ViewModels -->
+        <DataTemplate DataType="{x:Type vm:DashboardGeneralViewModel}">
+            <views:DashboardGeneralView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PosViewModel}">
+            <views:PosView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+            <views:DashboardView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ProductCrudViewModel}">
+            <views:ProductCrudView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CreditsViewModel}">
+            <views:CreditsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ProformasViewModel}">
+            <views:ProformasView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CashRegisterViewModel}">
+            <views:CashRegisterView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LotesViewModel}">
+            <views:LotesView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ProveedoresViewModel}">
+            <views:ProveedoresView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:VentasCorreccionViewModel}">
+            <views:VentasCorreccionView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:UsuariosViewModel}">
+            <views:UsuariosView />
+        </DataTemplate>
     </Window.Resources>
 
     <Grid>
@@ -51,254 +84,189 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <!-- 1. BRANDING ACEMAR & ESTADO BD LOCAL -->
-                <Border Grid.Row="0" Background="#151C0C" Padding="16,20">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Border Background="#4A5D23" Width="40" Height="40" CornerRadius="10" 
-                                    BorderBrush="#8FA668" BorderThickness="1.5">
-                                <TextBlock Text="🛠️" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Border>
-                            <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="ACEMAR" FontSize="20" FontWeight="Black" Foreground="#FFFFFF" />
-                                <TextBlock Text="FERRETERÍA &amp; ALMACÉN" FontSize="10" FontWeight="Bold" Foreground="#BCE08A" Margin="0,1,0,0" />
-                            </StackPanel>
+                <!-- 1. BRANDING ACEMAR & ICONO VERDE BD CONECTADA -->
+                <Border Grid.Row="0" Background="#151C0C" Padding="16,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Background="#4A5D23" Width="38" Height="38" CornerRadius="10" 
+                                BorderBrush="#8FA668" BorderThickness="1.5">
+                            <TextBlock Text="🛠️" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+
+                        <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="ACEMAR" FontSize="19" FontWeight="Black" Foreground="#FFFFFF" />
+                            <TextBlock Text="FERRETERÍA &amp; ALMACÉN" FontSize="10" FontWeight="Bold" Foreground="#BCE08A" Margin="0,1,0,0" />
                         </StackPanel>
 
-                        <!-- Indicador Accesible de Base de Datos Local SQLite -->
-                        <Border Background="#0E1408" CornerRadius="8" Padding="10,6" Margin="0,14,0,0"
-                                BorderBrush="#2D3B16" BorderThickness="1"
-                                AutomationProperties.Name="Estado de la base de datos local SQLite activa"
-                                ToolTip="Base de datos SQLite local conectada y funcionando en modo fuera de línea.">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <Ellipse Width="8" Height="8" Fill="#4CAF50" VerticalAlignment="Center" Margin="0,0,6,0" />
-                                <TextBlock Text="BD Local SQLite: Conectada" FontSize="11" FontWeight="Bold" Foreground="#E2EAD8" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
+                        <!-- Indicador Punto Verde BD Local Activa -->
+                        <Ellipse Grid.Column="2" Width="10" Height="10" Fill="#4CAF50" VerticalAlignment="Center" Margin="6,0,0,0"
+                                 ToolTip="Base de Datos SQLite Local Activa &amp; Operativa" />
+                    </Grid>
                 </Border>
 
                 <Separator Grid.Row="1" Background="#354318" Height="1" Margin="0" />
 
-                <!-- 2. BOTONES DE NAVEGACIÓN MODULAR (MVVM CON ESTADO ACTIVO DINÁMICO) -->
-                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="10,12,10,0" Focusable="False">
+                <!-- 2. BOTONES DE NAVEGACIÓN MODULAR -->
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="8,8,8,0" Focusable="False">
                     <StackPanel>
-                        <TextBlock Text="MÓDULOS DEL MOSTRADOR" FontSize="10" FontWeight="ExtraBold" Foreground="#A9BF88" Margin="8,0,0,8" />
+                        <TextBlock Text="ESTADÍSTICAS Y PANEL GENERAL" FontSize="9" FontWeight="ExtraBold" Foreground="#A9BF88" Margin="8,0,0,6" />
+
+                        <!-- 0. Dashboard General -->
+                        <Button Command="{Binding NavegarDashboardGeneralCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,8" FontSize="12" FontWeight="Bold"
+                                Background="{Binding IsDashboardGeneralActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsDashboardGeneralActive, Converter={StaticResource ActiveFgConv}}"
+                                BorderBrush="{Binding IsDashboardGeneralActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Dashboard Analítico, Gráficos &amp; Accesos Directos">
+                            <Grid HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="📊" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{Binding IsDashboardGeneralActive, Converter={StaticResource ActiveIconFgConv}}" />
+                                <TextBlock Grid.Column="1" Text="Dashboard Analítico" VerticalAlignment="Center" FontWeight="Bold" Foreground="{Binding IsDashboardGeneralActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
+                                <Border Grid.Column="2" Width="4" Height="14" Background="#A4C868" CornerRadius="2" Visibility="{Binding IsDashboardGeneralActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
+                            </Grid>
+                        </Button>
+
+                        <TextBlock Text="OPERACIONES Y MOSTRADOR" FontSize="9" FontWeight="ExtraBold" Foreground="#A9BF88" Margin="8,4,0,6" />
 
                         <!-- 1. Punto de Venta (POS) -->
-                        <Button Command="{Binding NavegarPosCommand}" 
-                                HorizontalContentAlignment="Left" 
-                                Padding="10,10" 
-                                Margin="0,0,0,6" 
-                                FontSize="13" 
-                                FontWeight="Bold"
-                                Background="{Binding IsPosActive, Converter={StaticResource ActiveBgConv}}" 
-                                Foreground="{Binding IsPosActive, Converter={StaticResource ActiveFgConv}}"
-                                BorderBrush="{Binding IsPosActive, Converter={StaticResource ActiveBorderConv}}"
-                                BorderThickness="1.5"
-                                AutomationProperties.Name="Navegar al Punto de Venta POS"
-                                AutomationProperties.HelpText="Abre el módulo de ventas rápidas en mostrador, emisión de tickets y facturación"
-                                ToolTip="Punto de Venta (POS) - Emitir tickets, buscar productos y procesar cobros">
+                        <Button Command="{Binding NavegarPosCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
+                                Background="{Binding IsPosActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsPosActive, Converter={StaticResource ActiveFgConv}}"
+                                BorderBrush="{Binding IsPosActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Punto de Venta (POS) - Despacho Multimedida &amp; FIFO">
                             <Grid HorizontalAlignment="Stretch">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="🛒" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0" 
-                                           Foreground="{Binding IsPosActive, Converter={StaticResource ActiveIconFgConv}}" />
-                                <TextBlock Grid.Column="1" Text="Punto de Venta (POS)" VerticalAlignment="Center" FontWeight="Bold" 
-                                           Foreground="{Binding IsPosActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
-                                <!-- Indicador Activo Pill -->
-                                <Border Grid.Column="2" Width="5" Height="16" Background="#A4C868" CornerRadius="2.5" 
-                                        Visibility="{Binding IsPosActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="🛒" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{Binding IsPosActive, Converter={StaticResource ActiveIconFgConv}}" />
+                                <TextBlock Grid.Column="1" Text="Punto de Venta (POS)" VerticalAlignment="Center" FontWeight="Bold" Foreground="{Binding IsPosActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
+                                <Border Grid.Column="2" Width="4" Height="14" Background="#A4C868" CornerRadius="2" Visibility="{Binding IsPosActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
                             </Grid>
                         </Button>
 
                         <!-- 2. Inventario Inteligente (Dashboard) -->
-                        <Button Command="{Binding NavegarDashboardCommand}" 
-                                HorizontalContentAlignment="Left" 
-                                Padding="10,10" 
-                                Margin="0,0,0,6" 
-                                FontSize="13" 
-                                FontWeight="Bold"
-                                Background="{Binding IsDashboardActive, Converter={StaticResource ActiveBgConv}}" 
-                                Foreground="{Binding IsDashboardActive, Converter={StaticResource ActiveFgConv}}"
-                                BorderBrush="{Binding IsDashboardActive, Converter={StaticResource ActiveBorderConv}}"
-                                BorderThickness="1.5"
-                                AutomationProperties.Name="Navegar a Inventario y Almacén"
-                                AutomationProperties.HelpText="Muestra el stock actual, alertas de stock mínimo y límite de almacenamiento CuMax"
-                                ToolTip="Inventario Inteligente - Consulta de stock, reposición y alertas de capacidad CuMax">
+                        <Button Command="{Binding NavegarDashboardCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
+                                Background="{Binding IsDashboardActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsDashboardActive, Converter={StaticResource ActiveFgConv}}"
+                                BorderBrush="{Binding IsDashboardActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Inventario &amp; CuMax Almacén">
                             <Grid HorizontalAlignment="Stretch">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="📊" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0" 
-                                           Foreground="{Binding IsDashboardActive, Converter={StaticResource ActiveIconFgConv}}" />
-                                <TextBlock Grid.Column="1" Text="Inventario &amp; Almacén" VerticalAlignment="Center" FontWeight="Bold" 
-                                           Foreground="{Binding IsDashboardActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
-                                <Border Grid.Column="2" Width="5" Height="16" Background="#A4C868" CornerRadius="2.5" 
-                                        Visibility="{Binding IsDashboardActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="📦" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{Binding IsDashboardActive, Converter={StaticResource ActiveIconFgConv}}" />
+                                <TextBlock Grid.Column="1" Text="Inventario &amp; Almacén" VerticalAlignment="Center" FontWeight="Bold" Foreground="{Binding IsDashboardActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
+                                <Border Grid.Column="2" Width="4" Height="14" Background="#A4C868" CornerRadius="2" Visibility="{Binding IsDashboardActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
                             </Grid>
                         </Button>
 
-                        <!-- 3. Catálogo y Precios (CRUD) -->
-                        <Button Command="{Binding NavegarProductCrudCommand}" 
-                                HorizontalContentAlignment="Left" 
-                                Padding="10,10" 
-                                Margin="0,0,0,6" 
-                                FontSize="13" 
-                                FontWeight="Bold"
-                                Background="{Binding IsProductCrudActive, Converter={StaticResource ActiveBgConv}}" 
-                                Foreground="{Binding IsProductCrudActive, Converter={StaticResource ActiveFgConv}}"
-                                BorderBrush="{Binding IsProductCrudActive, Converter={StaticResource ActiveBorderConv}}"
-                                BorderThickness="1.5"
-                                AutomationProperties.Name="Navegar al Catálogo de Productos y Precios Masivos"
-                                AutomationProperties.HelpText="Permite crear, modificar y ajustar precios masivos por porcentaje"
-                                ToolTip="Catálogo &amp; Precios - Alta de productos, modificación y actualización masiva de precios">
+                        <!-- 3. Lotes & FIFO -->
+                        <Button Command="{Binding NavegarLotesCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
+                                Background="{Binding IsLotesActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsLotesActive, Converter={StaticResource ActiveFgConv}}"
+                                BorderBrush="{Binding IsLotesActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Gestión de Lotes y Vencimientos FIFO">
                             <Grid HorizontalAlignment="Stretch">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="🏷️" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0" 
-                                           Foreground="{Binding IsProductCrudActive, Converter={StaticResource ActiveIconFgConv}}" />
-                                <TextBlock Grid.Column="1" Text="Catálogo &amp; Precios" VerticalAlignment="Center" FontWeight="Bold" 
-                                           Foreground="{Binding IsProductCrudActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
-                                <Border Grid.Column="2" Width="5" Height="16" Background="#A4C868" CornerRadius="2.5" 
-                                        Visibility="{Binding IsProductCrudActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="📦" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{Binding IsLotesActive, Converter={StaticResource ActiveIconFgConv}}" />
+                                <TextBlock Grid.Column="1" Text="Lotes &amp; Vencimientos" VerticalAlignment="Center" FontWeight="Bold" Foreground="{Binding IsLotesActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
+                                <Border Grid.Column="2" Width="4" Height="14" Background="#A4C868" CornerRadius="2" Visibility="{Binding IsLotesActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
                             </Grid>
                         </Button>
 
-                        <!-- 4. Créditos y Fiados -->
-                        <Button Command="{Binding NavegarCreditsCommand}" 
-                                HorizontalContentAlignment="Left" 
-                                Padding="10,10" 
-                                Margin="0,0,0,6" 
-                                FontSize="13" 
-                                FontWeight="Bold"
-                                Background="{Binding IsCreditsActive, Converter={StaticResource ActiveBgConv}}" 
-                                Foreground="{Binding IsCreditsActive, Converter={StaticResource ActiveFgConv}}"
-                                BorderBrush="{Binding IsCreditsActive, Converter={StaticResource ActiveBorderConv}}"
-                                BorderThickness="1.5"
-                                AutomationProperties.Name="Navegar a Gestión de Créditos y Fiados"
-                                AutomationProperties.HelpText="Módulo restringido para consulta de deudas, abonos a cuenta y registro de fiados"
-                                ToolTip="Créditos y Fiados - Registro de abonos, cuentas por cobrar y límites de crédito (Requiere Gerente)">
+                        <!-- 4. Catálogo y Precios (CRUD) -->
+                        <Button Command="{Binding NavegarProductCrudCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
+                                Background="{Binding IsProductCrudActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsProductCrudActive, Converter={StaticResource ActiveFgConv}}"
+                                BorderBrush="{Binding IsProductCrudActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Catálogo de Productos y Precios Masivos">
                             <Grid HorizontalAlignment="Stretch">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="💳" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0" 
-                                           Foreground="{Binding IsCreditsActive, Converter={StaticResource ActiveIconFgConv}}" />
-                                <TextBlock Grid.Column="1" Text="Créditos &amp; Fiados" VerticalAlignment="Center" FontWeight="Bold" 
-                                           Foreground="{Binding IsCreditsActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
-                                <Border Grid.Column="2" Width="5" Height="16" Background="#A4C868" CornerRadius="2.5" 
-                                        Visibility="{Binding IsCreditsActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="🏷️" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{Binding IsProductCrudActive, Converter={StaticResource ActiveIconFgConv}}" />
+                                <TextBlock Grid.Column="1" Text="Catálogo &amp; Precios" VerticalAlignment="Center" FontWeight="Bold" Foreground="{Binding IsProductCrudActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
+                                <Border Grid.Column="2" Width="4" Height="14" Background="#A4C868" CornerRadius="2" Visibility="{Binding IsProductCrudActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
                             </Grid>
                         </Button>
 
-                        <!-- 5. Proformas / Cotizaciones -->
-                        <Button Command="{Binding NavegarProformasCommand}" 
-                                HorizontalContentAlignment="Left" 
-                                Padding="10,10" 
-                                Margin="0,0,0,6" 
-                                FontSize="13" 
-                                FontWeight="Bold"
-                                Background="{Binding IsProformasActive, Converter={StaticResource ActiveBgConv}}" 
-                                Foreground="{Binding IsProformasActive, Converter={StaticResource ActiveFgConv}}"
-                                BorderBrush="{Binding IsProformasActive, Converter={StaticResource ActiveBorderConv}}"
-                                BorderThickness="1.5"
-                                AutomationProperties.Name="Navegar a Proformas y Cotizaciones"
-                                AutomationProperties.HelpText="Emisión de cotizaciones a clientes y conversión posterior a venta POS"
-                                ToolTip="Proformas / Cotizaciones - Crear presupuestos e importarlos directamente al Punto de Venta">
+                        <!-- 5. Proveedores -->
+                        <Button Command="{Binding NavegarProveedoresCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
+                                Background="{Binding IsProveedoresActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsProveedoresActive, Converter={StaticResource ActiveFgConv}}"
+                                BorderBrush="{Binding IsProveedoresActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Directorio y Tiempos de Reposición de Proveedores">
                             <Grid HorizontalAlignment="Stretch">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="📋" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0" 
-                                           Foreground="{Binding IsProformasActive, Converter={StaticResource ActiveIconFgConv}}" />
-                                <TextBlock Grid.Column="1" Text="Proformas / Cotizaciones" VerticalAlignment="Center" FontWeight="Bold" 
-                                           Foreground="{Binding IsProformasActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
-                                <Border Grid.Column="2" Width="5" Height="16" Background="#A4C868" CornerRadius="2.5" 
-                                        Visibility="{Binding IsProformasActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="🏭" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{Binding IsProveedoresActive, Converter={StaticResource ActiveIconFgConv}}" />
+                                <TextBlock Grid.Column="1" Text="Proveedores" VerticalAlignment="Center" FontWeight="Bold" Foreground="{Binding IsProveedoresActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
+                                <Border Grid.Column="2" Width="4" Height="14" Background="#A4C868" CornerRadius="2" Visibility="{Binding IsProveedoresActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
                             </Grid>
                         </Button>
 
-                        <!-- 6. Arqueo de Caja Diario -->
-                        <Button Command="{Binding NavegarCashRegisterCommand}" 
-                                HorizontalContentAlignment="Left" 
-                                Padding="10,10" 
-                                Margin="0,0,0,6" 
-                                FontSize="13" 
-                                FontWeight="Bold"
-                                Background="{Binding IsCashRegisterActive, Converter={StaticResource ActiveBgConv}}" 
-                                Foreground="{Binding IsCashRegisterActive, Converter={StaticResource ActiveFgConv}}"
-                                BorderBrush="{Binding IsCashRegisterActive, Converter={StaticResource ActiveBorderConv}}"
-                                BorderThickness="1.5"
-                                AutomationProperties.Name="Navegar a Arqueo de Caja Diario"
-                                AutomationProperties.HelpText="Cierre diario de caja, balance de efectivo y desglose de movimientos del turno"
-                                ToolTip="Arqueo de Caja Diario - Cuadre de caja, ventas en efectivo vs fiado y reporte de turno">
+                        <TextBlock Text="FINANZAS Y CONTROL AUDITADO" FontSize="9" FontWeight="ExtraBold" Foreground="#A9BF88" Margin="8,8,0,6" />
+
+                        <!-- 6. Créditos y Fiados -->
+                        <Button Command="{Binding NavegarCreditsCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
+                                Background="{Binding IsCreditsActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsCreditsActive, Converter={StaticResource ActiveFgConv}}"
+                                BorderBrush="{Binding IsCreditsActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Gestión de Créditos y Cuentas por Cobrar">
                             <Grid HorizontalAlignment="Stretch">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="💵" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0" 
-                                           Foreground="{Binding IsCashRegisterActive, Converter={StaticResource ActiveIconFgConv}}" />
-                                <TextBlock Grid.Column="1" Text="Arqueo de Caja Diario" VerticalAlignment="Center" FontWeight="Bold" 
-                                           Foreground="{Binding IsCashRegisterActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
-                                <Border Grid.Column="2" Width="5" Height="16" Background="#A4C868" CornerRadius="2.5" 
-                                        Visibility="{Binding IsCashRegisterActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="💳" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{Binding IsCreditsActive, Converter={StaticResource ActiveIconFgConv}}" />
+                                <TextBlock Grid.Column="1" Text="Créditos &amp; Fiados" VerticalAlignment="Center" FontWeight="Bold" Foreground="{Binding IsCreditsActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
+                                <Border Grid.Column="2" Width="4" Height="14" Background="#A4C868" CornerRadius="2" Visibility="{Binding IsCreditsActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
+                            </Grid>
+                        </Button>
+
+                        <!-- 7. Proformas -->
+                        <Button Command="{Binding NavegarProformasCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
+                                Background="{Binding IsProformasActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsProformasActive, Converter={StaticResource ActiveFgConv}}"
+                                BorderBrush="{Binding IsProformasActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Proformas y Cotizaciones Comerciales">
+                            <Grid HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="📋" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{Binding IsProformasActive, Converter={StaticResource ActiveIconFgConv}}" />
+                                <TextBlock Grid.Column="1" Text="Proformas" VerticalAlignment="Center" FontWeight="Bold" Foreground="{Binding IsProformasActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
+                                <Border Grid.Column="2" Width="4" Height="14" Background="#A4C868" CornerRadius="2" Visibility="{Binding IsProformasActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
+                            </Grid>
+                        </Button>
+
+                        <!-- 8. Arqueo de Caja -->
+                        <Button Command="{Binding NavegarCashRegisterCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
+                                Background="{Binding IsCashRegisterActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsCashRegisterActive, Converter={StaticResource ActiveFgConv}}"
+                                BorderBrush="{Binding IsCashRegisterActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Arqueo y Cierre Diario de Caja">
+                            <Grid HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="💵" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{Binding IsCashRegisterActive, Converter={StaticResource ActiveIconFgConv}}" />
+                                <TextBlock Grid.Column="1" Text="Arqueo de Caja" VerticalAlignment="Center" FontWeight="Bold" Foreground="{Binding IsCashRegisterActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
+                                <Border Grid.Column="2" Width="4" Height="14" Background="#A4C868" CornerRadius="2" Visibility="{Binding IsCashRegisterActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
+                            </Grid>
+                        </Button>
+
+                        <!-- 9. Corrección / Auditoría de Ventas -->
+                        <Button Command="{Binding NavegarVentasCorreccionCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
+                                Background="{Binding IsVentasCorreccionActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsVentasCorreccionActive, Converter={StaticResource ActiveFgConv}}"
+                                BorderBrush="{Binding IsVentasCorreccionActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Auditoría y Corrección de Ventas Emitidas">
+                            <Grid HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="🛡️" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{Binding IsVentasCorreccionActive, Converter={StaticResource ActiveIconFgConv}}" />
+                                <TextBlock Grid.Column="1" Text="Auditoría de Ventas" VerticalAlignment="Center" FontWeight="Bold" Foreground="{Binding IsVentasCorreccionActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
+                                <Border Grid.Column="2" Width="4" Height="14" Background="#A4C868" CornerRadius="2" Visibility="{Binding IsVentasCorreccionActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
+                            </Grid>
+                        </Button>
+
+                        <TextBlock Text="CONFIGURACIÓN Y SEGURIDAD" FontSize="9" FontWeight="ExtraBold" Foreground="#A9BF88" Margin="8,8,0,6" />
+
+                        <!-- 10. Gestión de Usuarios y Vendedores (Panel Admin) -->
+                        <Button Command="{Binding NavegarUsuariosCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
+                                Background="{Binding IsUsuariosActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsUsuariosActive, Converter={StaticResource ActiveFgConv}}"
+                                BorderBrush="{Binding IsUsuariosActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Gestión de Usuarios, Permisos y Vendedores (Exclusivo Administrador)">
+                            <Grid HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="👥" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{Binding IsUsuariosActive, Converter={StaticResource ActiveIconFgConv}}" />
+                                <TextBlock Grid.Column="1" Text="Gestión de Usuarios" VerticalAlignment="Center" FontWeight="Bold" Foreground="{Binding IsUsuariosActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
+                                <Border Grid.Column="2" Width="4" Height="14" Background="#A4C868" CornerRadius="2" Visibility="{Binding IsUsuariosActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
                             </Grid>
                         </Button>
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- 3. PANEL DE AUTORIZACIÓN GERENCIAL Y CAMBIO DE ROL -->
-                <Border Grid.Row="3" Background="#151C0C" Padding="12,10" Margin="10,0,10,10" CornerRadius="10"
-                        BorderBrush="#354318" BorderThickness="1"
-                        AutomationProperties.Name="Panel de usuario y control de rol de seguridad">
-                    <StackPanel>
-                        <TextBlock Text="AUTORIZACIÓN &amp; SEGURIDAD" FontSize="9" FontWeight="ExtraBold" Foreground="#A9BF88" Margin="0,0,0,6" />
-                        
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                            <Border Background="#2E3B15" Width="32" Height="32" CornerRadius="16" VerticalAlignment="Center" BorderBrush="#8FA668" BorderThickness="1">
-                                <TextBlock Text="👤" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Border>
-                            <StackPanel Margin="8,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding NombreUsuarioActual}" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF" 
-                                           TextTrimming="CharacterEllipsis" MaxWidth="165" />
-                                <TextBlock Text="{Binding RolActual, StringFormat={}Rol Activo: {0}}" FontSize="10" Foreground="#D4DFCA" FontWeight="SemiBold" />
-                            </StackPanel>
+                <!-- 3. PERFIL DE USUARIO Y ESTADO DE SESIÓN -->
+                <Border Grid.Row="3" Background="#151C0C" Padding="12,10" Margin="8,0,8,8" CornerRadius="8"
+                        BorderBrush="#2D3B16" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Background="#2E3B15" Width="30" Height="30" CornerRadius="15" VerticalAlignment="Center" BorderBrush="#8FA668" BorderThickness="1">
+                            <TextBlock Text="👤" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding NombreUsuarioActual}" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis" MaxWidth="170" />
+                            <TextBlock Text="Sesión Activa • Operador" FontSize="9" Foreground="#98AF7A" FontWeight="SemiBold" />
                         </StackPanel>
-
-                        <!-- Botón accesibles para autenticarse como Gerente o cambiar de rol -->
-                        <Button Command="{Binding AlternarModoAdminCommand}" 
-                                Padding="8,6" 
-                                FontSize="11" 
-                                FontWeight="Bold" 
-                                Background="#4A5D23" 
-                                Foreground="#FFFFFF" 
-                                BorderThickness="1" 
-                                BorderBrush="#A4C868" 
-                                AutomationProperties.Name="Boton para cambiar rol o autenticar acceso de Gerente"
-                                AutomationProperties.HelpText="Abre ventana para ingresar clave de Gerente ('acemar') o cerrar sesión de Administrador"
-                                ToolTip="Presione para autenticarse como Gerente (Clave: acemar) o volver al modo Vendedor">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <TextBlock Text="🔐 " FontSize="12" VerticalAlignment="Center" Foreground="#FFFFFF" />
-                                <TextBlock Text="Acceso / Cambio de Rol" VerticalAlignment="Center" Foreground="#FFFFFF" FontWeight="Bold" />
-                            </StackPanel>
-                        </Button>
-
-                        <TextBlock Text="Clave Administrador: 'acemar'" FontSize="9" Foreground="#A9BF88" Margin="0,4,0,0" TextAlignment="Center" FontWeight="SemiBold" />
                     </StackPanel>
                 </Border>
             </Grid>
@@ -310,7 +278,7 @@
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
                 <!-- Barra Superior con Título y Estado -->
-                <RowDefinition Height="60" />
+                <RowDefinition Height="55" />
                 <!-- ContentControl con Vista Activa en Card Container Adaptable -->
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
@@ -325,29 +293,58 @@
 
                     <!-- Título dinámico de la Vista Actual -->
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding TituloVistaActual}" FontSize="20" FontWeight="Black" Foreground="#1E2514" 
-                                   TextTrimming="CharacterEllipsis"
-                                   AutomationProperties.Name="{Binding TituloVistaActual, StringFormat={}Módulo actual: {0}}" />
+                        <TextBlock Text="{Binding TituloVistaActual}" FontSize="18" FontWeight="Black" Foreground="#1E2514" TextTrimming="CharacterEllipsis" />
                     </StackPanel>
 
-                    <!-- Badge de Rol Activo y Estación de Trabajo -->
+                    <!-- Botón Interactivo de Cambio de Rol y Estación de Trabajo -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Badge de Rol Activo con Alto Contraste -->
-                        <Border CornerRadius="14" Padding="12,6" Margin="0,0,10,0"
-                                Background="#EAF0E1" BorderBrush="#B5C6A0" BorderThickness="1"
-                                AutomationProperties.Name="{Binding RolActual, StringFormat={}Rol actual en la estación: {0}}"
-                                ToolTip="Rol asignado al usuario activo en este turno">
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="Rol: " FontSize="12" Foreground="#445037" FontWeight="Medium" />
-                                <TextBlock Text="{Binding RolActual}" FontWeight="ExtraBold" FontSize="12" Foreground="#2A3814" />
-                            </StackPanel>
-                        </Border>
+                        <Button Command="{Binding AlternarModoAdminCommand}"
+                                Padding="12,6" Margin="0,0,10,0"
+                                Cursor="Hand" ToolTip="Haga clic aquí para Cambiar de Rol (Administrador / Vendedor)">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="#EAF0E1" />
+                                    <Setter Property="BorderBrush" Value="#B5C6A0" />
+                                    <Setter Property="BorderThickness" Value="1" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" 
+                                                        BorderBrush="{TemplateBinding BorderBrush}" 
+                                                        BorderThickness="{TemplateBinding BorderThickness}" 
+                                                        CornerRadius="14" Padding="{TemplateBinding Padding}">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <TextBlock Text="🔑 Rol: " FontSize="11" Foreground="#354318" FontWeight="Medium" />
+                                                        <TextBlock Text="{Binding RolActual}" FontWeight="ExtraBold" FontSize="11" Foreground="#1E2514" />
+                                                        <TextBlock Text=" ⚙️" FontSize="10" VerticalAlignment="Center" Margin="4,0,0,0" Foreground="#4A5D23" />
+                                                    </StackPanel>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#DCE8CF" />
+                                                        <Setter Property="BorderBrush" Value="#4A5D23" />
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
 
-                        <!-- Badge de Terminal de Mostrador -->
-                        <Border Background="#F4F6F0" CornerRadius="8" Padding="10,6" BorderBrush="#DCDEC8" BorderThickness="1"
-                                ToolTip="Identificador de la estación de trabajo y caja registradora local">
+                        <!-- Botón Cerrar Sesión -->
+                        <Button Command="{Binding CerrarSesionCommand}"
+                                Padding="10,6" Margin="0,0,10,0"
+                                Background="#FFEBEE" Foreground="#C62828" BorderBrush="#FFCDD2" BorderThickness="1"
+                                Cursor="Hand" ToolTip="Cerrar sesión activa y volver a la pantalla de inicio de sesión">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="🖥️ Mostrador 01" FontSize="12" FontWeight="Bold" Foreground="#4A5D23" />
+                                <TextBlock Text="🚪 Cerrar Sesión" FontSize="11" FontWeight="Bold" />
+                            </StackPanel>
+                        </Button>
+
+                        <Border Background="#F4F6F0" CornerRadius="8" Padding="8,5" BorderBrush="#DCDEC8" BorderThickness="1">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding MostradorActual, StringFormat={}🖥️ {0}}" FontSize="11" FontWeight="Bold" Foreground="#4A5D23" ToolTip="Mostrador / Estación asignada al usuario actual" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -357,14 +354,13 @@
             <!-- ============================================================== -->
             <!-- CARD CONTAINER RESPONSIVO PARA VISTAS (BOUNDED DESKTOP VIEW)   -->
             <!-- ============================================================== -->
-            <Grid Grid.Row="1" Margin="12">
+            <Grid Grid.Row="1" Margin="10">
                 <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#DCDEC8" BorderThickness="1" SnapsToDevicePixels="True">
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="10" ShadowDepth="2" Direction="270" Color="#1E2514" Opacity="0.05" />
                     </Border.Effect>
 
-                    <ContentControl Content="{Binding CurrentViewModel}" Background="Transparent" Focusable="True"
-                                    AutomationProperties.Name="Contenido principal del módulo seleccionado" />
+                    <ContentControl Content="{Binding CurrentViewModel}" Background="Transparent" Focusable="True" />
                 </Border>
             </Grid>
         </Grid>

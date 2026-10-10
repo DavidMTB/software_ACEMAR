@@ -15,6 +15,7 @@ namespace software_ACEMAR.ViewModels
         private readonly IAuthService _authService;
         private readonly ICreditService _creditService;
         private readonly IProformaService _proformaService;
+        private readonly IPdfService _pdfService;
 
         private string _textoBusqueda = string.Empty;
         private Producto? _productoSeleccionado;
@@ -22,6 +23,8 @@ namespace software_ACEMAR.ViewModels
         private decimal _totalVenta;
         private decimal _subtotalVenta;
         private decimal _igvVenta;
+
+        private string _unidadMedidaSeleccionada = "Unidad";
 
         // Venta Efectivo vs Crédito
         private string _tipoVentaSeleccionado = "Efectivo"; // "Efectivo" o "Credito"
@@ -31,6 +34,7 @@ namespace software_ACEMAR.ViewModels
         public ObservableCollection<Producto> ProductosFiltrados { get; } = new();
         public ObservableCollection<DetalleVenta> TicketActual { get; } = new();
         public ObservableCollection<ClienteCredito> ClientesCredito { get; } = new();
+        public ObservableCollection<string> UnidadesDisponiblesProducto { get; } = new();
 
         public ICommand BuscarCommand { get; }
         public ICommand LimpiarBusquedaCommand { get; }
@@ -45,13 +49,15 @@ namespace software_ACEMAR.ViewModels
             ISalesService salesService, 
             IAuthService authService,
             ICreditService creditService,
-            IProformaService proformaService)
+            IProformaService proformaService,
+            IPdfService pdfService)
         {
             _inventoryService = inventoryService;
             _salesService = salesService;
             _authService = authService;
             _creditService = creditService;
             _proformaService = proformaService;
+            _pdfService = pdfService;
 
             BuscarCommand = new RelayCommand(EjecutarBusqueda);
             LimpiarBusquedaCommand = new RelayCommand(LimpiarBusqueda);
@@ -77,6 +83,8 @@ namespace software_ACEMAR.ViewModels
             }
         }
 
+        private decimal _precioUnitarioSeleccionado;
+
         public Producto? ProductoSeleccionado
         {
             get => _productoSeleccionado;
@@ -84,12 +92,32 @@ namespace software_ACEMAR.ViewModels
             {
                 if (SetField(ref _productoSeleccionado, value))
                 {
+                    ActualizarUnidadesDisponibles(value);
+                    ActualizarPrecioUnitarioSeleccionado();
                     if (value != null && (string.IsNullOrWhiteSpace(CantidadTexto) || CantidadTexto == "0"))
                     {
                         CantidadTexto = "1";
                     }
                 }
             }
+        }
+
+        public string UnidadMedidaSeleccionada
+        {
+            get => _unidadMedidaSeleccionada;
+            set
+            {
+                if (SetField(ref _unidadMedidaSeleccionada, value))
+                {
+                    ActualizarPrecioUnitarioSeleccionado();
+                }
+            }
+        }
+
+        public decimal PrecioUnitarioSeleccionado
+        {
+            get => _precioUnitarioSeleccionado;
+            set => SetField(ref _precioUnitarioSeleccionado, value);
         }
 
         public string CantidadTexto
@@ -182,6 +210,59 @@ namespace software_ACEMAR.ViewModels
             EjecutarBusqueda();
         }
 
+        private void ActualizarUnidadesDisponibles(Producto? prod)
+        {
+            UnidadesDisponiblesProducto.Clear();
+            if (prod == null) return;
+
+            var unidades = prod.ObtenerUnidadesDisponibles();
+            foreach (var u in unidades)
+            {
+                if (!UnidadesDisponiblesProducto.Contains(u, StringComparer.OrdinalIgnoreCase))
+                {
+                    UnidadesDisponiblesProducto.Add(u);
+                }
+            }
+
+            var dictPrecios = prod.ObtenerPreciosPorUnidad();
+            foreach (var k in dictPrecios.Keys)
+            {
+                if (!UnidadesDisponiblesProducto.Contains(k, StringComparer.OrdinalIgnoreCase))
+                {
+                    UnidadesDisponiblesProducto.Add(k);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(prod.UnidadMedida) && !UnidadesDisponiblesProducto.Contains(prod.UnidadMedida, StringComparer.OrdinalIgnoreCase))
+            {
+                UnidadesDisponiblesProducto.Insert(0, prod.UnidadMedida);
+            }
+
+            UnidadMedidaSeleccionada = UnidadesDisponiblesProducto.FirstOrDefault() ?? (string.IsNullOrWhiteSpace(prod.UnidadMedida) ? "Unidad" : prod.UnidadMedida);
+        }
+
+        private void ActualizarPrecioUnitarioSeleccionado()
+        {
+            if (ProductoSeleccionado != null)
+            {
+                string unidad = string.IsNullOrWhiteSpace(UnidadMedidaSeleccionada) ? ProductoSeleccionado.UnidadMedida : UnidadMedidaSeleccionada;
+                decimal precioFifo = _salesService.ObtenerPrecioVigente(ProductoSeleccionado.Id);
+                
+                if (precioFifo > 0 && string.Equals(unidad, ProductoSeleccionado.UnidadMedida, StringComparison.OrdinalIgnoreCase))
+                {
+                    PrecioUnitarioSeleccionado = precioFifo;
+                }
+                else
+                {
+                    PrecioUnitarioSeleccionado = ProductoSeleccionado.ObtenerPrecioParaUnidad(unidad);
+                }
+            }
+            else
+            {
+                PrecioUnitarioSeleccionado = 0m;
+            }
+        }
+
         private void EjecutarAgregarAlTicket()
         {
             if (ProductoSeleccionado == null)
@@ -204,19 +285,56 @@ namespace software_ACEMAR.ViewModels
                 return;
             }
 
-            var itemExistente = TicketActual.FirstOrDefault(t => t.ProductoId == ProductoSeleccionado.Id);
-            decimal cantidadTotalSolicitada = cantidad + (itemExistente?.Cantidad ?? 0m);
+            string unidad = string.IsNullOrWhiteSpace(UnidadMedidaSeleccionada) ? ProductoSeleccionado.UnidadMedida : UnidadMedidaSeleccionada;
+            decimal factor = ProductoSeleccionado.ObtenerFactorParaUnidad(unidad);
 
-            // Regla INV-01 (Bloqueo de Venta)
-            if (cantidadTotalSolicitada > ProductoSeleccionado.StockActual)
+            var itemExistente = TicketActual.FirstOrDefault(t => t.ProductoId == ProductoSeleccionado.Id);
+
+            decimal cantBaseExistente = 0m;
+            foreach (var itemTicket in TicketActual.Where(t => t.ProductoId == ProductoSeleccionado.Id))
             {
-                MessageBox.Show("Stock insuficiente", "Validación de Inventario", MessageBoxButton.OK, MessageBoxImage.Warning);
+                decimal itemFactor = ProductoSeleccionado.ObtenerFactorParaUnidad(itemTicket.UnidadMedida);
+                cantBaseExistente += (itemTicket.Cantidad * itemFactor);
+            }
+
+            decimal cantBaseNueva = cantidad * factor;
+            decimal cantBaseTotalSolicitada = cantBaseExistente + cantBaseNueva;
+
+            // Regla INV-01 (Bloqueo de Venta por Stock Insuficiente)
+            if (cantBaseTotalSolicitada > ProductoSeleccionado.StockActual)
+            {
+                MessageBox.Show($"Stock insuficiente. El producto '{ProductoSeleccionado.Nombre}' cuenta con {ProductoSeleccionado.StockActual:0.##} {ProductoSeleccionado.UnidadMedida} en stock (se requieren {cantBaseTotalSolicitada:0.##} {ProductoSeleccionado.UnidadMedida} para {cantidad:0.##} {unidad}).", "Validación de Inventario", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
+            // Control de Regla de Stock Mínimo / Punto de Reorden
+            decimal stockRestante = ProductoSeleccionado.StockActual - cantBaseTotalSolicitada;
+            if (ProductoSeleccionado.StockMinimo > 0 && stockRestante < ProductoSeleccionado.StockMinimo)
+            {
+                var confirmacion = MessageBox.Show(
+                    $"⚠️ ALERTA DE CONTROL DE STOCK MÍNIMO:\n\n" +
+                    $"El producto '{ProductoSeleccionado.Nombre}' tiene un Stock Mínimo de seguridad configurado en {ProductoSeleccionado.StockMinimo:0.##} {ProductoSeleccionado.UnidadMedida}.\n\n" +
+                    $"• Stock Actual: {ProductoSeleccionado.StockActual:0.##} {ProductoSeleccionado.UnidadMedida}\n" +
+                    $"• Requerido en Stock Base: {cantBaseTotalSolicitada:0.##} {ProductoSeleccionado.UnidadMedida} ({cantidad:0.##} {unidad})\n" +
+                    $"• Stock Restante: {stockRestante:0.##} {ProductoSeleccionado.UnidadMedida}\n\n" +
+                    $"La venta dejará el stock por debajo del límite de seguridad de almacén. ¿Desea autorizar y agregar al ticket de todos modos?",
+                    "Control de Stock Mínimo - ACEMAR",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (confirmacion != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+            }
+
+            decimal precioUnitarioFinal = ProductoSeleccionado.ObtenerPrecioParaUnidad(unidad);
 
             if (itemExistente != null)
             {
                 itemExistente.Cantidad += cantidad;
+                itemExistente.UnidadMedida = unidad;
+                itemExistente.PrecioUnitario = precioUnitarioFinal;
                 int index = TicketActual.IndexOf(itemExistente);
                 TicketActual.RemoveAt(index);
                 TicketActual.Insert(index, itemExistente);
@@ -229,7 +347,8 @@ namespace software_ACEMAR.ViewModels
                     Producto = ProductoSeleccionado,
                     ProductoNombre = ProductoSeleccionado.Nombre,
                     Cantidad = cantidad,
-                    PrecioUnitario = ProductoSeleccionado.PrecioUnitario
+                    PrecioUnitario = precioUnitarioFinal,
+                    UnidadMedida = unidad
                 };
                 TicketActual.Add(nuevoDetalle);
             }
@@ -276,6 +395,41 @@ namespace software_ACEMAR.ViewModels
                 return;
             }
 
+            // Validar stock disponible y alerta de stock mínimo para todos los ítems antes de procesar
+            foreach (var item in TicketActual)
+            {
+                var prod = _inventoryService.ObtenerPorId(item.ProductoId);
+                if (prod != null)
+                {
+                    decimal factorItem = prod.ObtenerFactorParaUnidad(item.UnidadMedida);
+                    decimal cantBaseRequerida = item.Cantidad * factorItem;
+
+                    if (cantBaseRequerida > prod.StockActual)
+                    {
+                        MessageBox.Show($"Stock insuficiente para '{prod.Nombre}'. Disponible: {prod.StockActual:0.##} {prod.UnidadMedida} (se requieren {cantBaseRequerida:0.##} {prod.UnidadMedida} para {item.Cantidad:0.##} {item.UnidadMedida}).", "Error al Procesar Venta", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    decimal restante = prod.StockActual - cantBaseRequerida;
+                    if (prod.StockMinimo > 0 && restante < prod.StockMinimo)
+                    {
+                        var resMin = MessageBox.Show(
+                            $"⚠️ CONTROL DE STOCK MÍNIMO DE ALMACÉN:\n\n" +
+                            $"El producto '{prod.Nombre}' tiene un Stock Mínimo de {prod.StockMinimo:0.##} {prod.UnidadMedida}.\n" +
+                            $"Al completar esta venta quedará en {restante:0.##} {prod.UnidadMedida}.\n\n" +
+                            $"¿Desea autorizar el despacho y completar la venta?",
+                            "Control de Stock Mínimo - ACEMAR",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Warning);
+
+                        if (resMin != MessageBoxResult.Yes)
+                        {
+                            return;
+                        }
+                    }
+                }
+            }
+
             // Si es venta a crédito, validar cliente y su límite disponible
             if (EsVentaCredito)
             {
@@ -300,7 +454,15 @@ namespace software_ACEMAR.ViewModels
                 }
             }
 
-            string tipoTexto = EsVentaCredito ? $"A CRÉDITO (Fiado para {ClienteCreditoSeleccionado?.Nombre})" : "AL CONTADO / EFECTIVO";
+            string tipoTexto = TipoVentaSeleccionado switch
+            {
+                "Credito" => $"A CRÉDITO (Fiado para {ClienteCreditoSeleccionado?.Nombre})",
+                "Digital" => "AL CONTADO (Yape / Plin / Transferencia)",
+                "Yape" => "AL CONTADO (Yape)",
+                "Plin" => "AL CONTADO (Plin)",
+                "Transferencia" => "AL CONTADO (Transferencia)",
+                _ => "AL CONTADO / EFECTIVO"
+            };
             var confirmacion = MessageBox.Show($"¿Confirmar venta por un total de S/ {TotalVenta:N2}?\nModalidad: {tipoTexto}", "Confirmación de Cobro", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (confirmacion != MessageBoxResult.Yes) return;
 
@@ -308,7 +470,7 @@ namespace software_ACEMAR.ViewModels
             {
                 Fecha = DateTime.Now,
                 Total = TotalVenta,
-                TipoVenta = EsVentaCredito ? "Credito" : "Efectivo",
+                TipoVenta = EsVentaCredito ? "Credito" : (string.IsNullOrWhiteSpace(TipoVentaSeleccionado) ? "Efectivo" : TipoVentaSeleccionado),
                 ClienteCreditoId = EsVentaCredito ? ClienteCreditoSeleccionado?.Id : null,
                 ClienteNombre = EsVentaCredito ? ClienteCreditoSeleccionado?.Nombre : "Cliente Mostrador",
                 UsuarioVendedor = _authService.UsuarioActual.NombreCompleto,
@@ -321,13 +483,19 @@ namespace software_ACEMAR.ViewModels
                 return;
             }
 
-            // Si fue a crédito, actualizar la deuda del cliente en la BD
-            if (EsVentaCredito && ClienteCreditoSeleccionado != null)
+            // ── Generar y guardar la Boleta en PDF en segundo plano (sin abrir visor automáticamente) ──
+            try
             {
-                _creditService.RegistrarNuevoFiado(ClienteCreditoSeleccionado.Id, TotalVenta, $"Venta ticket {venta.NumeroTicket}", _authService.UsuarioActual.NombreCompleto, out _);
+                byte[] pdfBytes = _pdfService.GenerarPdfBoletaVenta(venta);
+                _pdfService.GuardarPdf(pdfBytes, "Ventas", $"{venta.NumeroTicket}.pdf");
+            }
+            catch (Exception exPdf)
+            {
+                // Silencioso o log interno para no interrumpir el flujo del cajero
+                System.Diagnostics.Debug.WriteLine($"Error al guardar PDF en disco: {exPdf.Message}");
             }
 
-            MessageBox.Show($"¡Venta procesada con éxito!\nTicket: {venta.NumeroTicket}\nModalidad: {tipoTexto}\nTotal: S/ {venta.Total:N2}", "Venta Finalizada", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show($"¡Venta procesada con éxito!\n\nTicket: {venta.NumeroTicket}\nModalidad: {tipoTexto}\nTotal: S/ {venta.Total:N2}\n\n(El comprobante PDF quedó registrado en la carpeta 'Boletas' y puede visualizarse o reimprimirse en 'Histórico de Ventas').", "Venta Finalizada", MessageBoxButton.OK, MessageBoxImage.Information);
 
             TicketActual.Clear();
             RecalcularTotales();
@@ -353,7 +521,8 @@ namespace software_ACEMAR.ViewModels
                     ProductoId = d.ProductoId,
                     ProductoNombre = d.ProductoNombre,
                     Cantidad = d.Cantidad,
-                    PrecioUnitario = d.PrecioUnitario
+                    PrecioUnitario = d.PrecioUnitario,
+                    UnidadMedida = d.UnidadMedida
                 }).ToList()
             };
 
@@ -363,7 +532,18 @@ namespace software_ACEMAR.ViewModels
                 return;
             }
 
-            MessageBox.Show($"¡Proforma generada correctamente!\nCódigo: {proforma.NumeroProforma}\nCliente: {proforma.ClienteNombre}\nTotal Cotizado: S/ {proforma.Total:N2}\n(No se descuenta stock de almacén)", "Proforma Guardada", MessageBoxButton.OK, MessageBoxImage.Information);
+            // ── Generar y guardar PDF de Proforma ─────────────────────────────────
+            try
+            {
+                byte[] pdfBytes = _pdfService.GenerarPdfProforma(proforma);
+                _pdfService.GuardarPdf(pdfBytes, "Proformas", $"Proforma_{proforma.NumeroProforma}.pdf");
+            }
+            catch (Exception exPdf)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al guardar PDF Proforma: {exPdf.Message}");
+            }
+
+            MessageBox.Show($"¡Proforma generada correctamente!\n\nCódigo: {proforma.NumeroProforma}\nCliente: {proforma.ClienteNombre}\nTotal Cotizado: S/ {proforma.Total:N2}\n\n(La cotización en PDF quedó guardada y puede consultarse en la sección 'Proformas').", "Proforma Guardada", MessageBoxButton.OK, MessageBoxImage.Information);
 
             TicketActual.Clear();
             RecalcularTotales();

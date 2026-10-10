@@ -217,6 +217,25 @@ namespace software_ACEMAR.Services
 
             await context.Productos.AddAsync(producto, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
+
+            if (producto.StockActual > 0)
+            {
+                var loteInicial = new LoteProducto
+                {
+                    ProductoId = producto.Id,
+                    CantidadInicial = producto.StockActual,
+                    CantidadDisponible = producto.StockActual,
+                    CostoCompra = Math.Round(producto.PrecioUnitario * 0.70m, 2),
+                    PrecioVenta = producto.PrecioUnitario,
+                    FechaIngreso = DateTime.Now,
+                    UnidadMedida = string.IsNullOrWhiteSpace(producto.UnidadMedida) ? "Unidad" : producto.UnidadMedida,
+                    Observaciones = "Lote inicial al registrar producto",
+                    Estado = "Activo"
+                };
+                await context.LotesProducto.AddAsync(loteInicial, cancellationToken);
+                await context.SaveChangesAsync(cancellationToken);
+            }
+
             return (true, string.Empty);
         }
 
@@ -256,6 +275,8 @@ namespace software_ACEMAR.Services
             existente.StockMinimo = producto.StockMinimo;
             existente.CuMax = producto.CuMax;
             existente.UnidadMedida = producto.UnidadMedida;
+            existente.UnidadesPermitidas = producto.UnidadesPermitidas;
+            existente.PreciosPorUnidad = producto.PreciosPorUnidad;
 
             await context.SaveChangesAsync(cancellationToken);
             return (true, string.Empty);

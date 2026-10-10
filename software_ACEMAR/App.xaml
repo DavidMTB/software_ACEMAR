@@ -3,8 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:software_ACEMAR"
              xmlns:vm="clr-namespace:software_ACEMAR.ViewModels"
-             xmlns:views="clr-namespace:software_ACEMAR.Views"
-             StartupUri="MainWindow.xaml">
+             xmlns:views="clr-namespace:software_ACEMAR.Views">
     
     <Application.Resources>
         <!-- ============================================== -->

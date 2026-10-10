@@ -36,6 +36,8 @@ namespace software_ACEMAR.ViewModels
         public ICommand RegistrarAbonoCommand { get; }
         public ICommand RecargarCommand { get; }
         public ICommand RegistrarNuevoClienteCommand { get; }
+        public ICommand GuardarEdicionClienteCommand { get; }
+        public ICommand EliminarClienteCommand { get; }
         public ICommand RegistrarNuevoFiadoCommand { get; }
 
         public CreditsViewModel(ICreditService creditService, IAuthService authService)
@@ -46,6 +48,8 @@ namespace software_ACEMAR.ViewModels
             RegistrarAbonoCommand = new RelayCommand(EjecutarRegistroAbono);
             RecargarCommand = new RelayCommand(CargarDatos);
             RegistrarNuevoClienteCommand = new RelayCommand(EjecutarRegistroNuevoCliente);
+            GuardarEdicionClienteCommand = new RelayCommand(EjecutarGuardarEdicionCliente);
+            EliminarClienteCommand = new RelayCommand(EjecutarEliminarCliente);
             RegistrarNuevoFiadoCommand = new RelayCommand(EjecutarRegistroNuevoFiado);
 
             _authService.OnUsuarioCambiado += OnUsuarioCambiado;
@@ -55,7 +59,13 @@ namespace software_ACEMAR.ViewModels
         public ClienteCredito? ClienteSeleccionado
         {
             get => _clienteSeleccionado;
-            set => SetField(ref _clienteSeleccionado, value);
+            set
+            {
+                if (SetField(ref _clienteSeleccionado, value) && value != null)
+                {
+                    CargarClienteEnEdicion(value);
+                }
+            }
         }
 
         public string MontoAbonoTexto { get => _montoAbonoTexto; set => SetField(ref _montoAbonoTexto, value); }
@@ -222,6 +232,101 @@ namespace software_ACEMAR.ViewModels
             MontoNuevoFiado = string.Empty;
             DetalleNuevoFiado = "Materiales varios de ferretería";
             CargarDatos();
+        }
+
+        private void CargarClienteEnEdicion(ClienteCredito c)
+        {
+            NuevoClienteNombre = c.Nombre;
+            NuevoClienteDocumento = c.Documento;
+            NuevoClienteTelefono = c.Telefono ?? string.Empty;
+            NuevoClienteLimite = c.LimiteCredito.ToString("F2");
+        }
+
+        private void EjecutarGuardarEdicionCliente()
+        {
+            if (!_authService.PuedeAccederCreditos(out string errorPermiso))
+            {
+                MessageBox.Show(errorPermiso, "Seguridad", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (ClienteSeleccionado == null)
+            {
+                MessageBox.Show("Seleccione un cliente de la lista para modificar sus datos.", "Editar Cliente", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(NuevoClienteNombre))
+            {
+                MessageBox.Show("El nombre del cliente no puede estar vacío.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!decimal.TryParse(NuevoClienteLimite.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal limite) || limite <= 0)
+            {
+                MessageBox.Show("Ingrese un límite de crédito válido mayor a cero.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var clienteEditado = new ClienteCredito
+            {
+                Id = ClienteSeleccionado.Id,
+                Nombre = NuevoClienteNombre.Trim(),
+                Documento = ClienteSeleccionado.Documento,
+                Telefono = NuevoClienteTelefono.Trim(),
+                LimiteCredito = limite
+            };
+
+            if (!_creditService.ActualizarCliente(clienteEditado, out string error))
+            {
+                MessageBox.Show(error, "Error al Actualizar Cliente", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            MessageBox.Show($"¡Datos de '{clienteEditado.Nombre}' actualizados con éxito!\nNuevo límite de crédito: S/ {limite:N2}", "Cliente Actualizado", MessageBoxButton.OK, MessageBoxImage.Information);
+            CargarDatos();
+        }
+
+        private void EjecutarEliminarCliente(object? param)
+        {
+            var cliente = param as ClienteCredito ?? ClienteSeleccionado;
+            if (cliente == null)
+            {
+                MessageBox.Show("Seleccione un cliente o empresa de la lista para eliminar.", "Eliminar Cliente", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            if (!_authService.PuedeAccederCreditos(out string errorPermiso))
+            {
+                MessageBox.Show(errorPermiso, "Seguridad", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string mensajeConfirm = cliente.DeudaActual > 0
+                ? $"⚠️ ATENCIÓN: El cliente/empresa '{cliente.Nombre}' tiene una deuda pendiente de S/ {cliente.DeudaActual:N2}.\n\n¿Está seguro de eliminar esta cuenta corriente de la base de datos?"
+                : $"¿Desea eliminar definitivamente el registro del cliente / empresa '{cliente.Nombre}'?";
+
+            var confirmacion = MessageBox.Show(mensajeConfirm, "Confirmar Eliminación de Cliente", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (confirmacion != MessageBoxResult.Yes) return;
+
+            if (!_creditService.EliminarCliente(cliente.Id, out string error))
+            {
+                MessageBox.Show(error, "Error al Eliminar Cliente", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            MessageBox.Show($"Cliente / Empresa '{cliente.Nombre}' eliminado con éxito.", "Cliente Eliminado", MessageBoxButton.OK, MessageBoxImage.Information);
+            ClienteSeleccionado = null;
+            LimpiarFormularioCliente();
+            CargarDatos();
+        }
+
+        private void LimpiarFormularioCliente()
+        {
+            NuevoClienteNombre = string.Empty;
+            NuevoClienteDocumento = string.Empty;
+            NuevoClienteTelefono = string.Empty;
+            NuevoClienteLimite = "1000.00";
         }
     }
 }

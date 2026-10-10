@@ -110,7 +110,8 @@ namespace software_ACEMAR.Tests
         {
             // Paso 5: Módulo de Créditos (Fiados)
             // Registrar un 'Abono', el cual debe restar matemáticamente la deuda del cliente en la base de datos local
-            var authService = new AuthService(); // Admin por defecto
+            var authService = new AuthService();
+            authService.CambiarRol("Administrador");
             var creditService = new CreditService(authService);
 
             using var context = new AppDbContext();
@@ -132,7 +133,7 @@ namespace software_ACEMAR.Tests
         {
             var venta = new Venta
             {
-                UsuarioVendedor = "Carlos Vendedor",
+                UsuarioVendedor = "Vendedor Test",
                 TipoVenta = TipoVentaConsts.Efectivo
             };
 
@@ -174,6 +175,7 @@ namespace software_ACEMAR.Tests
         public async Task CreditService_RegistrarAbonoAsync_TransaccionAtomica()
         {
             var authService = new AuthService();
+            authService.CambiarRol("Administrador");
             var creditService = new CreditService(authService);
 
             using var context = new AppDbContext();
@@ -206,6 +208,38 @@ namespace software_ACEMAR.Tests
             Assert.IsTrue(exito, error);
             Assert.IsTrue(proforma.NumeroProforma.StartsWith("PRF-"));
             Assert.AreEqual(120.00m, proforma.Total);
+        }
+
+        [TestMethod]
+        public async Task Regla_ConversionUnidades_VolquetadaResta4MetrosBase()
+        {
+            // Vender 1 Volquetada de Arena debe restar 4.0 Metros del stock base (factor = 4.0)
+            var salesService = new SalesService();
+            using var context = new AppDbContext();
+            var arena = context.Productos.First(p => p.Codigo == "ARE-003"); // StockActual = 50.0 Metros
+            decimal stockInicial = arena.StockActual;
+
+            var venta = new Venta
+            {
+                UsuarioVendedor = "Vendedor Test",
+                TipoVenta = TipoVentaConsts.Efectivo
+            };
+            venta.Detalles.Add(new DetalleVenta
+            {
+                ProductoId = arena.Id,
+                ProductoNombre = arena.Nombre,
+                Cantidad = 1.0m, // 1 Volquetada
+                UnidadMedida = "Volquetada",
+                PrecioUnitario = 26.00m
+            });
+
+            var (exito, error) = await salesService.ProcesarVentaAsync(venta);
+            Assert.IsTrue(exito, error);
+
+            using var contextVerify = new AppDbContext();
+            var arenaVerificada = contextVerify.Productos.First(p => p.Id == arena.Id);
+            // Stock inicial (50.0) - (1 Volquetada * 4.0 Metros) = 46.0 Metros
+            Assert.AreEqual(stockInicial - 4.0m, arenaVerificada.StockActual);
         }
     }
 }

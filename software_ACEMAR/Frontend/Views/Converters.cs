@@ -10,6 +10,7 @@ namespace software_ACEMAR.Views
     {
         public static readonly IValueConverter BooleanToVisibility = new BooleanToVisibilityConverterInternal(false);
         public static readonly IValueConverter InverseBooleanToVisibility = new BooleanToVisibilityConverterInternal(true);
+        public static readonly IValueConverter StringToVisibility = new StringToVisibilityConverterInternal();
         public static readonly IValueConverter ActiveTabBackgroundConverter = new ActiveTabBackgroundConverter();
         public static readonly IValueConverter ActiveTabBorderConverter = new ActiveTabBorderConverter();
         public static readonly IValueConverter ActiveTabForegroundConverter = new ActiveTabForegroundConverter();
@@ -91,6 +92,17 @@ namespace software_ACEMAR.Views
             return isActive 
                 ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF")) 
                 : new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CBE3A6"));
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+    }
+
+    public class StringToVisibilityConverterInternal : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            string s = value as string ?? string.Empty;
+            return !string.IsNullOrWhiteSpace(s) ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();

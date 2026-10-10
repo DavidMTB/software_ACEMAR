@@ -29,8 +29,14 @@ namespace software_ACEMAR.Services
         bool CrearCliente(ClienteCredito cliente, out string error);
         Task<(bool Exito, string Error)> CrearClienteAsync(ClienteCredito cliente, CancellationToken cancellationToken = default);
 
+        bool ActualizarCliente(ClienteCredito cliente, out string error);
+        Task<(bool Exito, string Error)> ActualizarClienteAsync(ClienteCredito cliente, CancellationToken cancellationToken = default);
+
         bool RegistrarNuevoFiado(int clienteId, decimal monto, string detalle, string usuario, out string error);
         Task<(bool Exito, string Error)> RegistrarNuevoFiadoAsync(int clienteId, decimal monto, string detalle, string usuario, CancellationToken cancellationToken = default);
+
+        bool EliminarCliente(int clienteId, out string error);
+        Task<(bool Exito, string Error)> EliminarClienteAsync(int clienteId, CancellationToken cancellationToken = default);
     }
 
     public class CreditService : ICreditService
@@ -214,6 +220,47 @@ namespace software_ACEMAR.Services
             return (true, string.Empty);
         }
 
+        public bool ActualizarCliente(ClienteCredito cliente, out string error)
+        {
+            var (exito, err) = ActualizarClienteAsync(cliente).GetAwaiter().GetResult();
+            error = err;
+            return exito;
+        }
+
+        public async Task<(bool Exito, string Error)> ActualizarClienteAsync(ClienteCredito cliente, CancellationToken cancellationToken = default)
+        {
+            if (!_authService.PuedeAccederCreditos(out string permError))
+            {
+                return (false, permError);
+            }
+
+            if (string.IsNullOrWhiteSpace(cliente.Nombre))
+            {
+                return (false, "El nombre o razón social del cliente es obligatorio.");
+            }
+            if (cliente.LimiteCredito <= 0)
+            {
+                return (false, "El límite de crédito aprobado debe ser mayor a cero.");
+            }
+
+            await using var context = new AppDbContext();
+            var dbCliente = await context.ClientesCredito
+                .FirstOrDefaultAsync(c => c.Id == cliente.Id, cancellationToken);
+
+            if (dbCliente == null)
+            {
+                return (false, "Cliente no encontrado en la base de datos.");
+            }
+
+            dbCliente.Nombre = cliente.Nombre.Trim();
+            dbCliente.Telefono = cliente.Telefono?.Trim() ?? string.Empty;
+            dbCliente.LimiteCredito = cliente.LimiteCredito;
+            dbCliente.UltimaActualizacion = DateTime.Now;
+
+            await context.SaveChangesAsync(cancellationToken);
+            return (true, string.Empty);
+        }
+
         public bool RegistrarNuevoFiado(int clienteId, decimal monto, string detalle, string usuario, out string error)
         {
             var (exito, err) = RegistrarNuevoFiadoAsync(clienteId, monto, detalle, usuario).GetAwaiter().GetResult();
@@ -282,6 +329,40 @@ namespace software_ACEMAR.Services
                 await transaction.RollbackAsync(cancellationToken);
                 return (false, $"Error al registrar nuevo fiado: {ex.Message}");
             }
+        }
+
+        public bool EliminarCliente(int clienteId, out string error)
+        {
+            var (exito, err) = EliminarClienteAsync(clienteId).GetAwaiter().GetResult();
+            error = err;
+            return exito;
+        }
+
+        public async Task<(bool Exito, string Error)> EliminarClienteAsync(int clienteId, CancellationToken cancellationToken = default)
+        {
+            if (!_authService.PuedeAccederCreditos(out string permError))
+            {
+                return (false, permError);
+            }
+
+            await using var context = new AppDbContext();
+            var cliente = await context.ClientesCredito
+                .Include(c => c.Abonos)
+                .FirstOrDefaultAsync(c => c.Id == clienteId, cancellationToken);
+
+            if (cliente == null)
+            {
+                return (false, "Cliente no encontrado.");
+            }
+
+            if (cliente.Abonos.Any())
+            {
+                context.AbonosCredito.RemoveRange(cliente.Abonos);
+            }
+
+            context.ClientesCredito.Remove(cliente);
+            await context.SaveChangesAsync(cancellationToken);
+            return (true, string.Empty);
         }
     }
 }

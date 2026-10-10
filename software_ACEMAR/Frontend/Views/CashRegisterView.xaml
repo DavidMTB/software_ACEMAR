@@ -5,126 +5,219 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:software_ACEMAR.Views"
              mc:Ignorable="d" 
-             d:DesignHeight="700" d:DesignWidth="1100"
+             d:DesignHeight="780" d:DesignWidth="1150"
              Background="{DynamicResource BackgroundBrush}">
+
+    <UserControl.Resources>
+        <Style x:Key="PeriodoButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#F0F4E8" />
+            <Setter Property="Foreground" Value="#1E2514" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Padding" Value="10,5" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="5" 
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#B5C6A0" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#DCE8CF" />
+                                <Setter Property="BorderBrush" Value="#4A5D23" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ExportButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#1E7145" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="6" 
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#145231" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#278C57" />
+                                <Setter Property="BorderBrush" Value="#81C784" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
 
     <Grid Margin="12">
         <Grid.RowDefinitions>
-            <!-- Fila 0: Barra de Control y Selección de Fecha -->
+            <!-- Fila 0: Barra de Periodo y Exportación Excel -->
             <RowDefinition Height="Auto" />
-            <!-- Fila 1: Tarjetas KPI de Balance de Caja -->
+            <!-- Fila 1: Tarjetas KPI de Balance y Contabilidad -->
             <RowDefinition Height="Auto" />
             <!-- Fila 2: Tabla de Movimientos y Cierre -->
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- FILA 0: CONTROL DE FECHA Y APERTURA -->
-        <Border Grid.Row="0" Background="#FFFFFF" CornerRadius="8" Padding="10" BorderBrush="#DCE3D6" BorderThickness="1" Margin="0,0,0,10">
+        <!-- FILA 0: SELECCIÓN DE PERIODO, RANGO Y EXPORTACIÓN A EXCEL -->
+        <Border Grid.Row="0" Background="#FFFFFF" CornerRadius="8" Padding="12" BorderBrush="#DCE3D6" BorderThickness="1" Margin="0,0,0,10">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.05" Color="#1E2514" />
             </Border.Effect>
 
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="130" />
-                    <ColumnDefinition Width="12" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="100" />
-                    <ColumnDefinition Width="12" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="10" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="Arqueo y Cierre de Caja Diario" FontSize="16" FontWeight="Bold" Foreground="#1E2514" />
-                    <TextBlock Text="Auditoría de ingresos físicos en mostrador vs. fiados" FontSize="11" Foreground="#556049" Margin="0,1,0,0" />
-                </StackPanel>
+                <!-- Fila Superior: Título y Botón Exportar -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-                <!-- Selector de Fecha -->
-                <TextBlock Grid.Column="1" Text="Fecha:" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Foreground="#1E2514" Margin="0,0,6,0" />
-                <DatePicker Grid.Column="2" SelectedDate="{Binding FechaSeleccionada}" Height="30" FontSize="12" VerticalContentAlignment="Center" />
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="Arqueo, Cierre de Caja &amp; Contabilidad General ACEMAR" FontSize="16" FontWeight="Black" Foreground="#1E2514" />
+                            <Border Background="#EAF0E1" CornerRadius="6" Padding="6,2" Margin="10,0,0,0">
+                                <TextBlock Text="{Binding TipoPeriodoSeleccionado, StringFormat='PERÍODO: {0}'}" FontSize="10" FontWeight="Bold" Foreground="#354318" />
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="Control de ingresos físicos, cobros digitales, gastos en compras de lotes y exportación a Hoja de Cálculo." FontSize="11" Foreground="#556049" Margin="0,2,0,0" />
+                    </StackPanel>
 
-                <!-- Monto Apertura -->
-                <TextBlock Grid.Column="4" Text="Apertura (S/):" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Foreground="#1E2514" Margin="0,0,6,0" />
-                <TextBox Grid.Column="5" 
-                         Text="{Binding MontoApertura, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:0.00}}" 
-                         Height="30" 
-                         FontSize="13" 
-                         FontWeight="Bold" 
-                         VerticalContentAlignment="Center" 
-                         HorizontalContentAlignment="Center" 
-                         Background="#F8FAF5" 
-                         BorderBrush="#4A5D23" 
-                         BorderThickness="1.5" />
+                    <!-- Botón Exportar a Excel -->
+                    <Button Grid.Column="1" Command="{Binding ExportarExcelCommand}" Style="{StaticResource ExportButtonStyle}" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📊 " FontSize="14" />
+                            <TextBlock Text="EXPORTAR A HOJA DE CÁLCULO (EXCEL)" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
 
-                <!-- Botón Actualizar -->
-                <Button Grid.Column="7" 
-                        Content="🔄 RECALCULAR" 
-                        Command="{Binding CalcularArqueoCommand}" 
-                        Height="30" 
-                        Padding="12,0" 
-                        FontSize="12" 
-                        FontWeight="Bold" 
-                        Background="#4A5D23" 
-                        Foreground="#FFFFFF" 
-                        Cursor="Hand" />
+                <!-- Fila Inferior: Botones Rápidos de Periodo y Rango de Fechas -->
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="130" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="130" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="80" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Botones Periodo -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="📅 Diario (Hoy)" Command="{Binding SeleccionarPeriodoCommand}" CommandParameter="Diario" Style="{StaticResource PeriodoButtonStyle}" />
+                        <Button Content="🗓️ Semanal (7 días)" Command="{Binding SeleccionarPeriodoCommand}" CommandParameter="Semanal" Style="{StaticResource PeriodoButtonStyle}" />
+                        <Button Content="📆 Mensual (Mes)" Command="{Binding SeleccionarPeriodoCommand}" CommandParameter="Mensual" Style="{StaticResource PeriodoButtonStyle}" />
+                    </StackPanel>
+
+                    <!-- DatePicker Desde -->
+                    <TextBlock Grid.Column="2" Text="Desde:" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Foreground="#1E2514" />
+                    <DatePicker Grid.Column="4" SelectedDate="{Binding FechaDesde, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Height="28" FontSize="11" VerticalContentAlignment="Center" />
+
+                    <!-- DatePicker Hasta -->
+                    <TextBlock Grid.Column="6" Text="Hasta:" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Foreground="#1E2514" />
+                    <DatePicker Grid.Column="8" SelectedDate="{Binding FechaHasta, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Height="28" FontSize="11" VerticalContentAlignment="Center" />
+
+                    <!-- Apertura -->
+                    <TextBlock Grid.Column="10" Text="Apertura S/:" FontSize="11" FontWeight="Bold" VerticalAlignment="Center" Foreground="#1E2514" />
+                    <TextBox Grid.Column="11" Text="{Binding MontoApertura, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:0.00}}" 
+                             Height="28" FontSize="12" FontWeight="Bold" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Background="#F8FAF5" BorderBrush="#4A5D23" BorderThickness="1" />
+
+                    <!-- Recalcular -->
+                    <Button Grid.Column="13" Content="🔄 RECALCULAR" Command="{Binding CalcularArqueoCommand}" Height="28" Padding="12,0" FontSize="11" FontWeight="Bold" Background="#4A5D23" Foreground="#FFFFFF" Cursor="Hand" />
+                </Grid>
             </Grid>
         </Border>
 
-        <!-- FILA 1: TARJETAS KPI DE FLUJO DE CAJA -->
-        <Grid Grid.Row="1" Margin="0,0,0,10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="1.2*" />
-            </Grid.ColumnDefinitions>
+        <!-- FILA 1: TARJETAS KPI DE CONTABILIDAD Y BALANCE -->
+        <UniformGrid Grid.Row="1" Columns="5" Margin="0,0,0,10">
 
-            <!-- KPI 1: Ventas Efectivo -->
-            <Border Grid.Column="0" Background="#FFFFFF" CornerRadius="8" Padding="10" BorderBrush="#DCE3D6" BorderThickness="1">
+            <!-- KPI 1: Ventas Efectivo + Digital -->
+            <Border Background="#FFFFFF" CornerRadius="8" Padding="8" BorderBrush="#DCE3D6" BorderThickness="1" Margin="0,0,4,0">
                 <StackPanel>
-                    <TextBlock Text="💵 Ventas Efectivo" FontSize="11" Foreground="#556049" FontWeight="Bold" />
-                    <TextBlock Text="{Binding TotalVentasEfectivo, StringFormat={}S/ {0:N2}}" FontSize="18" FontWeight="ExtraBold" Foreground="#2E7D32" Margin="0,2,0,0" />
-                    <TextBlock Text="Dinero en mano" FontSize="10" Foreground="#889876" Margin="0,1,0,0" />
+                    <TextBlock Text="💵 Ventas Mostrador" FontSize="10" Foreground="#556049" FontWeight="Bold" />
+                    <TextBlock Text="{Binding TotalVentasEfectivo, StringFormat={}S/ {0:N2}}" FontSize="16" FontWeight="ExtraBold" Foreground="#2E7D32" Margin="0,2,0,0" />
+                    <StackPanel Orientation="Horizontal" Margin="0,1,0,0">
+                        <TextBlock Text="Digital: " FontSize="9" Foreground="#666666" />
+                        <TextBlock Text="{Binding TotalVentasDigital, StringFormat={}S/ {0:N2}}" FontSize="9" FontWeight="Bold" Foreground="#0288D1" />
+                    </StackPanel>
                 </StackPanel>
             </Border>
 
             <!-- KPI 2: Ventas Crédito / Fiados -->
-            <Border Grid.Column="2" Background="#FFFFFF" CornerRadius="8" Padding="10" BorderBrush="#DCE3D6" BorderThickness="1">
+            <Border Background="#FFFFFF" CornerRadius="8" Padding="8" BorderBrush="#DCE3D6" BorderThickness="1" Margin="2,0,4,0">
                 <StackPanel>
-                    <TextBlock Text="💳 Ventas Crédito (Fiados)" FontSize="11" Foreground="#556049" FontWeight="Bold" />
-                    <TextBlock Text="{Binding TotalVentasCredito, StringFormat={}S/ {0:N2}}" FontSize="18" FontWeight="ExtraBold" Foreground="#D32F2F" Margin="0,2,0,0" />
-                    <TextBlock Text="Cuentas por cobrar" FontSize="10" Foreground="#889876" Margin="0,1,0,0" />
+                    <TextBlock Text="💳 Ventas a Crédito" FontSize="10" Foreground="#556049" FontWeight="Bold" />
+                    <TextBlock Text="{Binding TotalVentasCredito, StringFormat={}S/ {0:N2}}" FontSize="16" FontWeight="ExtraBold" Foreground="#E65100" Margin="0,2,0,0" />
+                    <TextBlock Text="Por cobrar" FontSize="9" Foreground="#889876" Margin="0,1,0,0" />
                 </StackPanel>
             </Border>
 
             <!-- KPI 3: Abonos Cobrados -->
-            <Border Grid.Column="4" Background="#FFFFFF" CornerRadius="8" Padding="10" BorderBrush="#DCE3D6" BorderThickness="1">
+            <Border Background="#FFFFFF" CornerRadius="8" Padding="8" BorderBrush="#DCE3D6" BorderThickness="1" Margin="2,0,4,0">
                 <StackPanel>
-                    <TextBlock Text="📥 Abonos Cobrados" FontSize="11" Foreground="#556049" FontWeight="Bold" />
-                    <TextBlock Text="{Binding TotalAbonosEfectivo, StringFormat={}S/ {0:N2}}" FontSize="18" FontWeight="ExtraBold" Foreground="#1976D2" Margin="0,2,0,0" />
-                    <TextBlock Text="Cobranza previa" FontSize="10" Foreground="#889876" Margin="0,1,0,0" />
+                    <TextBlock Text="📥 Abonos Cobrados" FontSize="10" Foreground="#556049" FontWeight="Bold" />
+                    <TextBlock Text="{Binding TotalAbonosEfectivo, StringFormat={}S/ {0:N2}}" FontSize="16" FontWeight="ExtraBold" Foreground="#0288D1" Margin="0,2,0,0" />
+                    <TextBlock Text="Ingreso efectivo" FontSize="9" Foreground="#889876" Margin="0,1,0,0" />
                 </StackPanel>
             </Border>
 
-            <!-- KPI 4: Total Efectivo en Caja -->
-            <Border Grid.Column="6" Background="#E8EEDF" CornerRadius="8" Padding="10" BorderBrush="#4A5D23" BorderThickness="1.5">
+            <!-- KPI 4: Gastos Compras Lotes & Utilidad -->
+            <Border Background="#FFFFFF" CornerRadius="8" Padding="8" BorderBrush="#DCE3D6" BorderThickness="1" Margin="2,0,4,0">
                 <StackPanel>
-                    <TextBlock Text="💰 TOTAL EFECTIVO EN CAJA" FontSize="11" Foreground="#354318" FontWeight="ExtraBold" />
-                    <TextBlock Text="{Binding TotalEfectivoEnCaja, StringFormat={}S/ {0:N2}}" FontSize="20" FontWeight="ExtraBold" Foreground="#4A5D23" Margin="0,2,0,0" />
-                    <TextBlock Text="Apertura + Efectivo + Abonos" FontSize="10" Foreground="#556049" FontWeight="SemiBold" Margin="0,1,0,0" />
+                    <TextBlock Text="📦 Gastos Compras Lotes" FontSize="10" Foreground="#556049" FontWeight="Bold" />
+                    <TextBlock Text="{Binding TotalGastosLotes, StringFormat={}S/ {0:N2}}" FontSize="16" FontWeight="ExtraBold" Foreground="#C62828" Margin="0,2,0,0" />
+                    <StackPanel Orientation="Horizontal" Margin="0,1,0,0">
+                        <TextBlock Text="Utilidad Bruta: " FontSize="9" Foreground="#666666" />
+                        <TextBlock Text="{Binding UtilidadBruta, StringFormat={}S/ {0:N2}}" FontSize="9" FontWeight="Bold" Foreground="#2E7D32" />
+                    </StackPanel>
                 </StackPanel>
             </Border>
-        </Grid>
+
+            <!-- KPI 5: Total Efectivo en Caja -->
+            <Border Background="#E8EEDF" CornerRadius="8" Padding="8" BorderBrush="#4A5D23" BorderThickness="1.5" Margin="2,0,0,0">
+                <StackPanel>
+                    <TextBlock Text="💰 TOTAL EN CAJA" FontSize="10" Foreground="#354318" FontWeight="ExtraBold" />
+                    <TextBlock Text="{Binding TotalEfectivoEnCaja, StringFormat={}S/ {0:N2}}" FontSize="18" FontWeight="ExtraBold" Foreground="#4A5D23" Margin="0,2,0,0" />
+                    <TextBlock Text="Apertura + Efec + Abonos - Gastos" FontSize="9" Foreground="#556049" FontWeight="SemiBold" Margin="0,1,0,0" />
+                </StackPanel>
+            </Border>
+        </UniformGrid>
 
         <!-- FILA 2: MOVIMIENTOS DETALLADOS Y FORMULARIO DE CIERRE -->
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.3*" />
+                <ColumnDefinition Width="1.4*" />
                 <ColumnDefinition Width="12" />
                 <ColumnDefinition Width="1*" />
             </Grid.ColumnDefinitions>
@@ -141,7 +234,7 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="Detalle Cronológico de Movimientos" FontSize="15" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,8" />
+                    <TextBlock Grid.Row="0" Text="Detalle Cronológico de Movimientos y Contabilidad" FontSize="15" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,8" />
 
                     <DataGrid Grid.Row="1" 
                               ItemsSource="{Binding Movimientos}" 
@@ -156,11 +249,11 @@
                               BorderThickness="1"
                               RowHeight="34"
                               FontSize="12">
-                        
+
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Hora" Binding="{Binding FechaHora, StringFormat={}{0:HH:mm}}" Width="55" />
-                            <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo}" Width="140" FontWeight="SemiBold" />
-                            <DataGridTextColumn Header="Documento" Binding="{Binding Documento}" Width="110" />
+                            <DataGridTextColumn Header="Fecha / Hora" Binding="{Binding FechaHora, StringFormat={}{0:dd/MM HH:mm}}" Width="95" />
+                            <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo}" Width="150" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Documento" Binding="{Binding Documento}" Width="100" />
                             <DataGridTextColumn Header="Detalle" Binding="{Binding Detalle}" Width="*" />
                             <DataGridTextColumn Header="Monto" Binding="{Binding Monto, StringFormat={}S/ {0:N2}}" Width="85" FontWeight="Bold" />
                         </DataGrid.Columns>
@@ -168,7 +261,7 @@
                 </Grid>
             </Border>
 
-            <!-- PANEL DE CIERRE DE CAJA -->
+            <!-- PANEL DE CIERRE Y RESUMEN CONTABLE -->
             <Border Grid.Column="2" Background="#FFFFFF" CornerRadius="8" BorderBrush="#DCE3D6" BorderThickness="1" Padding="12">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.06" Color="#1E2514" />
@@ -177,28 +270,37 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="Cierre y Cuadre de Caja" FontSize="16" FontWeight="Bold" Foreground="#1E2514" />
-                        <TextBlock Text="Registre formalmente el saldo al terminar el turno" FontSize="11" Foreground="#556049" Margin="0,1,0,10" />
+                        <TextBlock Text="Registre el arqueo de la jornada o periodo seleccinado" FontSize="11" Foreground="#556049" Margin="0,1,0,10" />
 
-                        <!-- Resumen rápido -->
+                        <!-- Resumen Rápido -->
                         <Border Background="#F8FAF5" CornerRadius="6" Padding="10" BorderBrush="#DCE3D6" BorderThickness="1" Margin="0,0,0,10">
                             <StackPanel>
                                 <Grid Margin="0,0,0,4">
-                                    <TextBlock Text="Dinero Físico:" FontSize="12" Foreground="#556049" />
+                                    <TextBlock Text="Dinero Físico en Caja:" FontSize="12" Foreground="#556049" />
                                     <TextBlock Text="{Binding TotalEfectivoEnCaja, StringFormat={}S/ {0:N2}}" FontWeight="Bold" FontSize="13" Foreground="#4A5D23" HorizontalAlignment="Right" />
                                 </Grid>
                                 <Grid Margin="0,0,0,4">
-                                    <TextBlock Text="Total Fiados:" FontSize="12" Foreground="#556049" />
-                                    <TextBlock Text="{Binding TotalVentasCredito, StringFormat={}S/ {0:N2}}" FontWeight="Bold" FontSize="13" Foreground="#D32F2F" HorizontalAlignment="Right" />
+                                    <TextBlock Text="Cobros Digitales (Yape/Plin):" FontSize="12" Foreground="#556049" />
+                                    <TextBlock Text="{Binding TotalVentasDigital, StringFormat={}S/ {0:N2}}" FontWeight="Bold" FontSize="13" Foreground="#0288D1" HorizontalAlignment="Right" />
                                 </Grid>
+                                <Grid Margin="0,0,0,4">
+                                    <TextBlock Text="Ventas a Crédito (Fiados):" FontSize="12" Foreground="#556049" />
+                                    <TextBlock Text="{Binding TotalVentasCredito, StringFormat={}S/ {0:N2}}" FontWeight="Bold" FontSize="13" Foreground="#E65100" HorizontalAlignment="Right" />
+                                </Grid>
+                                <Grid Margin="0,0,0,4">
+                                    <TextBlock Text="Inversión Compras Lotes:" FontSize="12" Foreground="#556049" />
+                                    <TextBlock Text="{Binding TotalGastosLotes, StringFormat={}S/ {0:N2}}" FontWeight="Bold" FontSize="13" Foreground="#C62828" HorizontalAlignment="Right" />
+                                </Grid>
+                                <Separator Background="#DCDEC8" Height="1" Margin="0,4" />
                                 <Grid>
-                                    <TextBlock Text="Abonos Ingresados:" FontSize="12" Foreground="#556049" />
-                                    <TextBlock Text="{Binding TotalAbonosEfectivo, StringFormat={}S/ {0:N2}}" FontWeight="Bold" FontSize="13" Foreground="#1976D2" HorizontalAlignment="Right" />
+                                    <TextBlock Text="Utilidad Bruta Estimada:" FontSize="12" FontWeight="Bold" Foreground="#1E2514" />
+                                    <TextBlock Text="{Binding UtilidadBruta, StringFormat={}S/ {0:N2}}" FontWeight="ExtraBold" FontSize="13" Foreground="#2E7D32" HorizontalAlignment="Right" />
                                 </Grid>
                             </StackPanel>
                         </Border>
 
                         <!-- Observaciones de Cierre -->
-                        <TextBlock Text="Observaciones del Día:" FontSize="12" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,4" />
+                        <TextBlock Text="Observaciones / Comentarios:" FontSize="12" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,4" />
                         <TextBox Text="{Binding ObservacionesCierre, UpdateSourceTrigger=PropertyChanged}" 
                                  Height="70" 
                                  FontSize="12" 
@@ -211,7 +313,7 @@
                                  VerticalContentAlignment="Top" 
                                  Margin="0,0,0,10" />
 
-                        <!-- Botón Guardar Arqueo -->
+                        <!-- Botones de Acción -->
                         <Button Content="📋 REGISTRAR Y GUARDAR ARQUEO" 
                                 Command="{Binding GuardarArqueoCommand}" 
                                 FontSize="13" 
@@ -220,7 +322,15 @@
                                 Background="#4A5D23" 
                                 Foreground="#FFFFFF" 
                                 BorderThickness="0" 
+                                Margin="0,0,0,8"
                                 Cursor="Hand" />
+
+                        <Button Content="📊 EXPORTAR A HOJA DE CÁLCULO" 
+                                Command="{Binding ExportarExcelCommand}" 
+                                Style="{StaticResource ExportButtonStyle}"
+                                FontSize="12" 
+                                FontWeight="Bold" 
+                                Height="36" />
                     </StackPanel>
                 </ScrollViewer>
             </Border>

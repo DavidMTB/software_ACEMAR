@@ -180,6 +180,27 @@
                                 </DataGridTemplateColumn>
 
                                 <DataGridTextColumn Header="Límite" Binding="{Binding LimiteCredito, StringFormat={}S/ {0:N2}}" Width="90" />
+
+                                <!-- Botón Eliminar Cliente -->
+                                <DataGridTemplateColumn Header="Acción" Width="60">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="🗑️" 
+                                                    Command="{Binding DataContext.EliminarClienteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                    CommandParameter="{Binding}" 
+                                                    ToolTip="Eliminar Cliente / Empresa" 
+                                                    Background="#FFEEEF" 
+                                                    Foreground="#C62828" 
+                                                    BorderBrush="#FFCDD2" 
+                                                    BorderThickness="1" 
+                                                    Padding="4,1" 
+                                                    FontSize="11" 
+                                                    Cursor="Hand" 
+                                                    HorizontalAlignment="Center" 
+                                                    VerticalAlignment="Center" />
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                             </DataGrid.Columns>
                         </DataGrid>
                     </Grid>
@@ -284,12 +305,12 @@
                             </ScrollViewer>
                         </TabItem>
 
-                        <!-- PESTAÑA 3: REGISTRAR NUEVO CLIENTE -->
-                        <TabItem Header="➕ Nuevo Cliente" FontSize="12" FontWeight="Bold" Padding="10,6">
+                        <!-- PESTAÑA 3: GESTIONAR / EDITAR CLIENTE -->
+                        <TabItem Header="👤 Cliente (Crear/Editar)" FontSize="12" FontWeight="Bold" Padding="8,6">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel Margin="0,10,0,0">
-                                    <TextBlock Text="Registrar Nuevo Cliente Fiado" FontSize="15" FontWeight="Bold" Foreground="#1E2514" />
-                                    <TextBlock Text="Alta en el sistema de créditos" FontSize="11" Foreground="#556049" Margin="0,1,0,10" />
+                                    <TextBlock Text="Alta / Modificación de Cliente" FontSize="15" FontWeight="Bold" Foreground="#1E2514" />
+                                    <TextBlock Text="Edite el cliente seleccionado a la izquierda o cree uno nuevo" FontSize="11" Foreground="#556049" Margin="0,1,0,10" />
 
                                     <!-- Nombre -->
                                     <TextBlock Text="Nombre o Razón Social:" FontSize="12" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,2" />
@@ -311,11 +332,32 @@
                                     <TextBox Text="{Binding NuevoClienteLimite, UpdateSourceTrigger=PropertyChanged}" 
                                              FontSize="14" FontWeight="Bold" Foreground="#4A5D23" Padding="6,4" Background="#F8FAF5" Margin="0,0,0,12" />
 
-                                    <!-- Botón Guardar Cliente -->
-                                    <Button Content="➕ GUARDAR NUEVO CLIENTE" 
-                                            Command="{Binding RegistrarNuevoClienteCommand}" 
-                                            FontSize="13" FontWeight="Bold" Padding="10" Height="36"
-                                            Background="#4A5D23" Foreground="#FFFFFF" BorderThickness="0" Cursor="Hand" />
+                                    <!-- Botones -->
+                                    <Grid Margin="0,5,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="6" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="6" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0"
+                                                Content="✏️ GUARDAR" 
+                                                Command="{Binding GuardarEdicionClienteCommand}" 
+                                                FontSize="10" FontWeight="Bold" Padding="2" Height="36"
+                                                Background="#2563EB" Foreground="#FFFFFF" BorderThickness="0" Cursor="Hand" />
+                                        <Button Grid.Column="2"
+                                                Content="🗑️ ELIMINAR" 
+                                                Command="{Binding EliminarClienteCommand}" 
+                                                CommandParameter="{Binding ClienteSeleccionado}"
+                                                FontSize="10" FontWeight="Bold" Padding="2" Height="36"
+                                                Background="#C62828" Foreground="#FFFFFF" BorderThickness="0" Cursor="Hand" />
+                                        <Button Grid.Column="4"
+                                                Content="➕ NUEVO" 
+                                                Command="{Binding RegistrarNuevoClienteCommand}" 
+                                                FontSize="10" FontWeight="Bold" Padding="2" Height="36"
+                                                Background="#4A5D23" Foreground="#FFFFFF" BorderThickness="0" Cursor="Hand" />
+                                    </Grid>
                                 </StackPanel>
                             </ScrollViewer>
                         </TabItem>

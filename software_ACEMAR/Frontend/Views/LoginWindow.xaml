@@ -1,0 +1,115 @@
+<Window x:Class="software_ACEMAR.Views.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Inicio de Sesión - Ferretería ACEMAR" 
+        Height="520" Width="480"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        AutomationProperties.Name="Ventana de Inicio de Sesión Ferretería ACEMAR">
+
+    <Border Background="#FFFFFF" CornerRadius="16" BorderBrush="#1D2611" BorderThickness="2">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="30" ShadowDepth="6" Opacity="0.30" Color="#1E2514" />
+        </Border.Effect>
+
+        <Grid Margin="32">
+            <Grid.RowDefinitions>
+                <!-- Branding Header -->
+                <RowDefinition Height="Auto" />
+                <!-- Separator -->
+                <RowDefinition Height="Auto" />
+                <!-- Form Inputs -->
+                <RowDefinition Height="*" />
+                <!-- Action Buttons -->
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- 1. HEADER ACEMAR -->
+            <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,20">
+                <Border Background="#1D2611" Width="64" Height="64" CornerRadius="18" HorizontalAlignment="Center" Margin="0,0,0,12"
+                        BorderBrush="#8FA668" BorderThickness="2">
+                    <TextBlock Text="🛠️" FontSize="32" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock Text="FERRETERÍA ACEMAR" FontSize="22" FontWeight="Black" Foreground="#1E2514" HorizontalAlignment="Center" />
+                <TextBlock Text="Sistema de Control de Ventas &amp; Almacén" FontSize="12" FontWeight="Bold" Foreground="#4A5D23" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                <TextBlock Text="Ingrese sus credenciales de Vendedor o Administrador" FontSize="11" Foreground="#667056" HorizontalAlignment="Center" Margin="0,6,0,0" />
+            </StackPanel>
+
+            <Separator Grid.Row="1" Background="#DCE3D6" Margin="0,0,0,24" />
+
+            <!-- 2. FORMULARIO -->
+            <StackPanel Grid.Row="2">
+                <!-- Campo Usuario -->
+                <TextBlock Text="Nombre de Usuario:" FontSize="13" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,6" />
+                <TextBox x:Name="txtUsuario" 
+                         FontSize="15" 
+                         Padding="12,10" 
+                         Background="#F8FAF5" 
+                         BorderBrush="#C5D1BC" 
+                         BorderThickness="1.5" 
+                         Margin="0,0,0,18" 
+                         ToolTip="Ingrese su nombre de usuario (Ej: vendedor1, vendedor2, Gerente)" />
+
+                <!-- Campo Contraseña -->
+                <TextBlock Text="Contraseña:" FontSize="13" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,6" />
+                <PasswordBox x:Name="txtPassword" 
+                             FontSize="16" 
+                             Padding="12,10" 
+                             Background="#F8FAF5" 
+                             BorderBrush="#C5D1BC" 
+                             BorderThickness="1.5" 
+                             Margin="0,0,0,14" 
+                             ToolTip="Ingrese su clave secreta" />
+
+                <!-- Mensaje de Error -->
+                <Border x:Name="pnlError" Background="#FFEBEE" BorderBrush="#FFCDD2" BorderThickness="1" CornerRadius="6" Padding="10" Visibility="Collapsed" Margin="0,0,0,10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="⚠️ " FontSize="13" VerticalAlignment="Center" />
+                        <TextBlock x:Name="txtError" 
+                                   Foreground="#C62828" 
+                                   FontWeight="Bold" 
+                                   FontSize="12" 
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- 3. BOTONES -->
+            <Grid Grid.Row="3" Margin="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="1.4*" />
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" 
+                        Content="❌ Salir" 
+                        Click="BtnSalir_Click" 
+                        Background="#F1F5EC" 
+                        Foreground="#354318" 
+                        BorderBrush="#C5D1BC" 
+                        BorderThickness="1" 
+                        FontSize="14" 
+                        FontWeight="Bold"
+                        Padding="12,12" 
+                        Cursor="Hand" />
+
+                <Button Grid.Column="2" 
+                        Content="🚀 INICIAR SESIÓN" 
+                        IsDefault="True"
+                        Click="BtnIngresar_Click" 
+                        Background="#1D2611" 
+                        Foreground="#FFFFFF" 
+                        BorderBrush="#354318" 
+                        BorderThickness="1" 
+                        FontSize="14" 
+                        FontWeight="Black" 
+                        Padding="12,12" 
+                        Cursor="Hand" />
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

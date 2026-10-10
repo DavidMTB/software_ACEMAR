@@ -8,6 +8,52 @@ using software_ACEMAR.Services;
 
 namespace software_ACEMAR.ViewModels
 {
+    public class UnidadMedidaPrecioItem : ViewModelBase
+    {
+        private bool _estaSeleccionada;
+        private string _nombreUnidad = string.Empty;
+        private string _precioTexto = "0.00";
+        private string _factorTexto = "1.00";
+
+        public bool EstaSeleccionada
+        {
+            get => _estaSeleccionada;
+            set => SetField(ref _estaSeleccionada, value);
+        }
+
+        public string NombreUnidad
+        {
+            get => _nombreUnidad;
+            set => SetField(ref _nombreUnidad, value);
+        }
+
+        public string PrecioTexto
+        {
+            get => _precioTexto;
+            set => SetField(ref _precioTexto, value);
+        }
+
+        public string FactorTexto
+        {
+            get => _factorTexto;
+            set => SetField(ref _factorTexto, value);
+        }
+
+        public decimal ObtenerPrecio()
+        {
+            if (decimal.TryParse(PrecioTexto.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal p) && p > 0)
+                return p;
+            return 0m;
+        }
+
+        public decimal ObtenerFactor()
+        {
+            if (decimal.TryParse(FactorTexto.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal f) && f > 0)
+                return f;
+            return 1.0m;
+        }
+    }
+
     public class ProductCrudViewModel : ViewModelBase
     {
         private readonly IInventoryService _inventoryService;
@@ -25,6 +71,8 @@ namespace software_ACEMAR.ViewModels
         private string _formStockMinimo = "5";
         private string _formCuMax = "50";
         private string _formUnidad = "Unidad";
+        private string _formUnidadesPermitidas = string.Empty;
+        private string _nuevaUnidadNombre = string.Empty;
         private bool _esModoEdicion;
 
         // Actualización masiva de precios
@@ -33,9 +81,11 @@ namespace software_ACEMAR.ViewModels
 
         public ObservableCollection<Producto> Productos { get; } = new();
         public ObservableCollection<string> CategoriasDisponibles { get; } = new();
+        public ObservableCollection<UnidadMedidaPrecioItem> ListaUnidadesPrecios { get; } = new();
+
         public ObservableCollection<string> UnidadesMedida { get; } = new()
         {
-            "Unidad", "Bolsa", "Kg", "Metros", "Ciento", "Galón", "Rollo", "Millar"
+            "Unidad", "Bolsa", "Saco", "Caja", "Kg", "Metros", "Ciento", "Galón", "Rollo", "Millar", "Lata", "Carretilla", "Volquetada", "Paquete"
         };
 
         public ICommand GuardarProductoCommand { get; }
@@ -44,6 +94,7 @@ namespace software_ACEMAR.ViewModels
         public ICommand LimpiarFormularioCommand { get; }
         public ICommand AplicarAumentoMasivoCommand { get; }
         public ICommand RefrescarCommand { get; }
+        public ICommand AgregarNuevaUnidadCommand { get; }
 
         public ProductCrudViewModel(IInventoryService inventoryService)
         {
@@ -55,8 +106,10 @@ namespace software_ACEMAR.ViewModels
             LimpiarFormularioCommand = new RelayCommand(LimpiarFormulario);
             AplicarAumentoMasivoCommand = new RelayCommand(EjecutarAumentoMasivo);
             RefrescarCommand = new RelayCommand(CargarProductos);
+            AgregarNuevaUnidadCommand = new RelayCommand(EjecutarAgregarNuevaUnidad);
 
             CargarProductos();
+            InicializarListaUnidadesPrecios(null);
         }
 
         public string BusquedaTexto
@@ -92,6 +145,8 @@ namespace software_ACEMAR.ViewModels
         public string FormStockMinimo { get => _formStockMinimo; set => SetField(ref _formStockMinimo, value); }
         public string FormCuMax { get => _formCuMax; set => SetField(ref _formCuMax, value); }
         public string FormUnidad { get => _formUnidad; set => SetField(ref _formUnidad, value); }
+        public string FormUnidadesPermitidas { get => _formUnidadesPermitidas; set => SetField(ref _formUnidadesPermitidas, value); }
+        public string NuevaUnidadNombre { get => _nuevaUnidadNombre; set => SetField(ref _nuevaUnidadNombre, value); }
         public bool EsModoEdicion { get => _esModoEdicion; set => SetField(ref _esModoEdicion, value); }
 
         public string CategoriaAumento { get => _categoriaAumento; set => SetField(ref _categoriaAumento, value); }
@@ -114,6 +169,90 @@ namespace software_ACEMAR.ViewModels
             }
         }
 
+        private void InicializarListaUnidadesPrecios(Producto? p)
+        {
+            ListaUnidadesPrecios.Clear();
+
+            var permitidas = p?.ObtenerUnidadesDisponibles() ?? new List<string> { "Unidad" };
+            var precios = p?.ObtenerPreciosPorUnidad() ?? new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+
+            var listaBase = UnidadesMedida.ToList();
+            if (p != null)
+            {
+                foreach (var u in permitidas)
+                {
+                    if (!listaBase.Contains(u, StringComparer.OrdinalIgnoreCase))
+                        listaBase.Add(u);
+                }
+            }
+
+            foreach (var u in listaBase)
+            {
+                bool seleccionada = permitidas.Contains(u, StringComparer.OrdinalIgnoreCase) || string.Equals(u, p?.UnidadMedida, StringComparison.OrdinalIgnoreCase);
+                if (p == null && string.Equals(u, "Unidad", StringComparison.OrdinalIgnoreCase))
+                {
+                    seleccionada = true;
+                }
+
+                decimal precio = 0m;
+                if (precios.TryGetValue(u, out decimal pr) && pr > 0)
+                {
+                    precio = pr;
+                }
+                else if (p != null)
+                {
+                    precio = p.PrecioUnitario;
+                }
+                else
+                {
+                    decimal.TryParse(FormPrecio.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out precio);
+                }
+
+                decimal factor = p != null ? p.ObtenerFactorParaUnidad(u) : 1.0m;
+                if (p == null)
+                {
+                    if (string.Equals(u, "Volquetada", StringComparison.OrdinalIgnoreCase)) factor = 4.0m;
+                    else if (string.Equals(u, "Ciento", StringComparison.OrdinalIgnoreCase)) factor = 100.0m;
+                    else if (string.Equals(u, "Millar", StringComparison.OrdinalIgnoreCase)) factor = 1000.0m;
+                    else if (string.Equals(u, "Par", StringComparison.OrdinalIgnoreCase)) factor = 2.0m;
+                    else if (string.Equals(u, "Carretilla", StringComparison.OrdinalIgnoreCase)) factor = 0.25m;
+                    else if (string.Equals(u, "Lata", StringComparison.OrdinalIgnoreCase)) factor = 0.1m;
+                }
+
+                ListaUnidadesPrecios.Add(new UnidadMedidaPrecioItem
+                {
+                    NombreUnidad = u,
+                    EstaSeleccionada = seleccionada,
+                    PrecioTexto = precio > 0 ? precio.ToString("0.00") : "10.00",
+                    FactorTexto = factor.ToString("0.##")
+                });
+            }
+        }
+
+        private void EjecutarAgregarNuevaUnidad()
+        {
+            if (string.IsNullOrWhiteSpace(NuevaUnidadNombre)) return;
+
+            string nombre = NuevaUnidadNombre.Trim();
+            var existe = ListaUnidadesPrecios.FirstOrDefault(u => string.Equals(u.NombreUnidad, nombre, StringComparison.OrdinalIgnoreCase));
+            if (existe != null)
+            {
+                existe.EstaSeleccionada = true;
+            }
+            else
+            {
+                decimal.TryParse(FormPrecio.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal precioBase);
+                ListaUnidadesPrecios.Add(new UnidadMedidaPrecioItem
+                {
+                    NombreUnidad = nombre,
+                    EstaSeleccionada = true,
+                    PrecioTexto = precioBase > 0 ? precioBase.ToString("0.00") : "10.00"
+                });
+            }
+
+            NuevaUnidadNombre = string.Empty;
+        }
+
         private void CargarDatosEnFormulario(Producto p)
         {
             FormId = p.Id;
@@ -125,7 +264,10 @@ namespace software_ACEMAR.ViewModels
             FormStockMinimo = p.StockMinimo.ToString("0.##");
             FormCuMax = p.CuMax.ToString("0.##");
             FormUnidad = p.UnidadMedida;
+            FormUnidadesPermitidas = p.UnidadesPermitidas ?? string.Empty;
             EsModoEdicion = true;
+
+            InicializarListaUnidadesPrecios(p);
         }
 
         private void LimpiarFormulario()
@@ -139,8 +281,11 @@ namespace software_ACEMAR.ViewModels
             FormStockMinimo = "5";
             FormCuMax = "50";
             FormUnidad = "Unidad";
+            FormUnidadesPermitidas = string.Empty;
             EsModoEdicion = false;
             ProductoSeleccionado = null;
+
+            InicializarListaUnidadesPrecios(null);
         }
 
         private void EjecutarEditarProducto(object? param)
@@ -159,7 +304,7 @@ namespace software_ACEMAR.ViewModels
                 return;
             }
 
-            if (!decimal.TryParse(FormPrecio.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal precio) || precio <= 0)
+            if (!decimal.TryParse(FormPrecio.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal precioBase) || precioBase <= 0)
             {
                 MessageBox.Show("Ingrese un precio unitario válido mayor a cero.", "Validación", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -175,18 +320,59 @@ namespace software_ACEMAR.ViewModels
                 return;
             }
 
+            // Recopilar unidades seleccionadas y sus precios específicos de las casillas marcadas
+            var unidadesSeleccionadas = ListaUnidadesPrecios
+                .Where(u => u.EstaSeleccionada)
+                .Select(u => u.NombreUnidad.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (unidadesSeleccionadas.Count == 0)
+            {
+                unidadesSeleccionadas.Add("Unidad");
+                var itemUnidad = ListaUnidadesPrecios.FirstOrDefault(u => string.Equals(u.NombreUnidad, "Unidad", StringComparison.OrdinalIgnoreCase));
+                if (itemUnidad != null) itemUnidad.EstaSeleccionada = true;
+            }
+
+            string unidadPrincipal = unidadesSeleccionadas[0];
+
+            var dictPrecios = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in ListaUnidadesPrecios.Where(u => u.EstaSeleccionada))
+            {
+                decimal p = item.ObtenerPrecio();
+                dictPrecios[item.NombreUnidad.Trim()] = p > 0 ? p : precioBase;
+            }
+
+            if (!dictPrecios.ContainsKey(unidadPrincipal))
+            {
+                dictPrecios[unidadPrincipal] = precioBase;
+            }
+
+            decimal precioPrincipal = dictPrecios[unidadPrincipal];
+
             var producto = new Producto
             {
                 Id = FormId,
                 Codigo = FormCodigo.Trim(),
                 Nombre = FormNombre.Trim(),
                 Categoria = string.IsNullOrWhiteSpace(FormCategoria) ? "General" : FormCategoria.Trim(),
-                PrecioUnitario = precio,
+                PrecioUnitario = precioPrincipal,
                 StockActual = stock,
                 StockMinimo = stockMin,
                 CuMax = cuMax,
-                UnidadMedida = string.IsNullOrWhiteSpace(FormUnidad) ? "Unidad" : FormUnidad.Trim()
+                UnidadMedida = unidadPrincipal
             };
+
+            var dictFactores = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in ListaUnidadesPrecios.Where(u => u.EstaSeleccionada))
+            {
+                decimal f = item.ObtenerFactor();
+                dictFactores[item.NombreUnidad.Trim()] = f > 0 ? f : 1.0m;
+            }
+
+            producto.SetUnidadesPermitidas(unidadesSeleccionadas);
+            producto.GuardarPreciosPorUnidad(dictPrecios);
+            producto.GuardarFactoresPorUnidad(dictFactores);
 
             bool exito;
             string error;
@@ -206,7 +392,7 @@ namespace software_ACEMAR.ViewModels
                 return;
             }
 
-            MessageBox.Show($"¡Producto '{producto.Nombre}' guardado correctamente!", "Operación Exitosa", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show($"¡Producto '{producto.Nombre}' guardado correctamente con sus precios por unidad!", "Operación Exitosa", MessageBoxButton.OK, MessageBoxImage.Information);
             LimpiarFormulario();
             CargarProductos();
         }

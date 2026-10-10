@@ -11,33 +11,41 @@ namespace software_ACEMAR.Services
 {
     public interface ISalesService
     {
-        bool ValidarStockDisponible(int productoId, decimal cantidadSolicitada, out string mensajeError);
-        Task<(bool EsValido, string MensajeError)> ValidarStockDisponibleAsync(int productoId, decimal cantidadSolicitada, CancellationToken cancellationToken = default);
-        
+        bool ValidarStockDisponible(int productoId, decimal cantidadSolicitada, out string mensajeError, string? unidadMedida = null);
+        Task<(bool EsValido, string MensajeError)> ValidarStockDisponibleAsync(int productoId, decimal cantidadSolicitada, string? unidadMedida = null, CancellationToken cancellationToken = default);
+
         decimal MultiplicarPrecioFraccion(decimal cantidad, decimal precioUnitario);
-        
+
         bool ProcesarVenta(Venta venta, out string mensajeError);
         Task<(bool Exito, string MensajeError)> ProcesarVentaAsync(Venta venta, CancellationToken cancellationToken = default);
-        
+
         List<Venta> ObtenerVentasRecientes(int limite = 20);
         Task<List<Venta>> ObtenerVentasRecientesAsync(int limite = 20, CancellationToken cancellationToken = default);
+
+        /// <summary>Obtiene ventas de un rango de fechas para el Dashboard.</summary>
+        List<Venta> ObtenerVentasPorFecha(DateTime desde, DateTime hasta);
+
+        /// <summary>Obtiene el precio de venta vigente de un producto (del lote FIFO activo).</summary>
+        decimal ObtenerPrecioVigente(int productoId);
+
+        /// <summary>Obtiene la deuda actual de un ClienteCredito por su ID. Retorna 0 si no existe.</summary>
+        decimal ObtenerDeudaCliente(int clienteCreditoId);
     }
 
     public class SalesService : ISalesService
     {
-        public bool ValidarStockDisponible(int productoId, decimal cantidadSolicitada, out string mensajeError)
+        public bool ValidarStockDisponible(int productoId, decimal cantidadSolicitada, out string mensajeError, string? unidadMedida = null)
         {
-            var (esValido, error) = ValidarStockDisponibleAsync(productoId, cantidadSolicitada).GetAwaiter().GetResult();
+            var (esValido, error) = ValidarStockDisponibleAsync(productoId, cantidadSolicitada, unidadMedida).GetAwaiter().GetResult();
             mensajeError = error;
             return esValido;
         }
 
-        public async Task<(bool EsValido, string MensajeError)> ValidarStockDisponibleAsync(int productoId, decimal cantidadSolicitada, CancellationToken cancellationToken = default)
+        public async Task<(bool EsValido, string MensajeError)> ValidarStockDisponibleAsync(
+            int productoId, decimal cantidadSolicitada, string? unidadMedida = null, CancellationToken cancellationToken = default)
         {
             if (cantidadSolicitada <= 0)
-            {
                 return (false, "La cantidad solicitada debe ser mayor a cero.");
-            }
 
             await using var context = new AppDbContext();
             var producto = await context.Productos
@@ -45,22 +53,21 @@ namespace software_ACEMAR.Services
                 .FirstOrDefaultAsync(p => p.Id == productoId, cancellationToken);
 
             if (producto == null)
-            {
                 return (false, "Producto no encontrado.");
-            }
 
-            // Regla INV-01 (Bloqueo de Venta): Si cantidad_solicitada > stock_actual -> "Stock insuficiente"
-            if (cantidadSolicitada > producto.StockActual)
-            {
+            decimal factor = producto.ObtenerFactorParaUnidad(unidadMedida);
+            decimal cantidadBaseRequerida = cantidadSolicitada * factor;
+
+            // Regla INV-01 (Bloqueo de Venta): Si cantidad_base_requerida > stock_actual -> "Stock insuficiente"
+            if (cantidadBaseRequerida > producto.StockActual)
                 return (false, "Stock insuficiente");
-            }
 
             return (true, string.Empty);
         }
 
         public decimal MultiplicarPrecioFraccion(decimal cantidad, decimal precioUnitario)
         {
-            // Regla POS-02 (Fracciones): Multiplicar matemáticamente por precio unitario redondeado a 2 decimales
+            // Regla POS-02 (Fracciones): cantidad * precio, redondeado a 2 decimales
             return Math.Round(cantidad * precioUnitario, 2);
         }
 
@@ -71,19 +78,25 @@ namespace software_ACEMAR.Services
             return exito;
         }
 
-        public async Task<(bool Exito, string MensajeError)> ProcesarVentaAsync(Venta venta, CancellationToken cancellationToken = default)
+        /// <summary>
+        /// Procesa una venta de forma atómica:
+        /// 1. Valida el objeto Venta.
+        /// 2. Consume stock de lotes activos en FIFO aplicando factor de conversión de unidades.
+        /// 3. Actualiza DeudaActual si TipoVenta == Credito.
+        /// 4. Genera NumeroTicket y persiste.
+        /// </summary>
+        public async Task<(bool Exito, string MensajeError)> ProcesarVentaAsync(
+            Venta venta, CancellationToken cancellationToken = default)
         {
             if (!venta.EsValida(out string valError))
-            {
                 return (false, valError);
-            }
 
             await using var context = new AppDbContext();
             await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
 
             try
             {
-                // Optimización N+1: Cargar todos los productos involucrados en una sola consulta
+                // ── Cargar productos involucrados (evita N+1) ────────────────────
                 var productoIds = venta.Detalles.Select(d => d.ProductoId).Distinct().ToList();
                 var productosDict = await context.Productos
                     .Where(p => productoIds.Contains(p.Id))
@@ -91,8 +104,8 @@ namespace software_ACEMAR.Services
 
                 foreach (var item in venta.Detalles)
                 {
-                    // Evitar colisión de tracking en EF Core anulando la propiedad de navegación
-                    item.Producto = null;
+                    item.Producto      = null;
+                    item.LoteProducto  = null;
 
                     if (!productosDict.TryGetValue(item.ProductoId, out var producto))
                     {
@@ -100,27 +113,108 @@ namespace software_ACEMAR.Services
                         return (false, $"El producto ID {item.ProductoId} no existe.");
                     }
 
-                    // Regla INV-01: Verificación atómica antes de confirmar la venta
-                    if (item.Cantidad > producto.StockActual)
+                    // Unidad de medida por defecto si no viene del POS
+                    if (string.IsNullOrWhiteSpace(item.UnidadMedida))
+                        item.UnidadMedida = producto.UnidadMedida;
+
+                    // Factor multiplicador de unidad (ej: 1 Volquetada = 4 Metros base)
+                    decimal factor = producto.ObtenerFactorParaUnidad(item.UnidadMedida);
+                    decimal cantidadBaseTotal = item.Cantidad * factor;
+                    decimal cantidadBasePendiente = cantidadBaseTotal;
+
+                    // ── Intentar consumo FIFO multi-lote en stock base ─────────────────
+                    var lotesActivos = await context.LotesProducto
+                        .Where(l => l.ProductoId == item.ProductoId
+                                 && l.Estado == "Activo"
+                                 && l.CantidadDisponible > 0)
+                        .OrderBy(l => l.FechaIngreso)
+                        .ToListAsync(cancellationToken);
+
+                    if (lotesActivos.Any())
                     {
-                        await transaction.RollbackAsync(cancellationToken);
-                        return (false, "Stock insuficiente");
+                        decimal stockTotalLotes = lotesActivos.Sum(l => l.CantidadDisponible);
+                        if (cantidadBasePendiente > stockTotalLotes && cantidadBasePendiente > producto.StockActual)
+                        {
+                            await transaction.RollbackAsync(cancellationToken);
+                            return (false, $"Stock insuficiente para '{producto.Nombre}'. Disponible: {producto.StockActual:0.##} {producto.UnidadMedida}, requerido: {cantidadBaseTotal:0.##} {producto.UnidadMedida} ({item.Cantidad:0.##} {item.UnidadMedida}).");
+                        }
+
+                        foreach (var lote in lotesActivos)
+                        {
+                            if (cantidadBasePendiente <= 0) break;
+
+                            if (!item.LoteProductoId.HasValue)
+                            {
+                                item.LoteProductoId = lote.Id;
+                                if (item.PrecioUnitario <= 0)
+                                {
+                                    item.PrecioUnitario = lote.PrecioVenta * factor;
+                                }
+                            }
+
+                            decimal aConsumir = Math.Min(cantidadBasePendiente, lote.CantidadDisponible);
+                            lote.CantidadDisponible -= aConsumir;
+                            cantidadBasePendiente -= aConsumir;
+
+                            if (lote.CantidadDisponible <= 0)
+                            {
+                                lote.CantidadDisponible = 0;
+                                lote.Estado = "Agotado";
+                            }
+                        }
+
+                        producto.StockActual = Math.Max(0m, producto.StockActual - cantidadBaseTotal);
+                    }
+                    else
+                    {
+                        // Sin lotes: verificar stock directo del producto (retrocompatibilidad)
+                        if (cantidadBaseTotal > producto.StockActual)
+                        {
+                            await transaction.RollbackAsync(cancellationToken);
+                            return (false, $"Stock insuficiente para '{producto.Nombre}'.");
+                        }
+
+                        producto.StockActual -= cantidadBaseTotal;
                     }
 
-                    // Descontar stock atómico
-                    producto.StockActual -= item.Cantidad;
+                    // Sincronizar el PrecioUnitario del producto con el precio del siguiente lote FIFO activo
+                    var siguienteLoteActivo = await context.LotesProducto
+                        .Where(l => l.ProductoId == item.ProductoId && l.Estado == "Activo" && l.CantidadDisponible > 0)
+                        .OrderBy(l => l.FechaIngreso)
+                        .FirstOrDefaultAsync(cancellationToken);
+
+                    if (siguienteLoteActivo != null)
+                    {
+                        producto.PrecioUnitario = siguienteLoteActivo.PrecioVenta;
+                    }
                 }
 
+                // ── Fecha y ticket ───────────────────────────────────────────────
                 venta.ClienteCredito = null;
-
                 venta.Fecha = DateTime.Now;
                 venta.RecalcularTotal();
 
                 if (string.IsNullOrWhiteSpace(venta.NumeroTicket))
                 {
-                    // Optimización de secuencia sin Count() masivo
                     var maxId = await context.Ventas.MaxAsync(v => (int?)v.Id, cancellationToken) ?? 0;
                     venta.NumeroTicket = $"TCK-{DateTime.Now:yyyyMMdd}-{(maxId + 1):D4}";
+                }
+
+                // ── FIX BUG FIADO: actualizar DeudaActual del cliente directamente ─
+                // En lugar de llamar a CreditService.RegistrarNuevoFiado (que creaba
+                // una Venta duplicada), actualizamos la deuda aquí dentro de la misma
+                // transacción. El PosViewModel NO debe llamar a RegistrarNuevoFiado.
+                if (venta.TipoVenta == TipoVentaConsts.Credito && venta.ClienteCreditoId.HasValue)
+                {
+                    var cliente = await context.ClientesCredito
+                        .FirstOrDefaultAsync(c => c.Id == venta.ClienteCreditoId.Value, cancellationToken);
+
+                    if (cliente != null)
+                    {
+                        cliente.DeudaActual = Math.Round(
+                            cliente.DeudaActual + venta.Total, 2);
+                        cliente.UltimaActualizacion = DateTime.Now;
+                    }
                 }
 
                 await context.Ventas.AddAsync(venta, cancellationToken);
@@ -141,7 +235,8 @@ namespace software_ACEMAR.Services
             return ObtenerVentasRecientesAsync(limite).GetAwaiter().GetResult();
         }
 
-        public async Task<List<Venta>> ObtenerVentasRecientesAsync(int limite = 20, CancellationToken cancellationToken = default)
+        public async Task<List<Venta>> ObtenerVentasRecientesAsync(
+            int limite = 20, CancellationToken cancellationToken = default)
         {
             await using var context = new AppDbContext();
             return await context.Ventas
@@ -151,6 +246,44 @@ namespace software_ACEMAR.Services
                 .OrderByDescending(v => v.Fecha)
                 .Take(limite)
                 .ToListAsync(cancellationToken);
+        }
+
+        public List<Venta> ObtenerVentasPorFecha(DateTime desde, DateTime hasta)
+        {
+            using var context = new AppDbContext();
+            return context.Ventas
+                .AsNoTracking()
+                .Include(v => v.Detalles)
+                .Where(v => v.Fecha.Date >= desde.Date && v.Fecha.Date <= hasta.Date)
+                .OrderByDescending(v => v.Fecha)
+                .ToList();
+        }
+
+        public decimal ObtenerPrecioVigente(int productoId)
+        {
+            using var ctx = new AppDbContext();
+            var lote = ctx.LotesProducto
+                         .Where(l => l.ProductoId == productoId
+                                  && l.Estado == "Activo"
+                                  && l.CantidadDisponible > 0)
+                         .OrderBy(l => l.FechaIngreso)
+                         .FirstOrDefault();
+
+            if (lote != null) return lote.PrecioVenta;
+
+            return ctx.Productos
+                      .Where(p => p.Id == productoId)
+                      .Select(p => p.PrecioUnitario)
+                      .FirstOrDefault();
+        }
+
+        public decimal ObtenerDeudaCliente(int clienteCreditoId)
+        {
+            using var ctx = new AppDbContext();
+            return ctx.ClientesCredito
+                      .Where(c => c.Id == clienteCreditoId)
+                      .Select(c => c.DeudaActual)
+                      .FirstOrDefault();
         }
     }
 }

@@ -1,0 +1,52 @@
+================================================================================
+          RESUMEN DE CORRECCIONES Y NUEVAS FUNCIONALIDADES - SISTEMA ACEMAR
+================================================================================
+
+1. MÓDULO DE BOLETAS, TICKETS Y PROFORMAS (PDF)
+--------------------------------------------------------------------------------
+- Deshabilitada la emisión/descarga automática involuntaria de archivos PDF al finalizar ventas.
+- Solucionados los errores de renderizado de comprobantes PDF en el Histórico de Ventas, Proformas y Cotizaciones.
+
+2. SEGURIDAD, ROLES Y MENÚ LATERAL
+--------------------------------------------------------------------------------
+- Se limpió la barra lateral quitando el texto redundante "BD Local Activa", dejando un indicador visual con punto verde operativo.
+- Implementado el botón interactivo de Cambio de Rol en la barra superior (Administrador / Vendedor) con diálogo modal seguro de autenticación por clave.
+
+3. PUNTO DE VENTA (POS) Y CONTROL DE STOCK
+--------------------------------------------------------------------------------
+- Corrección de la validación de stock mínimo en el POS: se bloquea la adición al carrito si la cantidad a vender compromete la regla de stock mínimo configurada en el producto.
+
+4. ALMACÉN, CATÁLOGO Y UNIDADES DE MEDIDA MULTIMEDIDA
+--------------------------------------------------------------------------------
+- Eliminada la duplicidad en la selección de unidad de medida en Inventario/Almacén.
+- Habilitada la opción para definir múltiples unidades de medida adicionales con precios independientes por cada unidad en Catálogo & Precios.
+- Sincronización en el POS para permitir al vendedor elegir exactamente qué unidad de medida (y precio asociado) comprar.
+
+5. LOTES, VENCIMIENTOS Y CONTROL FIFO
+--------------------------------------------------------------------------------
+- Activación real y sincronizada del flujo FIFO por lotes y vencimientos en todas las pestañas.
+- Sincronización de precios independientes al registrar nuevos lotes de mercadería.
+- Asociación y visualización del Proveedor correspondiente en la tabla de ingreso de lotes.
+- Corrección de maquetación en la tabla de lotes para evitar que las columnas se sobrepongan visualmente.
+
+6. CRÉDITOS Y FIADOS - ELIMINACIÓN DE CLIENTES
+--------------------------------------------------------------------------------
+- Incorporada la opción de eliminar clientes/empresas de crédito (ClienteCredito) cuando tengan deuda 0 o hayan saldado sus cuentas.
+- Añadidos botones de eliminación (🗑️) directo en la tabla de clientes y en el panel lateral de edición con cuadro de confirmación.
+
+7. NUEVO DASHBOARD ANALÍTICO Y CENTRO DE CONTROL
+--------------------------------------------------------------------------------
+- Implementada la nueva pantalla "Dashboard Analítico" al inicio del menú lateral.
+- Gráficos integrados:
+  * Gráfico de Dona: Distribución por medio de pago (Efectivo, Digital/Yape/Plin, Crédito).
+  * Gráfico de Barras Verticales: Comparativa de ventas diarias de los últimos 7 días.
+  * Gráfico de Barras Horizontales: Top 5 productos más vendidos e ingresos generados.
+  * Gráfico de Cerrucho (Picos y Valles): Tendencia de fluctuación de demanda e ingresos.
+- Tarjetas KPI Ejecutivas: Total Ventas Día/Mes, Deuda Créditos, Stock Bajo/Lotes y Saldo Caja Chica.
+- Atajos Directos: Botones interactivos para saltar instantáneamente a las 9 pestañas/módulos del sistema.
+- Resueltos errores de maquetación XAML (reemplazados atributos incompatibles y sanitizados números NaN/Infinity).
+
+================================================================================
+Fecha de Emisión: 2026-10-07
+Sistema: Ferretería & Almacén ACEMAR v2.0
+================================================================================

@@ -62,11 +62,7 @@
                            Visibility="Collapsed" 
                            Margin="0,0,0,10" />
 
-                <TextBlock Text="Credencial por defecto: Usuario: Gerente / Contraseña: acemar" 
-                           FontSize="11" 
-                           Foreground="#78909C" 
-                           FontStyle="Italic" 
-                           HorizontalAlignment="Center" />
+
             </StackPanel>
 
             <!-- Botones de Acción -->

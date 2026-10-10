@@ -22,56 +22,65 @@
                 <ColumnDefinition Width="10" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="1.2*" />
                 <ColumnDefinition Width="10" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <!-- KPI 1: Total Productos -->
-            <Border Grid.Column="0" Background="#FFFFFF" CornerRadius="8" Padding="12" BorderBrush="#DCE3D6" BorderThickness="1">
+            <Border Grid.Column="0" Background="#FFFFFF" CornerRadius="8" Padding="12" BorderBrush="#DCE3D6" BorderThickness="1"
+                    ToolTip="Número total de productos registrados en el catálogo de la ferretería.">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.05" Color="#1E2514" />
                 </Border.Effect>
                 <StackPanel>
                     <TextBlock Text="Total de Productos" FontSize="12" Foreground="#556049" FontWeight="SemiBold" />
                     <TextBlock Text="{Binding TotalProductos}" FontSize="22" FontWeight="ExtraBold" Foreground="#354318" Margin="0,2,0,0" />
-                    <TextBlock Text="Registrados en almacén" FontSize="11" Foreground="#889876" Margin="0,1,0,0" />
+                    <TextBlock Text="Registrados en catálogo" FontSize="11" Foreground="#889876" Margin="0,1,0,0" />
                 </StackPanel>
             </Border>
 
             <!-- KPI 2: Alerta Stock Bajo / Crítico -->
-            <Border Grid.Column="2" Background="#FFF5F5" CornerRadius="8" Padding="12" BorderBrush="#FFCDD2" BorderThickness="1.5">
+            <Border Grid.Column="2" Background="#FFF5F5" CornerRadius="8" Padding="12" BorderBrush="#FFCDD2" BorderThickness="1.5"
+                    ToolTip="Cantidad de productos cuyo stock disponible es menor o igual a su límite de seguridad.">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.08" Color="#D32F2F" />
                 </Border.Effect>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="⚠️ " FontSize="12" VerticalAlignment="Center" />
-                        <TextBlock Text="Stock Bajo / Crítico" FontSize="12" Foreground="#C62828" FontWeight="Bold" VerticalAlignment="Center" />
+                        <TextBlock Text="Alerta Stock Bajo" FontSize="12" Foreground="#C62828" FontWeight="Bold" VerticalAlignment="Center" />
                     </StackPanel>
                     <TextBlock Text="{Binding TotalProductosBajoStock}" FontSize="22" FontWeight="ExtraBold" Foreground="#D32F2F" Margin="0,2,0,0" />
-                    <TextBlock Text="StockActual ≤ StockMinimo" FontSize="11" Foreground="#E57373" FontWeight="SemiBold" Margin="0,1,0,0" />
+                    <TextBlock Text="Requieren reposición" FontSize="11" Foreground="#E57373" FontWeight="SemiBold" Margin="0,1,0,0" />
                 </StackPanel>
             </Border>
 
-            <!-- KPI 3: Valor Total Inventario -->
-            <Border Grid.Column="4" Background="#FFFFFF" CornerRadius="8" Padding="12" BorderBrush="#DCE3D6" BorderThickness="1">
+            <!-- KPI 3: Ventas del Día -->
+            <Border Grid.Column="4" Background="#F0FDF4" CornerRadius="8" Padding="12" BorderBrush="#DCFCE7" BorderThickness="1.5"
+                    ToolTip="Resumen de ingresos del día desglosados en efectivo y fiados por cobrar.">
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.05" Color="#1E2514" />
+                    <DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.08" Color="#059669" />
                 </Border.Effect>
                 <StackPanel>
-                    <TextBlock Text="Valorización Inventario" FontSize="12" Foreground="#556049" FontWeight="SemiBold" />
-                    <TextBlock Text="{Binding ValorTotalInventario, StringFormat={}S/ {0:N2}}" FontSize="20" FontWeight="ExtraBold" Foreground="#4A5D23" Margin="0,2,0,0" />
-                    <TextBlock Text="Calculado a precio actual" FontSize="11" Foreground="#889876" Margin="0,1,0,0" />
+                    <TextBlock Text="Ventas de Hoy" FontSize="12" Foreground="#065F46" FontWeight="Bold" />
+                    <TextBlock Text="{Binding VentasDelDiaTotal, StringFormat={}S/ {0:N2}}" FontSize="20" FontWeight="ExtraBold" Foreground="#059669" Margin="0,2,0,0" />
+                    <StackPanel Orientation="Horizontal" Margin="0,1,0,0">
+                        <TextBlock Text="Efec: " FontSize="10" Foreground="#065F46" ToolTip="Ventas pagadas en efectivo hoy" />
+                        <TextBlock Text="{Binding VentasEfectivoTotal, StringFormat={}S/ {0:N2}}" FontSize="10" FontWeight="Bold" Foreground="#065F46" />
+                        <TextBlock Text=" | Fiado: " FontSize="10" Foreground="#065F46" Margin="4,0,0,0" ToolTip="Ventas otorgadas a crédito hoy" />
+                        <TextBlock Text="{Binding VentasCreditoTotal, StringFormat={}S/ {0:N2}}" FontSize="10" FontWeight="Bold" Foreground="#B45309" />
+                    </StackPanel>
                 </StackPanel>
             </Border>
 
-            <!-- KPI 4: Botón de Refresco y Ocupación CuMax -->
-            <Border Grid.Column="6" Background="#F8FAF5" CornerRadius="8" Padding="12" BorderBrush="#DCE3D6" BorderThickness="1">
+            <!-- KPI 4: Valorización Inventario & Botón Refresco -->
+            <Border Grid.Column="6" Background="#F8FAF5" CornerRadius="8" Padding="12" BorderBrush="#DCE3D6" BorderThickness="1"
+                    ToolTip="Valor económico total estimado de toda la mercadería almacenada.">
                 <Grid>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Promedio CuMax" FontSize="12" Foreground="#556049" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding PromedioOcupacionCuMax, StringFormat={}{0:0.0} %}" FontSize="18" FontWeight="Bold" Foreground="#354318" Margin="0,1,0,3" />
+                        <TextBlock Text="Valor de Inventario" FontSize="11" Foreground="#556049" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding ValorTotalInventario, StringFormat={}S/ {0:N2}}" FontSize="14" FontWeight="Bold" Foreground="#354318" Margin="0,1,0,3" />
                         <Button Content="🔄 Actualizar" 
                                 Command="{Binding CargarInventarioCommand}" 
                                 FontSize="11" 
@@ -81,7 +90,8 @@
                                 Foreground="#354318" 
                                 BorderBrush="#C5D1BC" 
                                 BorderThickness="1" 
-                                Cursor="Hand" />
+                                Cursor="Hand"
+                                ToolTip="Recargar la lista de existencias." />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -107,12 +117,13 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="Monitoreo de Existencias y Almacén" FontSize="16" FontWeight="Bold" Foreground="#1E2514" />
-                        <TextBlock Text="Las filas con StockActual ≤ StockMinimo se resaltan en rojo de alerta." FontSize="11" Foreground="#556049" Margin="0,1,0,0" />
+                        <TextBlock Text="Monitoreo de Existencias de Almacén" FontSize="16" FontWeight="Bold" Foreground="#1E2514" />
+                        <TextBlock Text="Las filas destacadas en color rojo indican productos que requieren reposición urgente." FontSize="11" Foreground="#556049" Margin="0,1,0,0" />
                     </StackPanel>
 
                     <!-- Buscador en inventario -->
-                    <Border Grid.Column="1" Background="#F8FAF5" CornerRadius="6" BorderBrush="#C5D1BC" BorderThickness="1" Width="240" Padding="6,2">
+                    <Border Grid.Column="1" Background="#F8FAF5" CornerRadius="6" BorderBrush="#C5D1BC" BorderThickness="1" Width="240" Padding="6,2"
+                            ToolTip="Escriba aquí para buscar productos en el almacén por nombre o código.">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="22" />
@@ -173,7 +184,7 @@
                         <DataGridTemplateColumn Header="Stock Actual" Width="95" SortMemberPath="StockActual">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0" ToolTip="Cantidad disponible actualmente en almacén.">
                                         <TextBlock Text="{Binding StockActual, StringFormat={}{0:0.##}}" FontWeight="Bold" FontSize="13" />
                                         <TextBlock Text="{Binding UnidadMedida, StringFormat={} {0}}" FontSize="11" Margin="3,0,0,0" VerticalAlignment="Bottom" />
                                     </StackPanel>
@@ -182,7 +193,7 @@
                         </DataGridTemplateColumn>
 
                         <DataGridTextColumn Header="Stock Mín." Binding="{Binding StockMinimo, StringFormat={}{0:0.##}}" Width="85" />
-                        <DataGridTextColumn Header="CuMax" Binding="{Binding CuMax, StringFormat={}{0:0.##}}" Width="85" />
+                        <DataGridTextColumn Header="Capacidad Máx (CuMax)" Binding="{Binding CuMax, StringFormat={}{0:0.##}}" Width="140" />
                         <DataGridTextColumn Header="Precio Unit." Binding="{Binding PrecioUnitario, StringFormat={}S/ {0:N2}}" Width="95" FontWeight="Bold" />
 
                         <DataGridTemplateColumn Header="Estado / Alerta" Width="130">
@@ -190,7 +201,8 @@
                                 <DataTemplate>
                                     <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
                                         <Border Background="#D32F2F" CornerRadius="10" Padding="8,2"
-                                                Visibility="{Binding EsStockBajo, Converter={x:Static local:Converters.BooleanToVisibility}}">
+                                                Visibility="{Binding EsStockBajo, Converter={x:Static local:Converters.BooleanToVisibility}}"
+                                                ToolTip="Alerta: Stock por debajo o igual al límite mínimo de seguridad.">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="⚠️" Margin="0,0,3,0" FontSize="10" />
                                                 <TextBlock Text="STOCK BAJO" Foreground="#FFFFFF" FontWeight="Bold" FontSize="10" />
@@ -198,7 +210,8 @@
                                         </Border>
 
                                         <Border Background="#E8F5E9" CornerRadius="10" Padding="8,2"
-                                                Visibility="{Binding EsStockBajo, Converter={x:Static local:Converters.InverseBooleanToVisibility}}">
+                                                Visibility="{Binding EsStockBajo, Converter={x:Static local:Converters.InverseBooleanToVisibility}}"
+                                                ToolTip="Stock adecuado disponible en almacén.">
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="✓" Foreground="#2E7D32" FontWeight="Bold" Margin="0,0,3,0" FontSize="10" />
                                                 <TextBlock Text="ABASTECIDO" Foreground="#2E7D32" FontWeight="Bold" FontSize="10" />
@@ -213,65 +226,39 @@
             </Grid>
         </Border>
 
-        <!-- FILA 2: PANEL DE INGRESO DE MERCADERÍA CON VALIDACIÓN DE CUMAX -->
-        <Border Grid.Row="2" Background="#FFFFFF" CornerRadius="8" BorderBrush="#DCE3D6" BorderThickness="1" Padding="12">
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.05" Color="#1E2514" />
-            </Border.Effect>
-
+        <!-- FILA 2: BANNER Y RESTRICCIÓN DE INGRESO DE STOCK POR LOTES FIFO -->
+        <Border Grid.Row="2" Background="#F4F7EF" CornerRadius="8" BorderBrush="#C5D1BC" BorderThickness="1.5" Padding="14"
+                ToolTip="Recordatorio de regla de inventario: Todos los nuevos ingresos de stock se deben registrar mediante lotes con proveedor y costo de compra.">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="14" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="10" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="90" />
-                    <ColumnDefinition Width="10" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Background="#E8EEDF" CornerRadius="6" Width="38" Height="38">
-                    <TextBlock Text="📦" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <Border Grid.Column="0" Background="#4A5D23" CornerRadius="8" Width="42" Height="42">
+                    <TextBlock Text="📦" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
 
                 <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                    <TextBlock Text="Ingreso de Mercadería (Validación CuMax - Regla INV-02)" FontSize="13" FontWeight="Bold" Foreground="#1E2514" />
-                    <StackPanel Orientation="Horizontal" Margin="0,1,0,0">
-                        <TextBlock Text="Seleccionado: " FontSize="11" Foreground="#556049" />
-                        <TextBlock Text="{Binding ProductoSeleccionado.Nombre, FallbackValue='(Seleccione un producto)'}" 
-                                   FontWeight="Bold" Foreground="#354318" FontSize="11" TextTrimming="CharacterEllipsis" MaxWidth="250" />
-                        <TextBlock Text=" | Stock: " FontSize="11" Foreground="#556049" Margin="4,0,0,0" />
-                        <TextBlock Text="{Binding ProductoSeleccionado.StockActual, FallbackValue='-', StringFormat={}{0:0.##}}" FontWeight="Bold" Foreground="#354318" FontSize="11" />
-                        <TextBlock Text=" | CuMax: " FontSize="11" Foreground="#556049" Margin="4,0,0,0" />
-                        <TextBlock Text="{Binding ProductoSeleccionado.CuMax, FallbackValue='-', StringFormat={}{0:0.##}}" FontWeight="Bold" Foreground="#4A5D23" FontSize="11" />
-                    </StackPanel>
+                    <TextBlock Text="Ingreso de Mercadería mediante Lotes de Compras" FontSize="14" FontWeight="Bold" Foreground="#1E2514" />
+                    <TextBlock Text="Todo nuevo ingreso de mercadería debe registrarse como un nuevo lote con su costo de compra y proveedor en 'Lotes &amp; Vencimientos'." 
+                               FontSize="11" Foreground="#556049" TextWrapping="Wrap" Margin="0,2,0,0" />
                 </StackPanel>
 
-                <TextBlock Grid.Column="4" Text="Cantidad:" FontSize="13" FontWeight="Bold" VerticalAlignment="Center" Foreground="#1E2514" />
-                <TextBox Grid.Column="5" 
-                         Text="{Binding CantidadIngresoTexto, UpdateSourceTrigger=PropertyChanged}" 
-                         FontSize="15" 
-                         FontWeight="Bold" 
-                         VerticalContentAlignment="Center" 
-                         HorizontalContentAlignment="Center"
-                         Background="#F8FAF5" 
-                         BorderBrush="#4A5D23" 
-                         BorderThickness="1.5" 
-                         Padding="2" 
-                         Height="34" />
-
-                <Button Grid.Column="7" 
-                        Content="📥 REGISTRAR INGRESO" 
-                        Command="{Binding RegistrarIngresoCommand}" 
+                <Button Grid.Column="3" 
+                        Content="📦 IR A LOTES &amp; VENCIMIENTOS" 
+                        Command="{Binding NavegarALotesCommand}" 
                         FontSize="12" 
                         FontWeight="Bold" 
-                        Padding="14,0" 
+                        Padding="16,10" 
                         Background="#4A5D23" 
                         Foreground="#FFFFFF" 
                         BorderThickness="0" 
                         Cursor="Hand" 
-                        Height="34" />
+                        VerticalAlignment="Center"
+                        ToolTip="Ir al formulario para ingresar un nuevo lote de mercadería." />
             </Grid>
         </Border>
     </Grid>

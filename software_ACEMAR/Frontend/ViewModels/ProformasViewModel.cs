@@ -11,6 +11,7 @@ namespace software_ACEMAR.ViewModels
     public class ProformasViewModel : ViewModelBase
     {
         private readonly IProformaService _proformaService;
+        private readonly IPdfService _pdfService;
 
         private Proforma? _proformaSeleccionada;
         private string _filtroEstado = "Pendiente";
@@ -19,15 +20,18 @@ namespace software_ACEMAR.ViewModels
 
         public ICommand CargarProformasCommand { get; }
         public ICommand AnularProformaCommand { get; }
+        public ICommand VerProformaPdfCommand { get; }
 
         public event Action<Proforma>? OnConvertirProformaAVenta;
 
-        public ProformasViewModel(IProformaService proformaService)
+        public ProformasViewModel(IProformaService proformaService, IPdfService pdfService)
         {
             _proformaService = proformaService;
+            _pdfService = pdfService;
 
             CargarProformasCommand = new RelayCommand(CargarProformas);
             AnularProformaCommand = new RelayCommand(EjecutarAnularProforma);
+            VerProformaPdfCommand = new RelayCommand(EjecutarVerProformaPdf);
 
             CargarProformas();
         }
@@ -92,6 +96,27 @@ namespace software_ACEMAR.ViewModels
 
             _proformaService.AnularProforma(p.Id);
             CargarProformas();
+        }
+
+        private void EjecutarVerProformaPdf(object? param)
+        {
+            var p = param as Proforma ?? ProformaSeleccionada;
+            if (p == null)
+            {
+                MessageBox.Show("Seleccione una proforma para exportar en PDF.", "Visualizar PDF", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var proformaCompleta = _proformaService.ObtenerPorId(p.Id) ?? p;
+            try
+            {
+                byte[] pdfBytes = _pdfService.GenerarPdfProforma(proformaCompleta);
+                string path = _pdfService.GuardarYAbrirPdf(pdfBytes, "Proformas", $"Proforma_{proformaCompleta.NumeroProforma}.pdf");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ocurrió un error al generar la Proforma PDF: {ex.Message}", "Error PDF", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
     }
 }
