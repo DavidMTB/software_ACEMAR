@@ -56,13 +56,9 @@ namespace software_ACEMAR.Tests
         [TestMethod]
         public void Regla_INV_01_BloqueoVenta_StockInsuficiente()
         {
-            // Regla INV-01 (Bloqueo de Venta): Si cantidad_solicitada > stock_actual,
-            // bloquear la acción y lanzar mensaje exacto: "Stock insuficiente".
-            using var context = new AppDbContext();
-            var producto = context.Productos.First(p => p.Codigo == "TUB-008"); // StockActual = 4.0
             var salesService = new SalesService();
-
-            // Solicitar 5.0 (mayor al stock actual de 4.0)
+            using var context = new AppDbContext();
+            var producto = context.Productos.First(p => p.Codigo == "TUB-008"); 
             bool esValido = salesService.ValidarStockDisponible(producto.Id, 5.0m, out string mensajeError);
 
             Assert.IsFalse(esValido);

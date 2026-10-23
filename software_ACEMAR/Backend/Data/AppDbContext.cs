@@ -178,8 +178,61 @@ namespace software_ACEMAR.Data
             SeedLotesIniciales();
             SeedClientesCredito();
             SeedUsuarios();
+            AjustarUnidadesBase();
 
             SaveChanges();
+        }
+
+        /// <summary>
+        /// Ajusta y sincroniza la unidad base de áridos (Arena Gruesa) a Metros (m³)
+        /// garantizando la equivalencia en stock, lotes y factores de conversión fraccionales.
+        /// </summary>
+        private void AjustarUnidadesBase()
+        {
+            var pArena = Productos.FirstOrDefault(p => p.Codigo == "ARE-003");
+            if (pArena != null && pArena.UnidadMedida != "Metros")
+            {
+                pArena.UnidadMedida = "Metros";
+                // Conversión de bolsas a metros: 1 metro = 25 bolsas -> factor 0.04
+                // 57.65 bolsas * 0.04 = 2.31 metros cúbicos
+                decimal stockMetros = Math.Round(pArena.StockActual * 0.04m, 2);
+                pArena.StockActual = stockMetros > 0 ? stockMetros : 10.0m;
+                pArena.StockMinimo = 2.0m;
+                pArena.CuMax = 30.0m;
+                pArena.PrecioUnitario = 65.00m; // Precio por metro cúbico
+
+                pArena.SetUnidadesPermitidas(new List<string> { "Metros", "Bolsa", "Carretilla", "Lata", "Volquetada" });
+                pArena.GuardarPreciosPorUnidad(new Dictionary<string, decimal>
+                {
+                    ["Metros"] = 65.00m,
+                    ["Bolsa"] = 6.50m,
+                    ["Carretilla"] = 10.00m,
+                    ["Lata"] = 2.50m,
+                    ["Volquetada"] = 260.00m
+                });
+                pArena.GuardarFactoresPorUnidad(new Dictionary<string, decimal>
+                {
+                    ["Metros"] = 1.0m,
+                    ["Bolsa"] = 0.04m,
+                    ["Carretilla"] = 0.08m,
+                    ["Lata"] = 0.02m,
+                    ["Volquetada"] = 4.0m
+                });
+
+                // Migrar lotes activos de este producto a Metros
+                var lotesArena = LotesProducto.Where(l => l.ProductoId == pArena.Id).ToList();
+                foreach (var l in lotesArena)
+                {
+                    if (l.UnidadMedida == "Bolsa")
+                    {
+                        l.UnidadMedida = "Metros";
+                        l.CantidadInicial = Math.Round(l.CantidadInicial * 0.04m, 2);
+                        l.CantidadDisponible = Math.Round(l.CantidadDisponible * 0.04m, 2);
+                        l.CostoCompra = Math.Round(l.CostoCompra / 0.04m, 2);
+                        l.PrecioVenta = 65.00m;
+                    }
+                }
+            }
         }
 
         private void SeedLotesIniciales()
@@ -331,8 +384,10 @@ namespace software_ACEMAR.Data
                 // ── CONSTRUCCIÓN ──────────────────────────────────────────────────
                 new Producto { Codigo = "CEM-001", Nombre = "Cemento Sol Tipo I (50kg)",       Categoria = "Construcción", PrecioUnitario = 32.50m, StockActual = 35.0m,   StockMinimo = 15.0m, CuMax = 100.0m, UnidadMedida = "Bolsa" },
                 new Producto { Codigo = "CEM-002", Nombre = "Cemento Andino Tipo V (50kg)",    Categoria = "Construcción", PrecioUnitario = 36.00m, StockActual = 20.0m,   StockMinimo = 10.0m, CuMax = 80.0m,  UnidadMedida = "Bolsa" },
-                new Producto { Codigo = "ARE-003", Nombre = "Arena Gruesa Lavada",             Categoria = "Construcción", PrecioUnitario = 6.50m,  StockActual = 50.0m,   StockMinimo = 20.0m, CuMax = 150.0m, UnidadMedida = "Bolsa",
-                               UnidadesPermitidas = "[\"Lata\",\"Carretilla\",\"Bolsa\",\"Volquetada\"]" },
+                new Producto { Codigo = "ARE-003", Nombre = "Arena Gruesa Lavada",             Categoria = "Construcción", PrecioUnitario = 65.00m, StockActual = 10.0m,    StockMinimo = 2.0m,  CuMax = 30.0m,  UnidadMedida = "Metros",
+                               UnidadesPermitidas = "[\"Metros\",\"Bolsa\",\"Carretilla\",\"Lata\",\"Volquetada\"]",
+                               PreciosPorUnidad = "{\"Metros\":65.0,\"Bolsa\":6.50,\"Carretilla\":10.0,\"Lata\":2.50,\"Volquetada\":260.0}",
+                               FactoresPorUnidad = "{\"Metros\":1.0,\"Bolsa\":0.04,\"Carretilla\":0.08,\"Lata\":0.02,\"Volquetada\":4.0}" },
                 new Producto { Codigo = "LAD-004", Nombre = "Ladrillo King Kong 18 Huecos",   Categoria = "Construcción", PrecioUnitario = 1.20m,  StockActual = 1200.0m, StockMinimo = 500.0m, CuMax = 3000.0m, UnidadMedida = "Unidad" },
                 new Producto { Codigo = "YES-023", Nombre = "Yeso Blanco Industrial (20kg)",  Categoria = "Construcción", PrecioUnitario = 12.50m, StockActual = 28.0m,   StockMinimo = 10.0m, CuMax = 80.0m,  UnidadMedida = "Bolsa" },
                 new Producto { Codigo = "MAL-024", Nombre = "Malla Electrosoldada 15x15 (m²)", Categoria = "Construcción", PrecioUnitario = 18.00m, StockActual = 40.0m,  StockMinimo = 15.0m, CuMax = 120.0m, UnidadMedida = "Metros" },

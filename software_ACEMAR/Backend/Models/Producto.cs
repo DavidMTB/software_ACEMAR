@@ -214,12 +214,13 @@ namespace software_ACEMAR.Models
             }
 
             // Factores estándar predeterminados por nombre si no hay factor personalizado guardado
+            if (string.Equals(UnidadMedida, "Metros", StringComparison.OrdinalIgnoreCase) && string.Equals(uNorm, "Bolsa", StringComparison.OrdinalIgnoreCase)) return 0.04m;
             if (string.Equals(uNorm, "Volquetada", StringComparison.OrdinalIgnoreCase)) return 4.0m;
             if (string.Equals(uNorm, "Ciento", StringComparison.OrdinalIgnoreCase)) return 100.0m;
             if (string.Equals(uNorm, "Millar", StringComparison.OrdinalIgnoreCase)) return 1000.0m;
             if (string.Equals(uNorm, "Par", StringComparison.OrdinalIgnoreCase)) return 2.0m;
-            if (string.Equals(uNorm, "Carretilla", StringComparison.OrdinalIgnoreCase)) return 0.25m;
-            if (string.Equals(uNorm, "Lata", StringComparison.OrdinalIgnoreCase)) return 0.1m;
+            if (string.Equals(uNorm, "Carretilla", StringComparison.OrdinalIgnoreCase)) return 0.08m;
+            if (string.Equals(uNorm, "Lata", StringComparison.OrdinalIgnoreCase)) return 0.02m;
 
             return 1.0m;
         }
