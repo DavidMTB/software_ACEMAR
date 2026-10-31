@@ -42,3 +42,7 @@ Thumbs.db
 .vscode/
 [Tt]est[Rr]esults/
 
+## Configuración y credenciales de IA
+ai_settings.json
+
+

@@ -40,6 +40,8 @@ namespace software_ACEMAR.Services
                     ventas = context.Ventas
                         .AsNoTracking()
                         .Include(v => v.Detalles)
+                            .ThenInclude(d => d.LoteProducto)
+                                .ThenInclude(l => l!.Proveedor)
                         .Where(v => v.Fecha >= inicio && v.Fecha < fin)
                         .OrderByDescending(v => v.Fecha)
                         .ToList();
@@ -242,7 +244,7 @@ namespace software_ACEMAR.Services
                 wsDetalles.Cell("A1").Style.Font.Bold = true;
                 wsDetalles.Cell("A1").Style.Font.FontSize = 14;
 
-                string[] headersDetalles = { "N.º TICKET", "FECHA VENTA", "DESCRIPCIÓN DEL PRODUCTO", "CANTIDAD", "UNIDAD", "P. UNITARIO (S/)", "IMPORTE LÍNEA (S/)" };
+                string[] headersDetalles = { "N.º TICKET", "FECHA VENTA", "DESCRIPCIÓN DEL PRODUCTO", "LOTE", "PROVEEDOR", "CANTIDAD", "UNIDAD", "P. UNITARIO (S/)", "IMPORTE LÍNEA (S/)" };
                 for (int c = 0; c < headersDetalles.Length; c++)
                 {
                     var cell = wsDetalles.Cell(3, c + 1);
@@ -265,15 +267,17 @@ namespace software_ACEMAR.Services
                             wsDetalles.Cell(rD, 2).Value = v.Fecha;
                             wsDetalles.Cell(rD, 2).Style.DateFormat.Format = "dd/MM/yyyy HH:mm";
                             wsDetalles.Cell(rD, 3).Value = d.ProductoNombre;
-                            wsDetalles.Cell(rD, 4).Value = d.Cantidad;
-                            wsDetalles.Cell(rD, 4).Style.NumberFormat.Format = "#,##0.00";
-                            wsDetalles.Cell(rD, 5).Value = string.IsNullOrWhiteSpace(d.UnidadMedida) ? "Unidades" : d.UnidadMedida;
+                            wsDetalles.Cell(rD, 4).Value = d.LoteDisplay;
+                            wsDetalles.Cell(rD, 5).Value = d.ProveedorDisplay;
+                            wsDetalles.Cell(rD, 6).Value = d.Cantidad;
+                            wsDetalles.Cell(rD, 6).Style.NumberFormat.Format = "#,##0.00";
+                            wsDetalles.Cell(rD, 7).Value = string.IsNullOrWhiteSpace(d.UnidadMedida) ? "Unidades" : d.UnidadMedida;
 
-                            wsDetalles.Cell(rD, 6).Value = d.PrecioUnitario;
-                            wsDetalles.Cell(rD, 6).Style.NumberFormat.Format = "\"S/\" #,##0.00";
+                            wsDetalles.Cell(rD, 8).Value = d.PrecioUnitario;
+                            wsDetalles.Cell(rD, 8).Style.NumberFormat.Format = "\"S/\" #,##0.00";
 
-                            wsDetalles.Cell(rD, 7).Value = d.Subtotal;
-                            wsDetalles.Cell(rD, 7).Style.NumberFormat.Format = "\"S/\" #,##0.00";
+                            wsDetalles.Cell(rD, 9).Value = d.Subtotal;
+                            wsDetalles.Cell(rD, 9).Style.NumberFormat.Format = "\"S/\" #,##0.00";
 
                             rD++;
                         }
@@ -285,15 +289,15 @@ namespace software_ACEMAR.Services
                     wsDetalles.Cell(rD, 1).Value = "TOTAL GENERAL ÍTEMS";
                     wsDetalles.Cell(rD, 1).Style.Font.Bold = true;
 
-                    wsDetalles.Cell(rD, 4).FormulaA1 = $"SUM(D4:D{rD - 1})";
-                    wsDetalles.Cell(rD, 4).Style.Font.Bold = true;
-                    wsDetalles.Cell(rD, 4).Style.NumberFormat.Format = "#,##0.00";
+                    wsDetalles.Cell(rD, 6).FormulaA1 = $"SUM(F4:F{rD - 1})";
+                    wsDetalles.Cell(rD, 6).Style.Font.Bold = true;
+                    wsDetalles.Cell(rD, 6).Style.NumberFormat.Format = "#,##0.00";
 
-                    wsDetalles.Cell(rD, 7).FormulaA1 = $"SUM(G4:G{rD - 1})";
-                    wsDetalles.Cell(rD, 7).Style.Font.Bold = true;
-                    wsDetalles.Cell(rD, 7).Style.NumberFormat.Format = "\"S/\" #,##0.00";
+                    wsDetalles.Cell(rD, 9).FormulaA1 = $"SUM(I4:I{rD - 1})";
+                    wsDetalles.Cell(rD, 9).Style.Font.Bold = true;
+                    wsDetalles.Cell(rD, 9).Style.NumberFormat.Format = "\"S/\" #,##0.00";
 
-                    var totalRangeD = wsDetalles.Range(rD, 1, rD, 7);
+                    var totalRangeD = wsDetalles.Range(rD, 1, rD, 9);
                     totalRangeD.Style.Fill.BackgroundColor = XLColor.FromHtml("#F1F5F9");
                     totalRangeD.Style.Border.TopBorder = XLBorderStyleValues.Thin;
                     totalRangeD.Style.Border.BottomBorder = XLBorderStyleValues.Double;

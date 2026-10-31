@@ -114,10 +114,12 @@
                                   RowHeight="32"
                                   FontSize="12">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Código" Binding="{Binding ProductoCodigo}" Width="80" />
+                                <DataGridTextColumn Header="Código" Binding="{Binding ProductoCodigo}" Width="75" />
                                 <DataGridTextColumn Header="Producto" Binding="{Binding ProductoNombre}" Width="*" FontWeight="SemiBold" />
+                                <DataGridTextColumn Header="Lote" Binding="{Binding LoteDisplay}" Width="85" FontWeight="SemiBold" />
+                                <DataGridTextColumn Header="Proveedor" Binding="{Binding ProveedorDisplay}" Width="130" />
                                 <DataGridTextColumn Header="Cantidad" Binding="{Binding Cantidad, StringFormat={}{0:N2}}" Width="70" FontWeight="Bold" />
-                                <DataGridTextColumn Header="U.M." Binding="{Binding UnidadMedida}" Width="60" />
+                                <DataGridTextColumn Header="U.M." Binding="{Binding UnidadMedida}" Width="55" />
                                 <DataGridTextColumn Header="P. Unit" Binding="{Binding PrecioUnitario, StringFormat={}S/ {0:N2}}" Width="75" />
                                 <DataGridTextColumn Header="Subtotal" Binding="{Binding Subtotal, StringFormat={}S/ {0:N2}}" Width="80" FontWeight="Bold" />
                             </DataGrid.Columns>

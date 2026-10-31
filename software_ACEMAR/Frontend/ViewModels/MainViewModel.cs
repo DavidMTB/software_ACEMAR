@@ -20,6 +20,7 @@ namespace software_ACEMAR.ViewModels
         private readonly IUserService _userService;
         private readonly IVentaCorrectionService _ventaCorrectionService;
         private readonly IPdfService _pdfService;
+        private readonly IAiAssistantService _aiAssistantService;
 
         private ViewModelBase _currentViewModel;
         private string _tituloVistaActual = "Punto de Venta (POS)";
@@ -37,9 +38,11 @@ namespace software_ACEMAR.ViewModels
         public ProveedoresViewModel ProveedoresVM { get; }
         public VentasCorreccionViewModel VentasCorreccionVM { get; }
         public UsuariosViewModel UsuariosVM { get; }
+        public AiAssistantViewModel AiAssistantVM { get; }
 
         public ICommand NavegarPosCommand { get; }
         public ICommand NavegarDashboardGeneralCommand { get; }
+        public ICommand NavegarAiAssistantCommand { get; }
         public ICommand NavegarDashboardCommand { get; }
         public ICommand NavegarProductCrudCommand { get; }
         public ICommand NavegarCreditsCommand { get; }
@@ -70,6 +73,7 @@ namespace software_ACEMAR.ViewModels
             _ventaCorrectionService = new VentaCorrectionService();
             _pdfService = new PdfService();
             _userService = new UserService();
+            _aiAssistantService = new AiAssistantService();
 
             // Inicializar ViewModels
             PosVM = new PosViewModel(_inventoryService, _salesService, _authService, _creditService, _proformaService, _pdfService);
@@ -83,6 +87,7 @@ namespace software_ACEMAR.ViewModels
             ProveedoresVM = new ProveedoresViewModel(_proveedorService, _inventoryService);
             VentasCorreccionVM = new VentasCorreccionViewModel(_ventaCorrectionService, _salesService, _pdfService);
             UsuariosVM = new UsuariosViewModel(_userService, _authService);
+            AiAssistantVM = new AiAssistantViewModel(_aiAssistantService);
 
             // Suscribir eventos de navegación de DashboardGeneral
             DashboardGeneralVM.OnNavegarSolicitado += vista =>
@@ -100,6 +105,7 @@ namespace software_ACEMAR.ViewModels
                     case "Proveedores": NavegarAProveedores(); break;
                     case "Auditoria": NavegarAVentasCorreccion(); break;
                     case "Usuarios": NavegarAUsuarios(); break;
+                    case "AiAssistant": NavegarAAiAssistant(); break;
                 }
             };
 
@@ -121,6 +127,7 @@ namespace software_ACEMAR.ViewModels
             // Comandos de navegación
             NavegarPosCommand = new RelayCommand(NavegarAPos);
             NavegarDashboardGeneralCommand = new RelayCommand(NavegarADashboardGeneral);
+            NavegarAiAssistantCommand = new RelayCommand(NavegarAAiAssistant);
             NavegarDashboardCommand = new RelayCommand(NavegarADashboard);
             NavegarProductCrudCommand = new RelayCommand(NavegarAProductCrud);
             NavegarCreditsCommand = new RelayCommand(NavegarACredits);
@@ -161,12 +168,14 @@ namespace software_ACEMAR.ViewModels
                     OnPropertyChanged(nameof(IsProveedoresActive));
                     OnPropertyChanged(nameof(IsVentasCorreccionActive));
                     OnPropertyChanged(nameof(IsUsuariosActive));
+                    OnPropertyChanged(nameof(IsAiAssistantActive));
                 }
             }
         }
 
         public bool IsPosActive => CurrentViewModel is PosViewModel;
         public bool IsDashboardGeneralActive => CurrentViewModel is DashboardGeneralViewModel;
+        public bool IsAiAssistantActive => CurrentViewModel is AiAssistantViewModel;
         public bool IsDashboardActive => CurrentViewModel is DashboardViewModel;
         public bool IsProductCrudActive => CurrentViewModel is ProductCrudViewModel;
         public bool IsCreditsActive => CurrentViewModel is CreditsViewModel;
@@ -315,6 +324,12 @@ namespace software_ACEMAR.ViewModels
             _ = UsuariosVM.CargarUsuariosAsync();
             CurrentViewModel = UsuariosVM;
             TituloVistaActual = "Gestión de Usuarios, Permisos y Vendedores";
+        }
+
+        private void NavegarAAiAssistant()
+        {
+            CurrentViewModel = AiAssistantVM;
+            TituloVistaActual = "🧠 ACEMAR Copilot • Asistente Ejecutivo de Inteligencia Artificial";
         }
 
         private void EjecutarCerrarSesion()

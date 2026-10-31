@@ -11,7 +11,7 @@ namespace software_ACEMAR.Models
         public decimal TotalVentasEfectivo { get; set; }
         public decimal TotalVentasCredito { get; set; }
         public decimal TotalAbonosEfectivo { get; set; }
-        public decimal TotalEfectivoEnCaja => MontoApertura + TotalVentasEfectivo + TotalAbonosEfectivo;
+        public decimal TotalEfectivoEnCaja => Math.Max(0m, MontoApertura + TotalVentasEfectivo + TotalAbonosEfectivo);
         public string Estado { get; set; } = "Cerrada"; // "Abierta", "Cerrada"
         public string Observaciones { get; set; } = string.Empty;
         public string UsuarioResponsable { get; set; } = string.Empty;

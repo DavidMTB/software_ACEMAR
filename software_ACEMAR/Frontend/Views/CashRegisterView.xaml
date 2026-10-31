@@ -209,7 +209,7 @@
                 <StackPanel>
                     <TextBlock Text="💰 TOTAL EN CAJA" FontSize="10" Foreground="#354318" FontWeight="ExtraBold" />
                     <TextBlock Text="{Binding TotalEfectivoEnCaja, StringFormat={}S/ {0:N2}}" FontSize="18" FontWeight="ExtraBold" Foreground="#4A5D23" Margin="0,2,0,0" />
-                    <TextBlock Text="Apertura + Efec + Abonos - Gastos" FontSize="9" Foreground="#556049" FontWeight="SemiBold" Margin="0,1,0,0" />
+                    <TextBlock Text="Apertura + Efec + Abonos" FontSize="9" Foreground="#556049" FontWeight="SemiBold" Margin="0,1,0,0" />
                 </StackPanel>
             </Border>
         </UniformGrid>

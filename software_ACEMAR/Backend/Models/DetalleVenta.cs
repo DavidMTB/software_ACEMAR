@@ -45,5 +45,26 @@ namespace software_ACEMAR.Models
         /// </summary>
         [NotMapped]
         public decimal Subtotal => Math.Round(Cantidad * PrecioUnitario, 2);
+
+        [NotMapped]
+        public string ProductoCodigo => Producto?.Codigo ?? (ProductoId > 0 ? $"PRD-{ProductoId:D3}" : "-");
+
+        [NotMapped]
+        public string LoteDisplay => LoteProducto != null ? $"Lote #{LoteProducto.Id:D4}" : (LoteProductoId.HasValue ? $"Lote #{LoteProductoId.Value:D4}" : "Sin Lote");
+
+        [NotMapped]
+        public string ProveedorDisplay
+        {
+            get
+            {
+                if (LoteProducto?.Proveedor != null && !string.IsNullOrWhiteSpace(LoteProducto.Proveedor.Nombre))
+                    return LoteProducto.Proveedor.Nombre;
+
+                if (LoteProducto != null)
+                    return LoteProducto.ProveedorNombreDisplay;
+
+                return "Proveedor General";
+            }
+        }
     }
 }

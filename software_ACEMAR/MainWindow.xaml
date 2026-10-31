@@ -58,6 +58,9 @@
         <DataTemplate DataType="{x:Type vm:UsuariosViewModel}">
             <views:UsuariosView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AiAssistantViewModel}">
+            <views:AiAssistantView />
+        </DataTemplate>
     </Window.Resources>
 
     <Grid>
@@ -125,6 +128,18 @@
                                 <TextBlock Grid.Column="0" Text="📊" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{Binding IsDashboardGeneralActive, Converter={StaticResource ActiveIconFgConv}}" />
                                 <TextBlock Grid.Column="1" Text="Dashboard Analítico" VerticalAlignment="Center" FontWeight="Bold" Foreground="{Binding IsDashboardGeneralActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
                                 <Border Grid.Column="2" Width="4" Height="14" Background="#A4C868" CornerRadius="2" Visibility="{Binding IsDashboardGeneralActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
+                            </Grid>
+                        </Button>
+
+                        <!-- Asistente IA Copilot -->
+                        <Button Command="{Binding NavegarAiAssistantCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,8" FontSize="12" FontWeight="Bold"
+                                Background="{Binding IsAiAssistantActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsAiAssistantActive, Converter={StaticResource ActiveFgConv}}"
+                                BorderBrush="{Binding IsAiAssistantActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Asistente Ejecutivo con Inteligencia Artificial Google Gemini">
+                            <Grid HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="🧠" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{Binding IsAiAssistantActive, Converter={StaticResource ActiveIconFgConv}}" />
+                                <TextBlock Grid.Column="1" Text="Asistente IA (Gemini)" VerticalAlignment="Center" FontWeight="Bold" Foreground="{Binding IsAiAssistantActive, Converter={StaticResource ActiveFgConv}}" TextTrimming="CharacterEllipsis" />
+                                <Border Grid.Column="2" Width="4" Height="14" Background="#A4C868" CornerRadius="2" Visibility="{Binding IsAiAssistantActive, Converter={x:Static views:Converters.BooleanToVisibility}}" />
                             </Grid>
                         </Button>
 

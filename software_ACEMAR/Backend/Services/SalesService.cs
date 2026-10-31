@@ -126,6 +126,7 @@ namespace software_ACEMAR.Services
 
                     // ── Intentar consumo FIFO multi-lote en stock base ─────────────────
                     var lotesActivos = await context.LotesProducto
+                        .Include(l => l.Proveedor)
                         .Where(l => l.ProductoId == item.ProductoId
                                  && l.Estado == "Activo"
                                  && l.CantidadDisponible > 0)
@@ -166,7 +167,9 @@ namespace software_ACEMAR.Services
                                 Cantidad = cantPresentacionConsumida,
                                 PrecioUnitario = item.PrecioUnitario,
                                 CostoUnitarioCompra = costoUnitarioPresentacion,
-                                LoteProductoId = lote.Id
+                                LoteProductoId = lote.Id,
+                                LoteProducto = lote,
+                                Producto = producto
                             });
                         }
 
@@ -278,6 +281,10 @@ namespace software_ACEMAR.Services
             return await context.Ventas
                 .AsNoTracking()
                 .Include(v => v.Detalles)
+                    .ThenInclude(d => d.LoteProducto)
+                        .ThenInclude(l => l!.Proveedor)
+                .Include(v => v.Detalles)
+                    .ThenInclude(d => d.Producto)
                 .Include(v => v.ClienteCredito)
                 .OrderByDescending(v => v.Fecha)
                 .Take(limite)
@@ -290,6 +297,10 @@ namespace software_ACEMAR.Services
             return context.Ventas
                 .AsNoTracking()
                 .Include(v => v.Detalles)
+                    .ThenInclude(d => d.LoteProducto)
+                        .ThenInclude(l => l!.Proveedor)
+                .Include(v => v.Detalles)
+                    .ThenInclude(d => d.Producto)
                 .Where(v => v.Fecha.Date >= desde.Date && v.Fecha.Date <= hasta.Date)
                 .OrderByDescending(v => v.Fecha)
                 .ToList();

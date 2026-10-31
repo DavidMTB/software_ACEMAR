@@ -95,7 +95,8 @@ namespace software_ACEMAR.ViewModels
             get => _montoApertura;
             set
             {
-                if (SetField(ref _montoApertura, value))
+                decimal valorValidado = value < 0 ? 0 : value;
+                if (SetField(ref _montoApertura, valorValidado))
                 {
                     ActualizarBalance();
                 }
@@ -144,6 +145,7 @@ namespace software_ACEMAR.ViewModels
 
         public void ActualizarBalance()
         {
+            if (_montoApertura < 0) _montoApertura = 0;
             var resumen = _cashRegisterService.ObtenerResumenPorRango(FechaDesde, FechaHasta, MontoApertura);
 
             TotalVentasEfectivo = resumen.TotalVentasEfectivo;
@@ -153,7 +155,7 @@ namespace software_ACEMAR.ViewModels
             TotalGastosLotes = resumen.TotalGastosLotes;
             TotalCostoVentas = resumen.TotalCostoVentas;
             UtilidadBruta = resumen.UtilidadBruta;
-            TotalEfectivoEnCaja = resumen.TotalEfectivoCaja;
+            TotalEfectivoEnCaja = Math.Max(0m, resumen.TotalEfectivoCaja);
 
             Movimientos.Clear();
             if (resumen.Movimientos != null)
@@ -167,6 +169,18 @@ namespace software_ACEMAR.ViewModels
 
         private void EjecutarGuardarArqueo()
         {
+            if (MontoApertura < 0)
+            {
+                MessageBox.Show("El monto de apertura de caja no puede ser negativo.", "Validación de Caja", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (TotalEfectivoEnCaja < 0)
+            {
+                MessageBox.Show("El saldo total en caja no puede ser negativo.", "Validación de Caja", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             var confirm = MessageBox.Show($"¿Desea registrar el Arqueo y Cierre de Caja para la fecha {FechaHasta:dd/MM/yyyy}?\nTotal en Efectivo: S/ {TotalEfectivoEnCaja:N2}\nTotal Fiados: S/ {TotalVentasCredito:N2}", "Confirmar Cierre de Caja", MessageBoxButton.YesNo, MessageBoxImage.Question);
             if (confirm != MessageBoxResult.Yes) return;
 

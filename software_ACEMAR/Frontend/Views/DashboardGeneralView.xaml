@@ -92,14 +92,25 @@
                                    FontSize="11" Foreground="#BCE08A" Margin="0,4,0,0" />
                     </StackPanel>
 
-                    <Button Grid.Column="1" Command="{Binding ActualizarDashboardCommand}"
-                            Style="{StaticResource ShortcutButtonStyle}" VerticalAlignment="Center"
-                            ToolTip="Haga clic aquí para volver a cargar y refrescar todos los números del panel.">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="🔄 " FontSize="13" />
-                            <TextBlock Text="Actualizar Métricas" />
-                        </StackPanel>
-                    </Button>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Command="{Binding NavegarACommand}" CommandParameter="AiAssistant"
+                                Style="{StaticResource ShortcutButtonStyle}" VerticalAlignment="Center" Margin="0,0,8,0"
+                                Background="#2563EB" BorderBrush="#60A5FA"
+                                ToolTip="Abrir Asistente Ejecutivo con Google Gemini.">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🧠 " FontSize="13" />
+                                <TextBlock Text="IA Gemini" />
+                            </StackPanel>
+                        </Button>
+                        <Button Command="{Binding ActualizarDashboardCommand}"
+                                Style="{StaticResource ShortcutButtonStyle}" VerticalAlignment="Center"
+                                ToolTip="Haga clic aquí para volver a cargar y refrescar todos los números del panel.">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔄 " FontSize="13" />
+                                <TextBlock Text="Actualizar Métricas" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
                 </Grid>
             </Border>
 

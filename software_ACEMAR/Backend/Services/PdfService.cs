@@ -162,7 +162,12 @@ namespace software_ACEMAR.Services
 
                                     table.Cell().Background(bg).Padding(4).Text(idx.ToString()).FontSize(8.5f);
                                     table.Cell().Background(bg).Padding(4).Text(codStr).FontSize(8.5f);
-                                    table.Cell().Background(bg).Padding(4).Text(item.ProductoNombre).FontSize(8.5f);
+                                    table.Cell().Background(bg).Padding(4).Column(cd =>
+                                    {
+                                        cd.Item().Text(item.ProductoNombre).FontSize(8.5f);
+                                        string loteProvTxt = $"[{item.LoteDisplay} | Prov: {item.ProveedorDisplay}]";
+                                        cd.Item().Text(loteProvTxt).FontSize(7.5f).FontColor("#475569").Italic();
+                                    });
                                     table.Cell().Background(bg).Padding(4).AlignRight().Text(item.Cantidad.ToString("0.##")).FontSize(8.5f);
                                     table.Cell().Background(bg).Padding(4).Text(umStr).FontSize(8.5f);
                                     table.Cell().Background(bg).Padding(4).AlignRight().Text($"S/ {item.PrecioUnitario:N2}").FontSize(8.5f);
@@ -285,6 +290,8 @@ namespace software_ACEMAR.Services
                                 string umStr = string.IsNullOrWhiteSpace(item.UnidadMedida) ? "U." : item.UnidadMedida;
 
                                 col.Item().Text(nombreConCod).Bold().FontSize(8);
+                                string infoLoteProv = $"  {item.LoteDisplay} • {item.ProveedorDisplay}";
+                                col.Item().Text(infoLoteProv).FontSize(6.8f).FontColor("#475569");
                                 col.Item().Row(r =>
                                 {
                                     r.RelativeItem().Text($"  {item.Cantidad:0.##} {umStr} x S/{item.PrecioUnitario:N2}");

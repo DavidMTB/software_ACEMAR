@@ -77,6 +77,11 @@ namespace software_ACEMAR.Services
             using var ctx = new AppDbContext();
             return ctx.Ventas
                       .Include(v => v.Detalles)
+                          .ThenInclude(d => d.LoteProducto)
+                              .ThenInclude(l => l!.Proveedor)
+                      .Include(v => v.Detalles)
+                          .ThenInclude(d => d.Producto)
+                      .Include(v => v.ClienteCredito)
                       .FirstOrDefault(v => v.Id == ventaId);
         }
 
@@ -86,6 +91,10 @@ namespace software_ACEMAR.Services
             var limite = DateTime.Now.AddDays(-LIMITE_DIAS_CORRECCION);
             var query  = ctx.Ventas
                             .Include(v => v.Detalles)
+                                .ThenInclude(d => d.LoteProducto)
+                                    .ThenInclude(l => l!.Proveedor)
+                            .Include(v => v.Detalles)
+                                .ThenInclude(d => d.Producto)
                             .Where(v => v.Fecha >= limite);
 
             if (fecha.HasValue)

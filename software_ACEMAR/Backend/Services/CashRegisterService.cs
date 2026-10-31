@@ -31,7 +31,8 @@ namespace software_ACEMAR.Services
         public decimal TotalGastosLotes { get; set; }
         public decimal TotalCostoVentas { get; set; }
         public decimal UtilidadBruta => (TotalVentasEfectivo + TotalVentasDigital + TotalVentasCredito) - TotalCostoVentas;
-        public decimal TotalEfectivoCaja => MontoApertura + TotalVentasEfectivo + TotalAbonosEfectivo - TotalGastosLotes;
+        public decimal TotalEfectivoCaja => Math.Max(0m, MontoApertura + TotalVentasEfectivo + TotalAbonosEfectivo);
+        public decimal BalanceNetoGeneral => (MontoApertura + TotalVentasEfectivo + TotalAbonosEfectivo) - TotalGastosLotes;
         public List<MovimientoCaja> Movimientos { get; set; } = new();
     }
 
@@ -196,6 +197,11 @@ namespace software_ACEMAR.Services
 
         public async Task<(bool Exito, string Error)> GuardarArqueoCajaAsync(ArqueoCaja arqueo, CancellationToken cancellationToken = default)
         {
+            if (arqueo.MontoApertura < 0)
+                return (false, "El monto de apertura de caja no puede ser negativo.");
+            if (arqueo.TotalEfectivoEnCaja < 0)
+                return (false, "El saldo total en caja no puede ser negativo.");
+
             try
             {
                 await using var context = new AppDbContext();
