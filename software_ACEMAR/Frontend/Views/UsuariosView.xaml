@@ -15,15 +15,14 @@
 
     <Grid Margin="16">
         <Grid.RowDefinitions>
-            <!-- Cabecera -->
+
             <RowDefinition Height="Auto" />
-            <!-- Barra de Herramientas y Búsqueda -->
+
             <RowDefinition Height="Auto" />
-            <!-- Tabla de Usuarios -->
+
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- 1. CABECERA -->
         <Border Grid.Row="0" Background="#FFFFFF" Padding="16,14" CornerRadius="10" BorderBrush="#DCDEC8" BorderThickness="1" Margin="0,0,0,14">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -42,7 +41,6 @@
             </Grid>
         </Border>
 
-        <!-- 2. BARRA DE HERRAMIENTAS -->
         <Grid Grid.Row="1" Margin="0,0,0,14">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="320" />
@@ -50,7 +48,6 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <!-- Búsqueda -->
             <Border Grid.Column="0" Background="#FFFFFF" CornerRadius="8" BorderBrush="#DCDEC8" BorderThickness="1" Padding="10,6">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -68,7 +65,6 @@
                 </Grid>
             </Border>
 
-            <!-- Botón Registrar Vendedor -->
             <Button Grid.Column="2" 
                     Command="{Binding AbrirNuevoUsuarioCommand}"
                     Background="#1D2611" 
@@ -85,7 +81,6 @@
             </Button>
         </Grid>
 
-        <!-- 3. TABLA DE VENDEDORES -->
         <Border Grid.Row="2" Background="#FFFFFF" CornerRadius="10" BorderBrush="#DCDEC8" BorderThickness="1" Padding="12">
             <DataGrid ItemsSource="{Binding Usuarios}" 
                       SelectedItem="{Binding UsuarioSeleccionado}"
@@ -172,7 +167,7 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <!-- Botón Editar -->
+
                                     <Button Command="{Binding DataContext.EditarUsuarioCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             Content="✏️ Editar" 
                                             Padding="8,4" 
@@ -185,7 +180,6 @@
                                             FontWeight="Bold" 
                                             Cursor="Hand" />
 
-                                    <!-- Botón Eliminar -->
                                     <Button Command="{Binding DataContext.EliminarUsuarioCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             Content="🗑️ Eliminar" 
                                             Padding="8,4" 
@@ -204,7 +198,6 @@
             </DataGrid>
         </Border>
 
-        <!-- 4. MODAL PARA REGISTRO Y EDICIÓN -->
         <Grid Grid.RowSpan="3" Visibility="{Binding MostrarFormularioModal, Converter={x:Static views:Converters.BooleanToVisibility}}" Background="#80000000">
             <Border Background="#FFFFFF" CornerRadius="12" Width="440" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" BorderBrush="#1D2611" BorderThickness="2">
                 <Border.Effect>
@@ -212,7 +205,7 @@
                 </Border.Effect>
 
                 <StackPanel>
-                    <!-- Título Modal -->
+
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
                         <TextBlock Text="👤 " FontSize="20" VerticalAlignment="Center" />
                         <TextBlock Text="{Binding EsModoEdicion, Converter={x:Static views:Converters.BooleanToVisibility}, StringFormat={}{0}}" FontSize="18" FontWeight="Black" Foreground="#1E2514">
@@ -231,7 +224,6 @@
 
                     <Separator Background="#DCE3D6" Margin="0,0,0,18" />
 
-                    <!-- Campo Nombre de Usuario -->
                     <TextBlock Text="Nombre del Vendedor:" FontSize="13" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,6" />
                     <TextBox Text="{Binding FormNombreUsuario, UpdateSourceTrigger=PropertyChanged}" 
                              FontSize="14" 
@@ -242,7 +234,6 @@
                              Margin="0,0,0,16" 
                              ToolTip="Nombre de usuario para el inicio de sesión del vendedor (Ej: vendedor6, Pedro, Maria)" />
 
-                    <!-- Campo Mostrador Asignado -->
                     <TextBlock Text="Mostrador Asignado:" FontSize="13" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,6" />
                     <ComboBox ItemsSource="{Binding MostradoresDisponibles}" 
                               SelectedItem="{Binding FormMostradorAsignado}" 
@@ -254,7 +245,6 @@
                               Margin="0,0,0,16" 
                               ToolTip="Seleccione la estación o mostrador asignado a este vendedor" />
 
-                    <!-- Campo Contraseña -->
                     <TextBlock Text="Contraseña del Vendedor:" FontSize="13" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,6" />
                     <TextBox Text="{Binding FormPassword, UpdateSourceTrigger=PropertyChanged}" 
                              FontSize="14" 
@@ -265,7 +255,6 @@
                              Margin="0,0,0,14" 
                              ToolTip="Contraseña asignada para el vendedor" />
 
-                    <!-- Mensaje de Error si aplica -->
                     <TextBlock Text="{Binding MensajeErrorForm}" 
                                Foreground="#C62828" 
                                FontWeight="Bold" 
@@ -274,7 +263,6 @@
                                Margin="0,0,0,10" 
                                Visibility="{Binding MensajeErrorForm, Converter={x:Static views:Converters.StringToVisibility}}" />
 
-                    <!-- Botones Modal -->
                     <Grid Margin="0,12,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />

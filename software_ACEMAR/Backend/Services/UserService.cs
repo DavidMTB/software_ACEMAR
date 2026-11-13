@@ -81,7 +81,6 @@ namespace software_ACEMAR.Services
                 return (false, "El usuario especificado no existe.");
             }
 
-            // Verificar duplicados de nombre (excepto él mismo)
             var existeOtro = await context.Usuarios.AnyAsync(u => u.Id != id && u.NombreUsuario.ToLower() == usernameTrim.ToLower());
             if (existeOtro)
             {

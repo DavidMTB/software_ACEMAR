@@ -61,7 +61,7 @@ namespace software_ACEMAR.ViewModels
 
         public MainViewModel(IAuthService authService)
         {
-            // Inicializar servicios
+
             _authService = authService;
             _inventoryService = new InventoryService();
             _salesService = new SalesService();
@@ -75,7 +75,6 @@ namespace software_ACEMAR.ViewModels
             _userService = new UserService();
             _aiAssistantService = new AiAssistantService();
 
-            // Inicializar ViewModels
             PosVM = new PosViewModel(_inventoryService, _salesService, _authService, _creditService, _proformaService, _pdfService);
             DashboardGeneralVM = new DashboardGeneralViewModel(_inventoryService, _salesService, _creditService, _proformaService, _cashRegisterService, _loteService);
             DashboardVM = new DashboardViewModel(_inventoryService, _salesService);
@@ -89,7 +88,6 @@ namespace software_ACEMAR.ViewModels
             UsuariosVM = new UsuariosViewModel(_userService, _authService);
             AiAssistantVM = new AiAssistantViewModel(_aiAssistantService);
 
-            // Suscribir eventos de navegación de DashboardGeneral
             DashboardGeneralVM.OnNavegarSolicitado += vista =>
             {
                 switch (vista)
@@ -109,13 +107,11 @@ namespace software_ACEMAR.ViewModels
                 }
             };
 
-            // Suscribir eventos de navegación de DashboardVM (Inventario)
             DashboardVM.OnNavegarSolicitado += vista =>
             {
                 if (vista == "Lotes") NavegarALotes();
             };
 
-            // Suscribir conversión de proforma a venta en POS
             ProformasVM.OnConvertirProformaAVenta += ProformaAConvertir =>
             {
                 PosVM.CargarItemsDesdeProforma(ProformaAConvertir);
@@ -124,7 +120,6 @@ namespace software_ACEMAR.ViewModels
 
             _currentViewModel = PosVM;
 
-            // Comandos de navegación
             NavegarPosCommand = new RelayCommand(NavegarAPos);
             NavegarDashboardGeneralCommand = new RelayCommand(NavegarADashboardGeneral);
             NavegarAiAssistantCommand = new RelayCommand(NavegarAAiAssistant);
@@ -146,7 +141,7 @@ namespace software_ACEMAR.ViewModels
 
         public void SetAuthService(IAuthService authService)
         {
-            // Método helper para inyección de instancia compartida de auth
+
             ActualizarDatosUsuario();
         }
 

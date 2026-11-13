@@ -15,12 +15,11 @@ namespace software_ACEMAR.ViewModels
         private readonly IAuthService _authService;
         private readonly IExcelExportService _excelExportService;
 
-        private string _tipoPeriodoSeleccionado = "Diario"; // "Diario", "Semanal", "Mensual", "Personalizado"
+        private string _tipoPeriodoSeleccionado = "Diario"; 
         private DateTime _fechaDesde = DateTime.Today;
         private DateTime _fechaHasta = DateTime.Today;
         private decimal _montoApertura = 150.00m;
 
-        // Métricas de Balance y Contabilidad
         private decimal _totalVentasEfectivo;
         private decimal _totalVentasDigital;
         private decimal _totalVentasCredito;
@@ -126,12 +125,12 @@ namespace software_ACEMAR.ViewModels
                     _fechaHasta = hoy;
                     break;
                 case "Semanal":
-                    // Últimos 7 días
+
                     _fechaDesde = hoy.AddDays(-6);
                     _fechaHasta = hoy;
                     break;
                 case "Mensual":
-                    // Primer día del mes hasta hoy
+
                     _fechaDesde = new DateTime(hoy.Year, hoy.Month, 1);
                     _fechaHasta = hoy;
                     break;

@@ -22,7 +22,6 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Cabecera -->
             <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,16">
                 <Border Background="#354318" Width="52" Height="52" CornerRadius="26" HorizontalAlignment="Center" Margin="0,0,0,10">
                     <TextBlock Text="🛡️" FontSize="26" HorizontalAlignment="Center" VerticalAlignment="Center" />
@@ -33,7 +32,6 @@
 
             <Separator Grid.Row="1" Background="#DCE3D6" Margin="0,0,0,20" />
 
-            <!-- Campos de Formulario -->
             <StackPanel Grid.Row="2">
                 <TextBlock Text="Usuario:" FontSize="13" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,6" />
                 <TextBox x:Name="txtUsuario" 
@@ -53,7 +51,6 @@
                              BorderThickness="1.5" 
                              Margin="0,0,0,10" />
 
-                <!-- Mensaje de Error -->
                 <TextBlock x:Name="txtError" 
                            Foreground="#D32F2F" 
                            FontWeight="SemiBold" 
@@ -62,10 +59,8 @@
                            Visibility="Collapsed" 
                            Margin="0,0,0,10" />
 
-
             </StackPanel>
 
-            <!-- Botones de Acción -->
             <Grid Grid.Row="3" Margin="0,16,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />

@@ -36,7 +36,6 @@ namespace software_ACEMAR.Tests
             var (creado, err) = await inventoryService.CrearProductoAsync(producto);
             Assert.IsTrue(creado, err);
 
-            // Crear Lote 1 (primer lote en ingresar)
             var lote1 = new LoteProducto
             {
                 ProductoId = producto.Id,
@@ -50,7 +49,6 @@ namespace software_ACEMAR.Tests
             var (lote1Exito, lote1Err) = await loteService.CrearLoteAsync(lote1);
             Assert.IsTrue(lote1Exito, lote1Err);
 
-            // Crear Lote 2 (segundo lote en ingresar)
             var lote2 = new LoteProducto
             {
                 ProductoId = producto.Id,
@@ -64,12 +62,11 @@ namespace software_ACEMAR.Tests
             var (lote2Exito, lote2Err) = await loteService.CrearLoteAsync(lote2);
             Assert.IsTrue(lote2Exito, lote2Err);
 
-            // Consumir 20 unidades en FIFO
             var (fifoExito, loteUsado, precioVenta, fifoErr) = await loteService.ConsumarStockFifoAsync(producto.Id, 20);
             Assert.IsTrue(fifoExito, fifoErr);
             Assert.IsNotNull(loteUsado);
-            Assert.AreEqual(lote1.Id, loteUsado.Id); // Debe ser Lote 1 por FIFO
-            Assert.AreEqual(30m, loteUsado.CantidadDisponible); // 50 - 20 = 30
+            Assert.AreEqual(lote1.Id, loteUsado.Id); 
+            Assert.AreEqual(30m, loteUsado.CantidadDisponible); 
         }
 
         [TestMethod]
@@ -148,14 +145,13 @@ namespace software_ACEMAR.Tests
             var (ventaOk, ventaErr) = await salesService.ProcesarVentaAsync(venta);
             Assert.IsTrue(ventaOk, ventaErr);
 
-            // Corregir la venta
             var nuevosDetalles = new List<DetalleVenta>
             {
                 new DetalleVenta
                 {
                     ProductoId = productoId,
                     ProductoNombre = productoNombre,
-                    Cantidad = 1, // Reducir a 1 galón
+                    Cantidad = 1, 
                     PrecioUnitario = 45.00m
                 }
             };
@@ -190,7 +186,6 @@ namespace software_ACEMAR.Tests
             var (prodOk, prodErr) = await inventoryService.CrearProductoAsync(producto);
             Assert.IsTrue(prodOk, prodErr);
 
-            // Lote 1: 10 Metros @ Costo S/ 30, PVP S/ 50
             var lote1 = new LoteProducto
             {
                 ProductoId = producto.Id,
@@ -203,7 +198,6 @@ namespace software_ACEMAR.Tests
             };
             await loteService.CrearLoteAsync(lote1);
 
-            // Lote 2: 10 Metros @ Costo S/ 20 (más barato), PVP S/ 40
             var lote2 = new LoteProducto
             {
                 ProductoId = producto.Id,
@@ -216,15 +210,13 @@ namespace software_ACEMAR.Tests
             };
             await loteService.CrearLoteAsync(lote2);
 
-            // Al ingresar lote más barato, PVP DEBE MANTENERSE en S/ 50.00 (el más caro del stock activo)
             decimal pvpActual = salesService.ObtenerPrecioVigente(producto.Id);
             Assert.AreEqual(50.00m, pvpActual);
 
-            // Venta de 15 Metros: 10 del Lote 1 (costo 30) y 5 del Lote 2 (costo 20), cobrados todos a PVP S/ 50
             var venta = new Venta
             {
                 Fecha = DateTime.Now,
-                Total = 15 * 50.00m, // 750.00
+                Total = 15 * 50.00m, 
                 TipoVenta = "Efectivo",
                 UsuarioVendedor = "Vendedor Test",
                 Detalles = new List<DetalleVenta>
@@ -243,7 +235,6 @@ namespace software_ACEMAR.Tests
             var (ventaOk, ventaErr) = await salesService.ProcesarVentaAsync(venta);
             Assert.IsTrue(ventaOk, ventaErr);
 
-            // Verificar que se dividió en 2 líneas FIFO con su respectivo costo de compra
             Assert.AreEqual(2, venta.Detalles.Count);
             var linea1 = venta.Detalles.First(d => d.LoteProductoId == lote1.Id);
             var linea2 = venta.Detalles.First(d => d.LoteProductoId == lote2.Id);
@@ -256,7 +247,6 @@ namespace software_ACEMAR.Tests
             Assert.AreEqual(20.00m, linea2.CostoUnitarioCompra);
             Assert.AreEqual(50.00m, linea2.PrecioUnitario);
 
-            // Como se agotó el Lote 1 (más caro), ahora el PVP del stock restante debe bajar a S/ 40.00
             decimal pvpDespuesAgotarLote1 = salesService.ObtenerPrecioVigente(producto.Id);
             Assert.AreEqual(40.00m, pvpDespuesAgotarLote1);
         }
@@ -284,18 +274,15 @@ namespace software_ACEMAR.Tests
                 FactoresPorUnidad = "{\"Volquetada\":4.0}"
             };
 
-            // Simular agregar 1 Volquetada
             vm.ProductoSeleccionado = prodArena;
             vm.UnidadMedidaSeleccionada = "Volquetada";
             vm.CantidadTexto = "1";
             vm.AgregarAlTicketCommand.Execute(null);
 
-            // Simular agregar 3 Metros
             vm.UnidadMedidaSeleccionada = "Metro";
             vm.CantidadTexto = "3";
             vm.AgregarAlTicketCommand.Execute(null);
 
-            // Debe haber 2 líneas separadas en el ticket
             Assert.AreEqual(2, vm.TicketActual.Count);
             Assert.AreEqual("Volquetada", vm.TicketActual[0].UnidadMedida);
             Assert.AreEqual(1m, vm.TicketActual[0].Cantidad);

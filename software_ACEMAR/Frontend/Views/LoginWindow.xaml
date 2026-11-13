@@ -17,17 +17,16 @@
 
         <Grid Margin="32">
             <Grid.RowDefinitions>
-                <!-- Branding Header -->
+
                 <RowDefinition Height="Auto" />
-                <!-- Separator -->
+
                 <RowDefinition Height="Auto" />
-                <!-- Form Inputs -->
+
                 <RowDefinition Height="*" />
-                <!-- Action Buttons -->
+
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- 1. HEADER ACEMAR -->
             <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,20">
                 <Border Background="#1D2611" Width="64" Height="64" CornerRadius="18" HorizontalAlignment="Center" Margin="0,0,0,12"
                         BorderBrush="#8FA668" BorderThickness="2">
@@ -40,9 +39,8 @@
 
             <Separator Grid.Row="1" Background="#DCE3D6" Margin="0,0,0,24" />
 
-            <!-- 2. FORMULARIO -->
             <StackPanel Grid.Row="2">
-                <!-- Campo Usuario -->
+
                 <TextBlock Text="Nombre de Usuario:" FontSize="13" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,6" />
                 <TextBox x:Name="txtUsuario" 
                          FontSize="15" 
@@ -53,7 +51,6 @@
                          Margin="0,0,0,18" 
                          ToolTip="Ingrese su nombre de usuario (Ej: vendedor1, vendedor2, Gerente)" />
 
-                <!-- Campo Contraseña -->
                 <TextBlock Text="Contraseña:" FontSize="13" FontWeight="Bold" Foreground="#1E2514" Margin="0,0,0,6" />
                 <PasswordBox x:Name="txtPassword" 
                              FontSize="16" 
@@ -64,7 +61,6 @@
                              Margin="0,0,0,14" 
                              ToolTip="Ingrese su clave secreta" />
 
-                <!-- Mensaje de Error -->
                 <Border x:Name="pnlError" Background="#FFEBEE" BorderBrush="#FFCDD2" BorderThickness="1" CornerRadius="6" Padding="10" Visibility="Collapsed" Margin="0,0,0,10">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="⚠️ " FontSize="13" VerticalAlignment="Center" />
@@ -77,7 +73,6 @@
                 </Border>
             </StackPanel>
 
-            <!-- 3. BOTONES -->
             <Grid Grid.Row="3" Margin="0,10,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />

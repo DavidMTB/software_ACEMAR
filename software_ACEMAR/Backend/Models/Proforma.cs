@@ -12,7 +12,7 @@ namespace software_ACEMAR.Models
         public string ClienteDocumento { get; set; } = string.Empty;
         public decimal Total { get; set; }
         public string Usuario { get; set; } = string.Empty;
-        public string Estado { get; set; } = "Pendiente"; // "Pendiente", "Convertida", "Anulada"
+        public string Estado { get; set; } = "Pendiente"; 
 
         public List<DetalleProforma> Detalles { get; set; } = new();
     }

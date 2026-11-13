@@ -16,7 +16,7 @@ namespace software_ACEMAR.ViewModels
     {
         public string Dia { get; set; } = string.Empty;
         public decimal Monto { get; set; }
-        public double AlturaBarra { get; set; } // 0 - 130 px
+        public double AlturaBarra { get; set; } 
         public string MontoFormateado => $"S/{Monto:N0}";
     }
 
@@ -25,7 +25,7 @@ namespace software_ACEMAR.ViewModels
         public string Nombre { get; set; } = string.Empty;
         public decimal CantidadVendida { get; set; }
         public decimal MontoTotal { get; set; }
-        public double PorcentajeBarra { get; set; } // 0 - 100
+        public double PorcentajeBarra { get; set; } 
         public string Unidad { get; set; } = "UND";
     }
 
@@ -76,7 +76,6 @@ namespace software_ACEMAR.ViewModels
         private string _puntosCerruchoLineaString = "0,100 40,80 80,110 120,40 160,95 200,30 240,85 280,20 320,70 380,40";
         private string _puntosCerruchoRellenoString = "0,140 0,100 40,80 80,110 120,40 160,95 200,30 240,85 280,20 320,70 380,40 380,140";
 
-        // --- Gráfico Circular (Dona de Formas de Pago) ---
         private Geometry? _arcoEfectivoGeometry;
         private Geometry? _arcoDigitalGeometry;
         private Geometry? _arcoCreditoGeometry;
@@ -84,7 +83,6 @@ namespace software_ACEMAR.ViewModels
         private string _tooltipDigital = "Yape / Plin / Digital";
         private string _tooltipCredito = "Crédito";
 
-        // --- Gráfico de Demanda por Horas (Opción A) ---
         private string _textoHorarioPico = "Sin ventas";
         private Brush _backgroundBadgePico = new SolidColorBrush(Color.FromRgb(244, 247, 238));
         private Brush _foregroundBadgePico = new SolidColorBrush(Color.FromRgb(46, 59, 21));
@@ -179,7 +177,6 @@ namespace software_ACEMAR.ViewModels
             set => SetField(ref _puntosCerruchoRellenoString, value);
         }
 
-        // Propiedades Gráfico Circular (Dona Dinámica)
         public Geometry? ArcoEfectivoGeometry
         {
             get => _arcoEfectivoGeometry;
@@ -216,7 +213,6 @@ namespace software_ACEMAR.ViewModels
             set => SetField(ref _tooltipCredito, value);
         }
 
-        // Propiedades Gráfico de Horas de Demanda (Opción A)
         public string TextoHorarioPico
         {
             get => _textoHorarioPico;
@@ -245,12 +241,11 @@ namespace software_ACEMAR.ViewModels
         {
             try
             {
-                // 1. Productos y Stock
+
                 var productos = _inventoryService.ObtenerTodos() ?? new List<Producto>();
                 TotalProductosCatalogo = productos.Count;
                 TotalProductosBajoStock = productos.Count(p => p.EsStockBajo);
 
-                // 2. Ventas del día y del mes
                 var hoy = DateTime.Today;
                 var primerDiaMes = new DateTime(hoy.Year, hoy.Month, 1);
                 var ventasMes = _salesService.ObtenerVentasPorFecha(primerDiaMes, hoy) ?? new List<Venta>();
@@ -259,19 +254,15 @@ namespace software_ACEMAR.ViewModels
                 TotalVentasHoy = Math.Round(ventasHoy.Sum(v => v.Total), 2);
                 TotalVentasMes = Math.Round(ventasMes.Sum(v => v.Total), 2);
 
-                // 3. Créditos / Fiados pendientes
                 var clientesCredito = _creditService.ObtenerTodos() ?? new List<ClienteCredito>();
                 TotalDeudaCreditos = Math.Round(clientesCredito.Sum(c => c.DeudaActual), 2);
 
-                // 4. Proformas activas
                 var proformas = _proformaService.ObtenerTodas() ?? new List<Proforma>();
                 TotalProformasActivas = proformas.Count(p => p.Estado == "Pendiente" || p.Estado == "Emitida");
 
-                // 5. Arqueo / Saldo de caja
                 var resumenCaja = _cashRegisterService.ObtenerResumenDelDia(hoy, 500m);
                 SaldoCajaChica = resumenCaja != null ? Math.Round(resumenCaja.TotalEfectivoCaja, 2) : 500m;
 
-                // 6. Lotes por vencer (calculado desde productos con stock bajo o lotes activos)
                 int countLotesBajos = 0;
                 foreach (var p in productos)
                 {
@@ -283,19 +274,14 @@ namespace software_ACEMAR.ViewModels
                 }
                 TotalLotesPorVencer = countLotesBajos;
 
-                // 7. Gráfico de Barras Verticales: Ventas de los últimos 7 días
                 CargarVentasUltimos7Dias(ventasMes);
 
-                // 8. Gráfico de Barras Horizontales: Top Productos más vendidos
                 CargarTopProductos(ventasMes, productos);
 
-                // 9. Gráfico de Donut: Medios de pago (con arcos dinámicos conectados)
                 CargarDistribucionMediosPago(ventasMes);
 
-                // 10. Gráfico de Ventas por Horas del Día (Opción A: Horarios de mayor demanda)
                 CargarVentasPorHoras(ventasHoy, ventasMes);
 
-                // 11. Gráfico de Cerrucho histórico / compatibilidad
                 GenerarGraficoCerrucho(ventasMes);
             }
             catch (Exception ex)
@@ -452,8 +438,6 @@ namespace software_ACEMAR.ViewModels
             TooltipDigital = $"Digital (Yape/Plin): S/ {totalDigital:N2} ({pctDigital:F1}%)";
             TooltipCredito = $"Fiado / Crédito: S/ {totalCredito:N2} ({pctCredito:F1}%)";
 
-            // Geometría del gráfico circular (Dona)
-            // Diámetro 92 (Radio = 46) centrado en (65, 65)
             double cx = 65.0;
             double cy = 65.0;
             double r = 46.0;
@@ -466,7 +450,6 @@ namespace software_ACEMAR.ViewModels
                 return;
             }
 
-            // Calculamos barrido angular proporcional de cada medio de cobro (360° total)
             double sweepEfectivo = (double)(totalEfectivo / granTotal) * 360.0;
             double sweepDigital = (double)(totalDigital / granTotal) * 360.0;
             double sweepCredito = (double)(totalCredito / granTotal) * 360.0;
@@ -491,7 +474,7 @@ namespace software_ACEMAR.ViewModels
             {
                 if (barridoGrad >= 359.9)
                 {
-                    // Círculo completo mediante dos semicírculos de 180°
+
                     var ptInicio = new Point(cx, cy - r);
                     var ptMedio = new Point(cx, cy + r);
 
@@ -501,7 +484,7 @@ namespace software_ACEMAR.ViewModels
                 }
                 else
                 {
-                    // Radianes comenzando en las 12 en punto (-90°)
+
                     double radInicio = (anguloInicioGrad - 90.0) * Math.PI / 180.0;
                     double radFin = (anguloInicioGrad + barridoGrad - 90.0) * Math.PI / 180.0;
 
@@ -687,7 +670,6 @@ namespace software_ACEMAR.ViewModels
             var sbLinea = new StringBuilder();
             var sbRelleno = new StringBuilder();
 
-            // Inicio del polígono de relleno
             sbRelleno.Append(FormatPoint(0, canvasHeight));
 
             for (int i = 0; i < valores.Count; i++)
@@ -708,7 +690,6 @@ namespace software_ACEMAR.ViewModels
                 sbRelleno.Append(ptStr);
             }
 
-            // Cierre del polígono de relleno
             sbRelleno.Append(" ");
             sbRelleno.Append(FormatPoint(canvasWidth, canvasHeight));
 

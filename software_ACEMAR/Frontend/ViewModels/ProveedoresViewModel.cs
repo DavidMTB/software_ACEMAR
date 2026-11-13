@@ -16,7 +16,6 @@ namespace software_ACEMAR.ViewModels
         private Proveedor? _proveedorSeleccionado;
         private string _busquedaTexto = string.Empty;
 
-        // Formulario
         private int _formId;
         private string _formNombre = string.Empty;
         private string _formContacto = string.Empty;

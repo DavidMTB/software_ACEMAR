@@ -20,13 +20,11 @@ namespace software_ACEMAR.ViewModels
         private string _cantidadIngresoTexto = string.Empty;
         private string _filtroTexto = string.Empty;
 
-        // KPIs Inventario
         private int _totalProductos;
         private int _totalProductosBajoStock;
         private decimal _valorTotalInventario;
         private decimal _promedioOcupacionCuMax;
 
-        // KPIs Ventas
         private decimal _ventasDelDiaTotal;
         private decimal _ventasEfectivoTotal;
         private decimal _ventasCreditoTotal;

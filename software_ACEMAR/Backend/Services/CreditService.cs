@@ -102,7 +102,7 @@ namespace software_ACEMAR.Services
 
         public async Task<(bool Exito, string MensajeError)> RegistrarAbonoAsync(int clienteId, decimal montoAbono, string observaciones, string usuario, CancellationToken cancellationToken = default)
         {
-            // Regla CRE-01 (Seguridad Fiados)
+
             if (!_authService.PuedeAccederCreditos(out string permisoError))
             {
                 return (false, permisoError);
@@ -131,7 +131,6 @@ namespace software_ACEMAR.Services
                     return (false, $"El monto del abono (S/ {montoAbono:N2}) no puede exceder la deuda actual (S/ {cliente.DeudaActual:N2}).");
                 }
 
-                // Resta matemática de la deuda en la BD local dentro de transacción atómica
                 cliente.DeudaActual = Math.Round(cliente.DeudaActual - montoAbono, 2);
                 cliente.UltimaActualizacion = DateTime.Now;
 
@@ -292,7 +291,6 @@ namespace software_ACEMAR.Services
                     return (false, "Cliente no encontrado.");
                 }
 
-                // Validar límite de crédito
                 decimal nuevaDeuda = cliente.DeudaActual + monto;
                 if (nuevaDeuda > cliente.LimiteCredito)
                 {
@@ -303,10 +301,8 @@ namespace software_ACEMAR.Services
                 cliente.DeudaActual = Math.Round(nuevaDeuda, 2);
                 cliente.UltimaActualizacion = DateTime.Now;
 
-                // Optimización de secuencia de ticket
                 var maxId = await context.Ventas.MaxAsync(v => (int?)v.Id, cancellationToken) ?? 0;
 
-                // Registrar la transacción como venta a crédito para arqueo de caja
                 var ventaCredito = new Venta
                 {
                     Fecha = DateTime.Now,

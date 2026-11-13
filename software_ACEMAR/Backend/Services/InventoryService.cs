@@ -28,7 +28,6 @@ namespace software_ACEMAR.Services
 
         bool AgregarOActualizarProducto(Producto producto);
 
-        // CRUD y Gestión Masiva
         bool CrearProducto(Producto producto, out string error);
         Task<(bool Exito, string Error)> CrearProductoAsync(Producto producto, CancellationToken cancellationToken = default);
 
@@ -124,7 +123,6 @@ namespace software_ACEMAR.Services
                 return (false, "El producto no fue encontrado en la base de datos.");
             }
 
-            // Regla INV-02 (CuMax): Si stock_actual + ingreso > CuMax -> "Límite físico de almacenamiento superado"
             if ((producto.StockActual + cantidadIngreso) > producto.CuMax)
             {
                 return (false, "Límite físico de almacenamiento superado");
@@ -298,7 +296,6 @@ namespace software_ACEMAR.Services
                 return (false, "Producto no encontrado.");
             }
 
-            // Validar si tiene ventas asociadas
             bool tieneVentas = await context.DetallesVenta
                 .AsNoTracking()
                 .AnyAsync(d => d.ProductoId == id, cancellationToken);

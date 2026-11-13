@@ -81,7 +81,6 @@ namespace software_ACEMAR.Services
         public int LotesActivos { get; set; }
         public int LotesPorAgotarse { get; set; }
 
-        // Contexto completo para grounding estricto
         public List<ProductoInfoContexto> CatalogoProductos { get; set; } = new();
         public List<VentaInfoContexto> HistorialVentasRecientes { get; set; } = new();
         public List<ProveedorInfoContexto> DirectorioProveedores { get; set; } = new();
@@ -120,7 +119,7 @@ namespace software_ACEMAR.Services
                     var cfg = JsonSerializer.Deserialize<AiConfig>(json);
                     if (cfg != null)
                     {
-                        // Si tenía modelos obsoletos o no disponibles (1.5 o 2.5-flash directo), actualizar a gemini-flash-lite-latest
+
                         if (string.IsNullOrWhiteSpace(cfg.Modelo) || cfg.Modelo.Contains("1.5") || cfg.Modelo == "gemini-2.5-flash")
                         {
                             cfg.Modelo = "gemini-flash-lite-latest";
@@ -191,7 +190,7 @@ namespace software_ACEMAR.Services
             IEnumerable<(string Rol, string Contenido)>? historial,
             CancellationToken cancellationToken)
         {
-            // Si no hay API Key configurada, se genera respuesta local directa
+
             if (!TieneApiKeyConfigurada())
             {
                 return await GenerarRespuestaHeuristicaLocalAsync(solicitud, datos, "⚠️ MODO LOCAL / DEMO (Sin API Key configurada)\nGenerado con el motor interno de datos de SQLite:");
@@ -204,7 +203,7 @@ namespace software_ACEMAR.Services
             }
             catch (Exception ex)
             {
-                // Fallback seguro: el sistema nunca se cuelga frente al docente y responde la pregunta específica
+
                 return await GenerarRespuestaHeuristicaLocalAsync(solicitud, datos, $"⚠️ MODO DE RESPALDO (Error al conectar con la API de Gemini: {ex.Message})\nEl sistema ha procesado tu consulta con el motor analítico local:");
             }
         }
@@ -217,14 +216,12 @@ namespace software_ACEMAR.Services
         {
             string apiKey = _config.ApiKey.Trim();
 
-            // Construir contexto empresarial exhaustivo y grounded desde SQLite
             var sbContexto = new StringBuilder();
             sbContexto.AppendLine("================================================================================");
             sbContexto.AppendLine("BASE DE DATOS VIVA DEL SISTEMA - FERRETERÍA & ALMACÉN ACEMAR S.A.C.");
             sbContexto.AppendLine("================================================================================");
             sbContexto.AppendLine();
 
-            // 1. Resumen financiero y comercial
             sbContexto.AppendLine("--- 1. RESUMEN FINANCIERO Y COMERCIAL SEMANAL ---");
             sbContexto.AppendLine($"- Total productos en catálogo: {datos.TotalProductos}");
             sbContexto.AppendLine($"- Ventas últimos 7 días: S/ {datos.TotalVentasSemana:N2} en {datos.CantidadTicketsSemana} comprobantes (Ticket promedio: S/ {datos.TicketPromedioSemana:N2})");
@@ -235,7 +232,6 @@ namespace software_ACEMAR.Services
             }
             sbContexto.AppendLine();
 
-            // 2. Historial de ventas recientes
             sbContexto.AppendLine("--- 2. HISTORIAL DE VENTAS RECIENTES (ORDEN CRONOLÓGICO DECRECIENTE) ---");
             if (datos.HistorialVentasRecientes.Any())
             {
@@ -256,7 +252,6 @@ namespace software_ACEMAR.Services
             }
             sbContexto.AppendLine();
 
-            // 3. Catálogo completo de productos con stock y precios
             sbContexto.AppendLine("--- 3. CATÁLOGO COMPLETO DE PRODUCTOS EN BASE DE DATOS (STOCK Y PRECIOS REALES) ---");
             foreach (var p in datos.CatalogoProductos)
             {
@@ -265,7 +260,6 @@ namespace software_ACEMAR.Services
             }
             sbContexto.AppendLine();
 
-            // 4. Directorio de proveedores
             sbContexto.AppendLine("--- 4. DIRECTORIO DE PROVEEDORES ASOCIADOS Y LÍNEAS DE SUMINISTRO ---");
             foreach (var pr in datos.DirectorioProveedores)
             {
@@ -273,7 +267,6 @@ namespace software_ACEMAR.Services
             }
             sbContexto.AppendLine();
 
-            // 5. Cartera de créditos
             sbContexto.AppendLine("--- 5. CARTERA DE CLIENTES DE CRÉDITO Y FIADOS PENDIENTES ---");
             sbContexto.AppendLine($"- Deuda total activa por cobrar: S/ {datos.DeudaTotalClientes:N2} en {datos.ClientesConDeuda} clientes con saldo deudor.");
             foreach (var c in datos.ClientesMayorDeuda)
@@ -335,7 +328,6 @@ namespace software_ACEMAR.Services
 
             string jsonBody = JsonSerializer.Serialize(requestBody);
 
-            // Intentar con el modelo configurado o con los modelos candidatos disponibles en la API de Gemini
             var modelosAIntentar = new List<string>();
             string modeloConfigurado = string.IsNullOrWhiteSpace(_config.Modelo) || _config.Modelo.Contains("1.5") || _config.Modelo == "gemini-2.5-flash"
                 ? "gemini-flash-lite-latest" 
@@ -373,7 +365,7 @@ namespace software_ACEMAR.Services
                                 string? textoGenerado = parts[0].GetProperty("text").GetString();
                                 if (!string.IsNullOrWhiteSpace(textoGenerado))
                                 {
-                                    // Si funcionó este modelo, actualizar la configuración para futuras peticiones
+
                                     if (_config.Modelo != modelo)
                                     {
                                         _config.Modelo = modelo;
@@ -386,7 +378,7 @@ namespace software_ACEMAR.Services
                     }
                     else if ((int)response.StatusCode == 404 || (int)response.StatusCode == 503 || (int)response.StatusCode == 429)
                     {
-                        // Modelo no disponible, ocupado o sin cuota temporal -> intentar con el siguiente modelo de la lista
+
                         continue;
                     }
                     else
@@ -408,7 +400,6 @@ namespace software_ACEMAR.Services
             await Task.Yield();
             string s = solicitud.Trim().ToLowerInvariant();
 
-            // 1. Saludos
             if (s == "hola" || s == "buenos dias" || s == "buenas tardes" || s == "saludos" || s.StartsWith("hola"))
             {
                 return $"{encabezadoAviso}\n\n" +
@@ -422,7 +413,6 @@ namespace software_ACEMAR.Services
                        "¿Qué consulta o reporte necesitas revisar hoy?";
             }
 
-            // 2. Consulta de Ventas Recientes / Última Venta
             bool esPeticionVentas = s.Contains("ultima venta") || s.Contains("última venta") || 
                                     s.Contains("ultimas ventas") || s.Contains("últimas ventas") || 
                                     s.Contains("lista de venta") || s.Contains("historial de venta") ||
@@ -470,7 +460,6 @@ namespace software_ACEMAR.Services
                 return sbVentas.ToString();
             }
 
-            // 3. Consulta de Proveedores
             bool esPeticionProveedores = s.Contains("proveedor") || s.Contains("proveedores") || 
                                           s.Contains("a quien compramos") || s.Contains("quien nos vende") || 
                                           s.Contains("contacto de") || s.Contains("telefono de");
@@ -511,7 +500,6 @@ namespace software_ACEMAR.Services
                 return sbProv.ToString();
             }
 
-            // 4. Consulta de Caja Registradora
             if (s.Contains("caja") || s.Contains("arqueo") || s.Contains("efectivo en caja"))
             {
                 var sbCaja = new StringBuilder();
@@ -525,7 +513,6 @@ namespace software_ACEMAR.Services
                 return sbCaja.ToString();
             }
 
-            // 5. Consulta específica de Productos / Stock (ej: "¿Cuánto queda de arena?", "dime todos los tipos de arena", "precio de fierro", etc.)
             bool esPeticionDiagnostico = s.Contains("diagnóstico") || s.Contains("diagnostico") || s.Contains("ejecutivo") || s.Contains("auditoría") || s.Contains("auditoria");
 
             if (!esPeticionDiagnostico)
@@ -567,7 +554,6 @@ namespace software_ACEMAR.Services
                     return sbProd.ToString();
                 }
 
-                // 6. Consulta de Deudas / Créditos / Fiados
                 if (s.Contains("deuda") || s.Contains("fiado") || s.Contains("credito") || s.Contains("moros") || s.Contains("cobrar"))
                 {
                     var sbCred = new StringBuilder();
@@ -592,7 +578,6 @@ namespace software_ACEMAR.Services
                 }
             }
 
-            // 7. Informe Ejecutivo General Heurístico
             var sb = new StringBuilder();
             sb.AppendLine(encabezadoAviso);
             sb.AppendLine();
@@ -658,7 +643,7 @@ namespace software_ACEMAR.Services
 
             try
             {
-                // 1. Catálogo completo de productos con proveedor habitual
+
                 var productos = await ctx.Productos
                     .AsNoTracking()
                     .Include(p => p.ProductosProveedor)
@@ -693,7 +678,6 @@ namespace software_ACEMAR.Services
                     $"{p.Nombre} (Stock: {p.StockActual:0.##} {p.UnidadMedida} / Mín: {p.StockMinimo:0.##})"
                 ).ToList();
 
-                // 2. Historial de ventas recientes (las últimas 30 ventas con detalle de productos)
                 var ventasRecientes = await ctx.Ventas
                     .AsNoTracking()
                     .Include(v => v.Detalles)
@@ -712,7 +696,6 @@ namespace software_ACEMAR.Services
                     Items = v.Detalles?.Select(d => $"{d.Cantidad:0.##} {d.UnidadMedida} x {d.ProductoNombre} (P.U: S/ {d.PrecioUnitario:N2})").ToList() ?? new List<string>()
                 }).ToList();
 
-                // 3. Ventas de los últimos 7 días para métricas consolidadas
                 var hace7Dias = DateTime.Today.AddDays(-6);
                 var ventasSemana = ventasRecientes.Where(v => v.Fecha >= hace7Dias).ToList();
                 if (!ventasSemana.Any())
@@ -745,7 +728,6 @@ namespace software_ACEMAR.Services
 
                 datos.TopProductosVendidos = topProds;
 
-                // 4. Directorio de proveedores
                 var proveedores = await ctx.Proveedores.AsNoTracking().ToListAsync(cancellationToken);
                 datos.DirectorioProveedores = proveedores.Select(pr => new ProveedorInfoContexto
                 {
@@ -758,7 +740,6 @@ namespace software_ACEMAR.Services
                     LineasSuministro = pr.Observaciones ?? ""
                 }).ToList();
 
-                // 5. Clientes de crédito y fiados
                 var clientesCredito = await ctx.ClientesCredito.AsNoTracking().ToListAsync(cancellationToken);
                 var conDeuda = clientesCredito.Where(c => c.DeudaActual > 0).OrderByDescending(c => c.DeudaActual).ToList();
                 datos.ClientesConDeuda = conDeuda.Count;
@@ -767,12 +748,10 @@ namespace software_ACEMAR.Services
                     $"{c.Nombre} (Debe: S/ {c.DeudaActual:N2} de S/ {c.LimiteCredito:N2})"
                 ).ToList();
 
-                // 6. Lotes activos
                 var lotes = await ctx.LotesProducto.AsNoTracking().Where(l => l.Estado == "Activo").ToListAsync(cancellationToken);
                 datos.LotesActivos = lotes.Count;
                 datos.LotesPorAgotarse = lotes.Count(l => l.CantidadDisponible <= (l.CantidadInicial * 0.20m));
 
-                // 7. Estado de caja registradora
                 var ultimoArqueo = await ctx.ArqueosCaja.AsNoTracking().OrderByDescending(a => a.FechaHoraRegistro).FirstOrDefaultAsync(cancellationToken);
                 if (ultimoArqueo != null)
                 {

@@ -18,7 +18,6 @@ namespace software_ACEMAR.ViewModels
         private Venta? _ventaSeleccionada;
         private DetalleVenta? _detalleSeleccionado;
 
-        // Edición de ítem seleccionado
         private string _nuevaCantidadTexto = string.Empty;
         private string _nuevoPrecioTexto = string.Empty;
         private string _motivoAuditoria = string.Empty;

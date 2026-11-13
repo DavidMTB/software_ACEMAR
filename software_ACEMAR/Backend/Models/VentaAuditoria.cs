@@ -4,10 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace software_ACEMAR.Models
 {
-    /// <summary>
-    /// Registro de auditoría para cambios en ventas procesadas.
-    /// Toda corrección de una venta genera al menos un registro aquí.
-    /// </summary>
+
     public class VentaAuditoria
     {
         public int Id { get; set; }
@@ -24,16 +21,13 @@ namespace software_ACEMAR.Models
         [MaxLength(100)]
         public string UsuarioModifica { get; set; } = string.Empty;
 
-        /// <summary>Descripción legible del cambio realizado.</summary>
         [Required]
         [MaxLength(500)]
         public string Descripcion { get; set; } = string.Empty;
 
-        /// <summary>Estado/valor anterior serializado (JSON o texto plano).</summary>
         [MaxLength(2000)]
         public string? ValorAnterior { get; set; }
 
-        /// <summary>Estado/valor nuevo serializado (JSON o texto plano).</summary>
         [MaxLength(2000)]
         public string? ValorNuevo { get; set; }
     }

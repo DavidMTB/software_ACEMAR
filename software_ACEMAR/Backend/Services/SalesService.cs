@@ -22,13 +22,10 @@ namespace software_ACEMAR.Services
         List<Venta> ObtenerVentasRecientes(int limite = 20);
         Task<List<Venta>> ObtenerVentasRecientesAsync(int limite = 20, CancellationToken cancellationToken = default);
 
-        /// <summary>Obtiene ventas de un rango de fechas para el Dashboard.</summary>
         List<Venta> ObtenerVentasPorFecha(DateTime desde, DateTime hasta);
 
-        /// <summary>Obtiene el precio de venta vigente de un producto (del lote FIFO activo).</summary>
         decimal ObtenerPrecioVigente(int productoId);
 
-        /// <summary>Obtiene la deuda actual de un ClienteCredito por su ID. Retorna 0 si no existe.</summary>
         decimal ObtenerDeudaCliente(int clienteCreditoId);
     }
 
@@ -58,7 +55,6 @@ namespace software_ACEMAR.Services
             decimal factor = producto.ObtenerFactorParaUnidad(unidadMedida);
             decimal cantidadBaseRequerida = cantidadSolicitada * factor;
 
-            // Regla INV-01 (Bloqueo de Venta): Si cantidad_base_requerida > stock_actual -> "Stock insuficiente"
             if (cantidadBaseRequerida > producto.StockActual)
                 return (false, "Stock insuficiente");
 
@@ -67,7 +63,7 @@ namespace software_ACEMAR.Services
 
         public decimal MultiplicarPrecioFraccion(decimal cantidad, decimal precioUnitario)
         {
-            // Regla POS-02 (Fracciones): cantidad * precio, redondeado a 2 decimales
+
             return Math.Round(cantidad * precioUnitario, 2);
         }
 
@@ -78,13 +74,6 @@ namespace software_ACEMAR.Services
             return exito;
         }
 
-        /// <summary>
-        /// Procesa una venta de forma atómica:
-        /// 1. Valida el objeto Venta.
-        /// 2. Consume stock de lotes activos en FIFO aplicando factor de conversión de unidades.
-        /// 3. Actualiza DeudaActual si TipoVenta == Credito.
-        /// 4. Genera NumeroTicket y persiste.
-        /// </summary>
         public async Task<(bool Exito, string MensajeError)> ProcesarVentaAsync(
             Venta venta, CancellationToken cancellationToken = default)
         {
@@ -96,7 +85,7 @@ namespace software_ACEMAR.Services
 
             try
             {
-                // ── Cargar productos involucrados (evita N+1) ────────────────────
+
                 var productoIds = venta.Detalles.Select(d => d.ProductoId).Distinct().ToList();
                 var productosDict = await context.Productos
                     .Where(p => productoIds.Contains(p.Id))
@@ -115,16 +104,13 @@ namespace software_ACEMAR.Services
                         return (false, $"El producto ID {item.ProductoId} no existe.");
                     }
 
-                    // Unidad de medida por defecto si no viene del POS
                     if (string.IsNullOrWhiteSpace(item.UnidadMedida))
                         item.UnidadMedida = producto.UnidadMedida;
 
-                    // Factor multiplicador de unidad (ej: 1 Volquetada = 4 Metros base)
                     decimal factor = producto.ObtenerFactorParaUnidad(item.UnidadMedida);
                     decimal cantidadBaseTotal = item.Cantidad * factor;
                     decimal cantidadBasePendiente = cantidadBaseTotal;
 
-                    // ── Intentar consumo FIFO multi-lote en stock base ─────────────────
                     var lotesActivos = await context.LotesProducto
                         .Include(l => l.Proveedor)
                         .Where(l => l.ProductoId == item.ProductoId
@@ -194,7 +180,7 @@ namespace software_ACEMAR.Services
                     }
                     else
                     {
-                        // Sin lotes: verificar stock directo del producto (retrocompatibilidad)
+
                         if (cantidadBaseTotal > producto.StockActual)
                         {
                             await transaction.RollbackAsync(cancellationToken);
@@ -215,7 +201,6 @@ namespace software_ACEMAR.Services
                         });
                     }
 
-                    // Sincronizar el PrecioUnitario del producto con el precio de venta MÁXIMO de los lotes activos restantes
                     var lotesActivosRestantes = await context.LotesProducto
                         .Where(l => l.ProductoId == item.ProductoId && l.Estado == "Activo" && l.CantidadDisponible > 0)
                         .ToListAsync(cancellationToken);
@@ -228,7 +213,6 @@ namespace software_ACEMAR.Services
 
                 venta.Detalles = nuevosDetalles;
 
-                // ── Fecha y ticket ───────────────────────────────────────────────
                 venta.ClienteCredito = null;
                 venta.Fecha = DateTime.Now;
                 venta.RecalcularTotal();
@@ -239,10 +223,6 @@ namespace software_ACEMAR.Services
                     venta.NumeroTicket = $"TCK-{DateTime.Now:yyyyMMdd}-{(maxId + 1):D4}";
                 }
 
-                // ── FIX BUG FIADO: actualizar DeudaActual del cliente directamente ─
-                // En lugar de llamar a CreditService.RegistrarNuevoFiado (que creaba
-                // una Venta duplicada), actualizamos la deuda aquí dentro de la misma
-                // transacción. El PosViewModel NO debe llamar a RegistrarNuevoFiado.
                 if (venta.TipoVenta == TipoVentaConsts.Credito && venta.ClienteCreditoId.HasValue)
                 {
                     var cliente = await context.ClientesCredito

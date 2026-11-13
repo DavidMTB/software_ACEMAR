@@ -10,46 +10,26 @@ namespace software_ACEMAR.Services
 {
     public interface ILoteService
     {
-        /// <summary>Obtiene todos los lotes de un producto, ordenados por fecha (FIFO).</summary>
+
         List<LoteProducto> ObtenerLotesPorProducto(int productoId);
 
-        /// <summary>Obtiene solo los lotes activos (con stock > 0) de un producto, ordenados por FIFO.</summary>
         List<LoteProducto> ObtenerLotesActivos(int productoId);
 
-        /// <summary>
-        /// Registra un nuevo lote de compra para un producto.
-        /// Actualiza automáticamente el StockActual del Producto.
-        /// </summary>
         Task<(bool Exito, string Error)> CrearLoteAsync(LoteProducto lote);
 
-        /// <summary>
-        /// Consume cantidad de los lotes de un producto en orden FIFO.
-        /// Devuelve el lote consumido (o el primero si se consumió parcialmente).
-        /// </summary>
         Task<(bool Exito, LoteProducto? LoteUsado, decimal PrecioVenta, string Error)> ConsumarStockFifoAsync(
             int productoId, decimal cantidad);
 
-        /// <summary>
-        /// Devuelve stock a un lote específico (usado al revertir una venta).
-        /// </summary>
         Task<(bool Exito, string Error)> DevolverStockALoteAsync(int loteId, decimal cantidad);
 
-        /// <summary>
-        /// Obtiene el precio de venta vigente de un producto (del lote FIFO activo).
-        /// Si no tiene lotes, devuelve el PrecioUnitario del Producto.
-        /// </summary>
         decimal ObtenerPrecioVigenteProducto(int productoId);
 
-        /// <summary>Calcula el stock total disponible de un producto sumando sus lotes activos.</summary>
         decimal CalcularStockTotal(int productoId);
 
-        /// <summary>Recalcula y sincroniza el StockActual del Producto con la suma de sus lotes.</summary>
         Task SincronizarStockProductoAsync(int productoId);
 
-        /// <summary>Obtiene todos los lotes con su info de producto, para la vista de gestión.</summary>
         List<LoteProducto> ObtenerTodosLotes(string? filtroEstado = null);
 
-        /// <summary>Cierra manualmente un lote (Estado = "Cerrado").</summary>
         Task<(bool Exito, string Error)> CerrarLoteAsync(int loteId, string usuario);
     }
 
@@ -91,12 +71,11 @@ namespace software_ACEMAR.Services
             await using var tx = await ctx.Database.BeginTransactionAsync();
             try
             {
-                // Verificar que el producto existe
+
                 var producto = await ctx.Productos.FindAsync(lote.ProductoId);
                 if (producto == null)
                     return (false, "El producto asociado al lote no existe.");
 
-                // Verificar CuMax (si tiene CuMax definido)
                 if (producto.CuMax > 0)
                 {
                     decimal stockActualTotal = CalcularStockTotalConCtx(ctx, lote.ProductoId);
@@ -110,11 +89,8 @@ namespace software_ACEMAR.Services
                 ctx.LotesProducto.Add(lote);
                 await ctx.SaveChangesAsync();
 
-                // Actualizar StockActual del producto
                 producto.StockActual = CalcularStockTotalConCtx(ctx, lote.ProductoId);
 
-                // Regla PVP vs Reposición: El PVP del producto se actualiza al precio MÁXIMO entre los lotes activos.
-                // Si entra un lote con costo más alto, el PVP sube. Si entra más barato, se conserva el mayor hasta que se agote.
                 var lotesActivos = await ctx.LotesProducto
                     .Where(l => l.ProductoId == lote.ProductoId && l.Estado == "Activo" && l.CantidadDisponible > 0)
                     .ToListAsync();
@@ -151,7 +127,7 @@ namespace software_ACEMAR.Services
             await using var tx = await ctx.Database.BeginTransactionAsync();
             try
             {
-                // FIFO: tomar lote más antiguo con stock disponible
+
                 var lote = await ctx.LotesProducto
                     .Where(l => l.ProductoId == productoId && l.Estado == "Activo" && l.CantidadDisponible > 0)
                     .OrderBy(l => l.FechaIngreso)
@@ -178,15 +154,13 @@ namespace software_ACEMAR.Services
                     lote.Estado = "Agotado";
                 }
 
-                // Recalcular stock del producto
                 var producto = await ctx.Productos.FindAsync(productoId);
                 if (producto != null)
                     producto.StockActual = CalcularStockTotalConCtx(ctx, productoId) - cantidad
-                                         + (lote.Estado == "Agotado" ? 0 : 0); // ya descontado
+                                         + (lote.Estado == "Agotado" ? 0 : 0); 
 
                 await ctx.SaveChangesAsync();
 
-                // Recalculo final correcto
                 if (producto != null)
                     producto.StockActual = CalcularStockTotalConCtx(ctx, productoId);
                 await ctx.SaveChangesAsync();
@@ -243,7 +217,6 @@ namespace software_ACEMAR.Services
             if (lotesActivos.Any())
                 return lotesActivos.Max(l => l.PrecioVenta);
 
-            // Fallback: precio del producto
             return ctx.Productos.Where(p => p.Id == productoId)
                                 .Select(p => p.PrecioUnitario)
                                 .FirstOrDefault();
@@ -298,7 +271,6 @@ namespace software_ACEMAR.Services
             lote.Estado = "Cerrado";
             await ctx.SaveChangesAsync();
 
-            // Recalcular stock del producto
             var producto = await ctx.Productos.FindAsync(lote.ProductoId);
             if (producto != null)
             {

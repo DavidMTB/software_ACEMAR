@@ -21,13 +21,11 @@ namespace software_ACEMAR.ViewModels
         private string _mensajePermisoVendedor = string.Empty;
         private bool _tieneAcceso = true;
 
-        // Formulario Nuevo Cliente
         private string _nuevoClienteNombre = string.Empty;
         private string _nuevoClienteDocumento = string.Empty;
         private string _nuevoClienteTelefono = string.Empty;
         private string _nuevoClienteLimite = "1000.00";
 
-        // Formulario Nuevo Fiado Directo
         private string _montoNuevoFiado = string.Empty;
         private string _detalleNuevoFiado = "Materiales varios de ferretería";
 

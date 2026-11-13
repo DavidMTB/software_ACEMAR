@@ -16,7 +16,7 @@ namespace software_ACEMAR.Tests
         [TestInitialize]
         public void Setup()
         {
-            // Asegurar que la base de datos de prueba esté inicializada limpiamente
+
             using var context = new AppDbContext();
             context.Database.EnsureDeleted();
             context.InitializeDatabase();
@@ -25,7 +25,7 @@ namespace software_ACEMAR.Tests
         [TestMethod]
         public void Regla_POS_01_BusquedaManual_PorNombreOCodigo()
         {
-            // Regla POS-01 (Búsqueda): La búsqueda de productos en el POS es manual por nombre
+
             var inventoryService = new InventoryService();
 
             var resultadosPorNombre = inventoryService.BuscarPorNombre("Cemento");
@@ -38,16 +38,15 @@ namespace software_ACEMAR.Tests
         [TestMethod]
         public void Regla_POS_02_CalculoFraccionesDecimales()
         {
-            // Regla POS-02 (Fracciones): Permitir ingreso de cantidades en decimales (double o decimal),
-            // multiplicando matemáticamente por el precio unitario.
+
             var salesService = new SalesService();
 
-            decimal cantidad1 = 2.5m; // 2.5 Kg
+            decimal cantidad1 = 2.5m; 
             decimal precio1 = 7.20m;
             decimal subtotal1 = salesService.MultiplicarPrecioFraccion(cantidad1, precio1);
             Assert.AreEqual(18.00m, subtotal1);
 
-            decimal cantidad2 = 0.75m; // 0.75 metros o fracción
+            decimal cantidad2 = 0.75m; 
             decimal precio2 = 14.80m;
             decimal subtotal2 = salesService.MultiplicarPrecioFraccion(cantidad2, precio2);
             Assert.AreEqual(11.10m, subtotal2);
@@ -68,13 +67,11 @@ namespace software_ACEMAR.Tests
         [TestMethod]
         public void Regla_INV_02_CuMax_LimiteAlmacenamientoSuperado()
         {
-            // Regla INV-02 (CuMax): Al ingresar nueva mercadería al almacén,
-            // si stock_actual + ingreso > CuMax, lanzar: "Límite físico de almacenamiento superado".
+
             using var context = new AppDbContext();
-            var producto = context.Productos.First(p => p.Codigo == "CEM-001"); // StockActual = 35.0, CuMax = 100.0
+            var producto = context.Productos.First(p => p.Codigo == "CEM-001"); 
             var inventoryService = new InventoryService();
 
-            // Intentar ingresar 70.0 (35.0 + 70.0 = 105.0 > 100.0)
             bool ingresoPermitido = inventoryService.ValidarIngresoMercaderia(producto.Id, 70.0m, out string mensajeError);
 
             Assert.IsFalse(ingresoPermitido);
@@ -84,8 +81,7 @@ namespace software_ACEMAR.Tests
         [TestMethod]
         public void Regla_CRE_01_SeguridadFiados_BloqueoVendedor()
         {
-            // Regla CRE-01 (Seguridad Fiados): Si un usuario con rol "Vendedor" intenta abrir la vista de créditos
-            // o procesar uno, bloquear acceso con el mensaje: "Permisos insuficientes. Contacte al Administrador".
+
             var authService = new AuthService();
             authService.CambiarRol("Vendedor");
 
@@ -94,7 +90,6 @@ namespace software_ACEMAR.Tests
             Assert.IsFalse(accesoPermitido);
             Assert.AreEqual("Permisos insuficientes. Contacte al Administrador", mensajeError);
 
-            // Verificar que como Administrador sí tiene acceso
             authService.CambiarRol("Administrador");
             bool accesoAdmin = authService.PuedeAccederCreditos(out string mensajeAdmin);
             Assert.IsTrue(accesoAdmin);
@@ -104,8 +99,7 @@ namespace software_ACEMAR.Tests
         [TestMethod]
         public void Regla_Credito_AbonoRestaMatematicaDeuda()
         {
-            // Paso 5: Módulo de Créditos (Fiados)
-            // Registrar un 'Abono', el cual debe restar matemáticamente la deuda del cliente en la base de datos local
+
             var authService = new AuthService();
             authService.CambiarRol("Administrador");
             var creditService = new CreditService(authService);
@@ -118,7 +112,6 @@ namespace software_ACEMAR.Tests
             bool exito = creditService.RegistrarAbono(cliente.Id, montoAbono, "Abono de prueba", "admin", out string error);
             Assert.IsTrue(exito, error);
 
-            // Verificar la resta matemática en la base de datos SQLite
             using var context2 = new AppDbContext();
             var clienteActualizado = context2.ClientesCredito.First(c => c.Documento == "45892147");
             Assert.AreEqual(deudaInicial - montoAbono, clienteActualizado.DeudaActual);
@@ -209,10 +202,10 @@ namespace software_ACEMAR.Tests
         [TestMethod]
         public async Task Regla_ConversionUnidades_VolquetadaResta4MetrosBase()
         {
-            // Vender 1 Volquetada de Arena debe restar 4.0 Metros del stock base (factor = 4.0)
+
             var salesService = new SalesService();
             using var context = new AppDbContext();
-            var arena = context.Productos.First(p => p.Codigo == "ARE-003"); // StockActual = 50.0 Metros
+            var arena = context.Productos.First(p => p.Codigo == "ARE-003"); 
             decimal stockInicial = arena.StockActual;
 
             var venta = new Venta
@@ -224,7 +217,7 @@ namespace software_ACEMAR.Tests
             {
                 ProductoId = arena.Id,
                 ProductoNombre = arena.Nombre,
-                Cantidad = 1.0m, // 1 Volquetada
+                Cantidad = 1.0m, 
                 UnidadMedida = "Volquetada",
                 PrecioUnitario = 26.00m
             });
@@ -234,7 +227,7 @@ namespace software_ACEMAR.Tests
 
             using var contextVerify = new AppDbContext();
             var arenaVerificada = contextVerify.Productos.First(p => p.Id == arena.Id);
-            // Stock inicial (50.0) - (1 Volquetada * 4.0 Metros) = 46.0 Metros
+
             Assert.AreEqual(stockInicial - 4.0m, arenaVerificada.StockActual);
         }
     }

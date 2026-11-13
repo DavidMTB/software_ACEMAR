@@ -61,7 +61,6 @@ namespace software_ACEMAR.ViewModels
         private Producto? _productoSeleccionado;
         private string _busquedaTexto = string.Empty;
 
-        // Formulario de edición/creación
         private int _formId;
         private string _formCodigo = string.Empty;
         private string _formNombre = string.Empty;
@@ -75,7 +74,6 @@ namespace software_ACEMAR.ViewModels
         private string _nuevaUnidadNombre = string.Empty;
         private bool _esModoEdicion;
 
-        // Actualización masiva de precios
         private string _categoriaAumento = "Todas";
         private string _porcentajeAumentoTexto = "5.0";
 
@@ -320,7 +318,6 @@ namespace software_ACEMAR.ViewModels
                 return;
             }
 
-            // Recopilar unidades seleccionadas y sus precios específicos de las casillas marcadas
             var unidadesSeleccionadas = ListaUnidadesPrecios
                 .Where(u => u.EstaSeleccionada)
                 .Select(u => u.NombreUnidad.Trim())

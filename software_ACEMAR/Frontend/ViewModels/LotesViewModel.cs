@@ -17,7 +17,6 @@ namespace software_ACEMAR.ViewModels
         private Producto? _productoFiltro;
         private LoteProducto? _loteSeleccionado;
 
-        // Formulario de Lote
         private int _formId;
         private Producto? _formProductoSeleccionado;
         private Proveedor? _formProveedorSeleccionado;
@@ -85,7 +84,6 @@ namespace software_ACEMAR.ViewModels
                     FormPrecioVenta = precioVenta > 0 ? precioVenta.ToString("0.00") : "10.00";
                     FormCostoCompra = precioVenta > 0 ? Math.Round(precioVenta * 0.70m, 2).ToString("0.00") : "7.00";
 
-                    // Autoseleccionar proveedor asignado al producto si existe
                     var provs = _proveedorService.ObtenerProveedoresDeProducto(value.Id);
                     if (provs.Any())
                     {

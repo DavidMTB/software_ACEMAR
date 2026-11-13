@@ -169,7 +169,6 @@ namespace software_ACEMAR.Services
                 return (false, "Credenciales incorrectas. Verifique el usuario (Gerente) y la contraseña.");
             }
 
-            // Si el usuario actual era vendedor, guardarlo como usuarioVendedorPrevio para retornar a él
             if (string.Equals(_usuarioActual.Rol, "Vendedor", StringComparison.OrdinalIgnoreCase))
             {
                 _usuarioVendedorPrevio = _usuarioActual;
@@ -204,17 +203,13 @@ namespace software_ACEMAR.Services
                 return true;
             }
 
-            // Si no hay vendedor previo (ej. se inició sesión como Gerente directamente),
-            // se debe requerir seleccionar/ingresar la cuenta de vendedor deseada.
             requiereSeleccionarVendedor = true;
             return false;
         }
 
         public bool PuedeAccederCreditos(out string mensajeError)
         {
-            // Regla CRE-01 (Seguridad Fiados):
-            // Si un usuario con rol "Vendedor" intenta abrir la vista de créditos o procesar uno,
-            // bloquear acceso con el mensaje: "Permisos insuficientes. Contacte al Administrador".
+
             if (string.Equals(_usuarioActual.Rol, "Vendedor", StringComparison.OrdinalIgnoreCase))
             {
                 mensajeError = "Permisos insuficientes. Contacte al Administrador";

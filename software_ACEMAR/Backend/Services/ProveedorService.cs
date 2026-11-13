@@ -17,10 +17,8 @@ namespace software_ACEMAR.Services
         bool Actualizar(Proveedor proveedor, out string error);
         bool Eliminar(int id, out string error);
 
-        /// <summary>Asocia un proveedor a un producto. Si esHabitual=true, desmarca el previo habitual.</summary>
         bool AsociarAProducto(int proveedorId, int productoId, bool esHabitual, out string error);
 
-        /// <summary>Desasocia un proveedor de un producto.</summary>
         bool DesasociarDeProducto(int proveedorId, int productoId, out string error);
     }
 
@@ -124,7 +122,6 @@ namespace software_ACEMAR.Services
                 return false;
             }
 
-            // Eliminar asociaciones primero
             ctx.ProductosProveedores.RemoveRange(proveedor.ProductosProveedor);
             ctx.Proveedores.Remove(proveedor);
             ctx.SaveChanges();
@@ -136,7 +133,6 @@ namespace software_ACEMAR.Services
             error = string.Empty;
             using var ctx = new AppDbContext();
 
-            // Verificar que no estén ya asociados
             var existente = ctx.ProductosProveedores
                               .FirstOrDefault(pp => pp.ProveedorId == proveedorId && pp.ProductoId == productoId);
             if (existente != null)
@@ -153,7 +149,6 @@ namespace software_ACEMAR.Services
                 });
             }
 
-            // Si se marca como habitual, desmarcar el previo
             if (esHabitual)
             {
                 var previosHabituales = ctx.ProductosProveedores

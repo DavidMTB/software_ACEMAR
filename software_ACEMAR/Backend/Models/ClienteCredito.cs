@@ -7,7 +7,7 @@ namespace software_ACEMAR.Models
     {
         public int Id { get; set; }
         public string Nombre { get; set; } = string.Empty;
-        public string Documento { get; set; } = string.Empty; // DNI o RUC
+        public string Documento { get; set; } = string.Empty; 
         public string Telefono { get; set; } = string.Empty;
         public decimal LimiteCredito { get; set; }
         public decimal DeudaActual { get; set; }

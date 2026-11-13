@@ -9,7 +9,7 @@ namespace software_ACEMAR.Data
 {
     public class AppDbContext : DbContext
     {
-        // ── DbSets existentes ───────────────────────────────────────────────────
+
         public DbSet<Producto>       Productos      => Set<Producto>();
         public DbSet<Venta>          Ventas         => Set<Venta>();
         public DbSet<DetalleVenta>   DetallesVenta  => Set<DetalleVenta>();
@@ -20,7 +20,6 @@ namespace software_ACEMAR.Data
         public DbSet<DetalleProforma> DetallesProforma => Set<DetalleProforma>();
         public DbSet<ArqueoCaja>     ArqueosCaja    => Set<ArqueoCaja>();
 
-        // ── DbSets nuevos ───────────────────────────────────────────────────────
         public DbSet<LoteProducto>    LotesProducto      => Set<LoteProducto>();
         public DbSet<Proveedor>       Proveedores        => Set<Proveedor>();
         public DbSet<ProductoProveedor> ProductosProveedores => Set<ProductoProveedor>();
@@ -48,7 +47,6 @@ namespace software_ACEMAR.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // ── Precisiones decimales: Producto ─────────────────────────────────
             modelBuilder.Entity<Producto>()
                 .Property(p => p.PrecioUnitario).HasPrecision(18, 2);
             modelBuilder.Entity<Producto>()
@@ -58,7 +56,6 @@ namespace software_ACEMAR.Data
             modelBuilder.Entity<Producto>()
                 .Property(p => p.CuMax).HasPrecision(18, 2);
 
-            // ── Precisiones decimales: LoteProducto ─────────────────────────────
             modelBuilder.Entity<LoteProducto>()
                 .Property(l => l.CantidadInicial).HasPrecision(18, 2);
             modelBuilder.Entity<LoteProducto>()
@@ -68,21 +65,18 @@ namespace software_ACEMAR.Data
             modelBuilder.Entity<LoteProducto>()
                 .Property(l => l.PrecioVenta).HasPrecision(18, 2);
 
-            // Relación LoteProducto → Producto
             modelBuilder.Entity<LoteProducto>()
                 .HasOne(l => l.Producto)
                 .WithMany(p => p.Lotes)
                 .HasForeignKey(l => l.ProductoId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Relación LoteProducto → Proveedor (opcional)
             modelBuilder.Entity<LoteProducto>()
                 .HasOne(l => l.Proveedor)
                 .WithMany()
                 .HasForeignKey(l => l.ProveedorId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            // ── ProductoProveedor ────────────────────────────────────────────────
             modelBuilder.Entity<ProductoProveedor>()
                 .HasOne(pp => pp.Producto)
                 .WithMany(p => p.ProductosProveedor)
@@ -95,17 +89,14 @@ namespace software_ACEMAR.Data
                 .HasForeignKey(pp => pp.ProveedorId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ── ClienteCredito ───────────────────────────────────────────────────
             modelBuilder.Entity<ClienteCredito>()
                 .Property(c => c.LimiteCredito).HasPrecision(18, 2);
             modelBuilder.Entity<ClienteCredito>()
                 .Property(c => c.DeudaActual).HasPrecision(18, 2);
 
-            // ── AbonoCredito ─────────────────────────────────────────────────────
             modelBuilder.Entity<AbonoCredito>()
                 .Property(a => a.Monto).HasPrecision(18, 2);
 
-            // ── Venta ────────────────────────────────────────────────────────────
             modelBuilder.Entity<Venta>()
                 .Property(v => v.Total).HasPrecision(18, 2);
 
@@ -115,14 +106,12 @@ namespace software_ACEMAR.Data
                 .HasForeignKey(v => v.ClienteCreditoId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            // VentaAuditoria → Venta
             modelBuilder.Entity<VentaAuditoria>()
                 .HasOne(a => a.Venta)
                 .WithMany(v => v.Auditorias)
                 .HasForeignKey(a => a.VentaId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // ── DetalleVenta ─────────────────────────────────────────────────────
             modelBuilder.Entity<DetalleVenta>()
                 .Property(d => d.Cantidad).HasPrecision(18, 2);
             modelBuilder.Entity<DetalleVenta>()
@@ -130,24 +119,20 @@ namespace software_ACEMAR.Data
             modelBuilder.Entity<DetalleVenta>()
                 .Property(d => d.CostoUnitarioCompra).HasPrecision(18, 2);
 
-            // DetalleVenta → LoteProducto (opcional, retrocompatible)
             modelBuilder.Entity<DetalleVenta>()
                 .HasOne(d => d.LoteProducto)
                 .WithMany()
                 .HasForeignKey(d => d.LoteProductoId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            // ── Proforma ─────────────────────────────────────────────────────────
             modelBuilder.Entity<Proforma>()
                 .Property(p => p.Total).HasPrecision(18, 2);
 
-            // ── DetalleProforma ──────────────────────────────────────────────────
             modelBuilder.Entity<DetalleProforma>()
                 .Property(d => d.Cantidad).HasPrecision(18, 2);
             modelBuilder.Entity<DetalleProforma>()
                 .Property(d => d.PrecioUnitario).HasPrecision(18, 2);
 
-            // ── ArqueoCaja ───────────────────────────────────────────────────────
             modelBuilder.Entity<ArqueoCaja>()
                 .Property(a => a.MontoApertura).HasPrecision(18, 2);
             modelBuilder.Entity<ArqueoCaja>()
@@ -158,22 +143,15 @@ namespace software_ACEMAR.Data
                 .Property(a => a.TotalAbonosEfectivo).HasPrecision(18, 2);
         }
 
-        /// <summary>
-        /// Inicializa la BD con EnsureCreated y aplica las columnas nuevas
-        /// de forma segura (sin destruir datos existentes).
-        /// </summary>
         public void InitializeDatabase()
         {
-            // Configurar WAL mode y busy timeout para concurrencia multi-hilo en SQLite
+
             Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;");
 
-            // Crear tablas nuevas (no afecta tablas existentes)
             Database.EnsureCreated();
 
-            // Aplicar columnas nuevas de forma segura mediante SQL directo
             ApplySchemaUpgrades();
 
-            // Seed de datos iniciales solo si están vacíos
             SeedProductos();
             GarantizarArenaFina();
             SeedProveedores();
@@ -186,23 +164,18 @@ namespace software_ACEMAR.Data
             SaveChanges();
         }
 
-        /// <summary>
-        /// Ajusta y sincroniza la unidad base de áridos (Arena Gruesa) a Metros (m³)
-        /// garantizando la equivalencia en stock, lotes y factores de conversión fraccionales.
-        /// </summary>
         private void AjustarUnidadesBase()
         {
             var pArena = Productos.FirstOrDefault(p => p.Codigo == "ARE-003");
             if (pArena != null && pArena.UnidadMedida != "Metros")
             {
                 pArena.UnidadMedida = "Metros";
-                // Conversión de bolsas a metros: 1 metro = 25 bolsas -> factor 0.04
-                // 57.65 bolsas * 0.04 = 2.31 metros cúbicos
+
                 decimal stockMetros = Math.Round(pArena.StockActual * 0.04m, 2);
                 pArena.StockActual = stockMetros > 0 ? stockMetros : 10.0m;
                 pArena.StockMinimo = 2.0m;
                 pArena.CuMax = 30.0m;
-                pArena.PrecioUnitario = 65.00m; // Precio por metro cúbico
+                pArena.PrecioUnitario = 65.00m; 
 
                 pArena.SetUnidadesPermitidas(new List<string> { "Metros", "Bolsa", "Carretilla", "Lata", "Volquetada" });
                 pArena.GuardarPreciosPorUnidad(new Dictionary<string, decimal>
@@ -222,7 +195,6 @@ namespace software_ACEMAR.Data
                     ["Volquetada"] = 4.0m
                 });
 
-                // Migrar lotes activos de este producto a Metros
                 var lotesArena = LotesProducto.Where(l => l.ProductoId == pArena.Id).ToList();
                 foreach (var l in lotesArena)
                 {
@@ -238,9 +210,6 @@ namespace software_ACEMAR.Data
             }
         }
 
-        /// <summary>
-        /// Garantiza la existencia de Arena Fina Cantera para consultas de stock de áridos.
-        /// </summary>
         private void GarantizarArenaFina()
         {
             var pArenaFina = Productos.FirstOrDefault(p => p.Codigo == "ARE-004" || p.Nombre.ToLower().Contains("arena fina"));
@@ -264,9 +233,6 @@ namespace software_ACEMAR.Data
             }
         }
 
-        /// <summary>
-        /// Seed de proveedores realistas del sector ferretero y de construcción peruano.
-        /// </summary>
         private void SeedProveedores()
         {
             if (Proveedores.Any()) return;
@@ -411,10 +377,6 @@ namespace software_ACEMAR.Data
             SaveChanges();
         }
 
-        /// <summary>
-        /// Vincula de forma inteligente cada producto con su proveedor habitual y
-        /// actualiza los lotes activos sin proveedor asignado.
-        /// </summary>
         private void VincularProveedoresALotes()
         {
             if (!Proveedores.Any()) return;
@@ -502,10 +464,6 @@ namespace software_ACEMAR.Data
             }
         }
 
-        /// <summary>
-        /// Agrega tablas y columnas nuevas a la base de datos de forma idempotente.
-        /// EnsureCreated es un no-op si el archivo de la BD ya existía previamente.
-        /// </summary>
         private void ApplySchemaUpgrades()
         {
             var conn = Database.GetDbConnection();
@@ -514,7 +472,6 @@ namespace software_ACEMAR.Data
 
             using var cmd = conn.CreateCommand();
 
-            // ── 1. Crear tablas nuevas si no existen ─────────────────────────────
             cmd.CommandText = @"
                 CREATE TABLE IF NOT EXISTS ""Proveedores"" (
                     ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_Proveedores"" PRIMARY KEY AUTOINCREMENT,
@@ -566,7 +523,6 @@ namespace software_ACEMAR.Data
             ";
             cmd.ExecuteNonQuery();
 
-            // Helper: verificar si columna existe
             bool ColumnExists(string table, string column)
             {
                 cmd.CommandText = $"PRAGMA table_info({table});";
@@ -579,7 +535,6 @@ namespace software_ACEMAR.Data
                 return false;
             }
 
-            // Helper: agregar columna si no existe
             void AddColumnIfMissing(string table, string column, string definition)
             {
                 if (!ColumnExists(table, column))
@@ -589,36 +544,28 @@ namespace software_ACEMAR.Data
                 }
             }
 
-            // ── 2. Agregar columnas nuevas a tablas existentes de forma segura ───
-            // Producto: UnidadesPermitidas, PreciosPorUnidad y FactoresPorUnidad
             AddColumnIfMissing("Productos", "UnidadesPermitidas", "TEXT NULL");
             AddColumnIfMissing("Productos", "PreciosPorUnidad", "TEXT NULL");
             AddColumnIfMissing("Productos", "FactoresPorUnidad", "TEXT NULL");
 
-            // DetalleVenta: LoteProductoId, UnidadMedida, CostoUnitarioCompra
             AddColumnIfMissing("DetallesVenta", "LoteProductoId", "INTEGER NULL REFERENCES LotesProducto(Id) ON DELETE SET NULL");
             AddColumnIfMissing("DetallesVenta", "UnidadMedida", "TEXT NOT NULL DEFAULT 'Unidad'");
             AddColumnIfMissing("DetallesVenta", "CostoUnitarioCompra", "TEXT NOT NULL DEFAULT '0'");
 
-            // DetalleProforma: UnidadMedida
             AddColumnIfMissing("DetallesProforma", "UnidadMedida", "TEXT NOT NULL DEFAULT 'Unidad'");
 
-            // Venta: FueModificada, FechaModificacion
             AddColumnIfMissing("Ventas", "FueModificada", "INTEGER NOT NULL DEFAULT 0");
             AddColumnIfMissing("Ventas", "FechaModificacion", "TEXT NULL");
 
-            // Usuarios: MostradorAsignado
             AddColumnIfMissing("Usuarios", "MostradorAsignado", "TEXT NOT NULL DEFAULT 'Mostrador 01'");
         }
-
-        // ── Seed de datos ────────────────────────────────────────────────────────
 
         private void SeedProductos()
         {
             if (Productos.Any()) return;
 
             Productos.AddRange(
-                // ── CONSTRUCCIÓN ──────────────────────────────────────────────────
+
                 new Producto { Codigo = "CEM-001", Nombre = "Cemento Sol Tipo I (50kg)",       Categoria = "Construcción", PrecioUnitario = 32.50m, StockActual = 35.0m,   StockMinimo = 15.0m, CuMax = 100.0m, UnidadMedida = "Bolsa" },
                 new Producto { Codigo = "CEM-002", Nombre = "Cemento Andino Tipo V (50kg)",    Categoria = "Construcción", PrecioUnitario = 36.00m, StockActual = 20.0m,   StockMinimo = 10.0m, CuMax = 80.0m,  UnidadMedida = "Bolsa" },
                 new Producto { Codigo = "ARE-003", Nombre = "Arena Gruesa Lavada",             Categoria = "Construcción", PrecioUnitario = 65.00m, StockActual = 10.0m,    StockMinimo = 2.0m,  CuMax = 30.0m,  UnidadMedida = "Metros",
@@ -637,7 +584,6 @@ namespace software_ACEMAR.Data
                 new Producto { Codigo = "BLO-027", Nombre = "Bloqueta de Concreto 15cm",      Categoria = "Construcción", PrecioUnitario = 2.50m,  StockActual = 500.0m,  StockMinimo = 200.0m, CuMax = 2000.0m, UnidadMedida = "Unidad" },
                 new Producto { Codigo = "MOR-028", Nombre = "Mortero Seco Klaukol 25kg",      Categoria = "Construcción", PrecioUnitario = 24.00m, StockActual = 18.0m,   StockMinimo = 8.0m,  CuMax = 60.0m,  UnidadMedida = "Bolsa" },
 
-                // ── FIJACIONES ────────────────────────────────────────────────────
                 new Producto { Codigo = "CLA-005", Nombre = "Clavos de Acero 2\" (Kg)",               Categoria = "Fijaciones", PrecioUnitario = 7.20m,  StockActual = 8.5m,  StockMinimo = 10.0m, CuMax = 50.0m,  UnidadMedida = "Kg" },
                 new Producto { Codigo = "CLA-006", Nombre = "Clavos para Madera 3\" (Kg)",            Categoria = "Fijaciones", PrecioUnitario = 6.80m,  StockActual = 42.0m, StockMinimo = 15.0m, CuMax = 80.0m,  UnidadMedida = "Kg" },
                 new Producto { Codigo = "TOR-007", Nombre = "Tornillos Autoperforantes 2\" (Ciento)", Categoria = "Fijaciones", PrecioUnitario = 14.50m, StockActual = 18.0m, StockMinimo = 10.0m, CuMax = 60.0m,  UnidadMedida = "Ciento" },
@@ -645,7 +591,6 @@ namespace software_ACEMAR.Data
                 new Producto { Codigo = "TAC-030", Nombre = "Taco Fischer SX10 (Bolsa 50u)",          Categoria = "Fijaciones", PrecioUnitario = 9.50m,  StockActual = 22.0m, StockMinimo = 8.0m,  CuMax = 80.0m,  UnidadMedida = "Bolsa" },
                 new Producto { Codigo = "AND-031", Nombre = "Anclaje Químico Hilti RE 500",           Categoria = "Fijaciones", PrecioUnitario = 85.00m, StockActual = 5.0m,  StockMinimo = 3.0m,  CuMax = 20.0m,  UnidadMedida = "Unidad" },
 
-                // ── GASFITERÍA ────────────────────────────────────────────────────
                 new Producto { Codigo = "TUB-008", Nombre = "Tubo PVC 1/2\" Clase 10 (Unidad)",       Categoria = "Gasfitería", PrecioUnitario = 14.80m, StockActual = 4.0m,  StockMinimo = 12.0m, CuMax = 60.0m,  UnidadMedida = "Unidad" },
                 new Producto { Codigo = "TUB-009", Nombre = "Tubo PVC 2\" Desagüe Liviano (Unidad)",  Categoria = "Gasfitería", PrecioUnitario = 22.50m, StockActual = 15.0m, StockMinimo = 8.0m,  CuMax = 50.0m,  UnidadMedida = "Unidad" },
                 new Producto { Codigo = "PEG-010", Nombre = "Pegamento PVC Oatey 1/4 Galón",         Categoria = "Gasfitería", PrecioUnitario = 28.00m, StockActual = 9.0m,  StockMinimo = 5.0m,  CuMax = 30.0m,  UnidadMedida = "Galón" },
@@ -654,7 +599,6 @@ namespace software_ACEMAR.Data
                 new Producto { Codigo = "LLA-034", Nombre = "Llave de Paso 1/2\" Bronce FV",         Categoria = "Gasfitería", PrecioUnitario = 18.50m, StockActual = 14.0m, StockMinimo = 6.0m,  CuMax = 50.0m,  UnidadMedida = "Unidad" },
                 new Producto { Codigo = "SIF-035", Nombre = "Sifón Botella PVC 1 1/2\" Lavatorio",   Categoria = "Gasfitería", PrecioUnitario = 12.00m, StockActual = 10.0m, StockMinimo = 4.0m,  CuMax = 40.0m,  UnidadMedida = "Unidad" },
 
-                // ── ELECTRICIDAD ──────────────────────────────────────────────────
                 new Producto { Codigo = "CAB-011", Nombre = "Cable Eléctrico Mellizo 2x14 (Metros)", Categoria = "Electricidad", PrecioUnitario = 3.50m,  StockActual = 120.0m, StockMinimo = 30.0m, CuMax = 200.0m, UnidadMedida = "Metros" },
                 new Producto { Codigo = "CAB-012", Nombre = "Cable Indeco THW 14 AWG (Metros)",      Categoria = "Electricidad", PrecioUnitario = 2.80m,  StockActual = 95.0m,  StockMinimo = 25.0m, CuMax = 300.0m, UnidadMedida = "Metros" },
                 new Producto { Codigo = "INT-013", Nombre = "Interruptor Simple Bticino Matix",      Categoria = "Electricidad", PrecioUnitario = 8.50m,  StockActual = 30.0m,  StockMinimo = 10.0m, CuMax = 100.0m, UnidadMedida = "Unidad" },
@@ -663,7 +607,6 @@ namespace software_ACEMAR.Data
                 new Producto { Codigo = "CON-037", Nombre = "Conduit PVC 3/4\" x 3m (Unidad)",      Categoria = "Electricidad", PrecioUnitario = 8.00m,  StockActual = 40.0m,  StockMinimo = 15.0m, CuMax = 100.0m, UnidadMedida = "Unidad" },
                 new Producto { Codigo = "CAJ-038", Nombre = "Caja Octogonal PVC c/ Tapa Ciega",      Categoria = "Electricidad", PrecioUnitario = 2.00m,  StockActual = 55.0m,  StockMinimo = 20.0m, CuMax = 150.0m, UnidadMedida = "Unidad" },
 
-                // ── HERRAMIENTAS ──────────────────────────────────────────────────
                 new Producto { Codigo = "DIS-015", Nombre = "Disco de Corte Metal 4 1/2\" Norton",   Categoria = "Herramientas", PrecioUnitario = 6.50m,  StockActual = 25.0m, StockMinimo = 8.0m,  CuMax = 80.0m,  UnidadMedida = "Unidad" },
                 new Producto { Codigo = "DIS-016", Nombre = "Disco Diamantado Continuo 4 1/2\" Bosch", Categoria = "Herramientas", PrecioUnitario = 19.50m, StockActual = 7.0m, StockMinimo = 5.0m, CuMax = 40.0m,  UnidadMedida = "Unidad" },
                 new Producto { Codigo = "LLA-020", Nombre = "Llave Francesa Ajustable 10\" Stanley",  Categoria = "Herramientas", PrecioUnitario = 38.00m, StockActual = 6.0m,  StockMinimo = 3.0m,  CuMax = 25.0m,  UnidadMedida = "Unidad" },
@@ -674,14 +617,12 @@ namespace software_ACEMAR.Data
                 new Producto { Codigo = "ESP-041", Nombre = "Espátula Mango Plástico 4\"",            Categoria = "Herramientas", PrecioUnitario = 8.50m,  StockActual = 20.0m, StockMinimo = 8.0m,  CuMax = 60.0m,  UnidadMedida = "Unidad" },
                 new Producto { Codigo = "NIV-042", Nombre = "Nivel de Burbuja Aluminio 60cm",         Categoria = "Herramientas", PrecioUnitario = 32.00m, StockActual = 7.0m,  StockMinimo = 3.0m,  CuMax = 20.0m,  UnidadMedida = "Unidad" },
 
-                // ── PINTURAS ──────────────────────────────────────────────────────
                 new Producto { Codigo = "PIN-017", Nombre = "Pintura Látex Vencedor Blanco (Galón)", Categoria = "Pinturas", PrecioUnitario = 42.00m, StockActual = 14.0m, StockMinimo = 6.0m,  CuMax = 50.0m,  UnidadMedida = "Galón" },
                 new Producto { Codigo = "BRO-018", Nombre = "Brocha 3\" Cerda Mona Atlas",           Categoria = "Pinturas", PrecioUnitario = 8.00m,  StockActual = 22.0m, StockMinimo = 8.0m,  CuMax = 60.0m,  UnidadMedida = "Unidad" },
                 new Producto { Codigo = "ROD-043", Nombre = "Rodillo Lana 9\" para Látex",           Categoria = "Pinturas", PrecioUnitario = 14.00m, StockActual = 15.0m, StockMinimo = 6.0m,  CuMax = 50.0m,  UnidadMedida = "Unidad" },
                 new Producto { Codigo = "ESM-044", Nombre = "Esmalte Alquídico Satinado Negro (L)",  Categoria = "Pinturas", PrecioUnitario = 19.50m, StockActual = 10.0m, StockMinimo = 4.0m,  CuMax = 40.0m,  UnidadMedida = "Litro" },
                 new Producto { Codigo = "LIJ-045", Nombre = "Lija al Agua Grano 120 (Pliego)",       Categoria = "Pinturas", PrecioUnitario = 1.80m,  StockActual = 60.0m, StockMinimo = 20.0m, CuMax = 200.0m, UnidadMedida = "Unidad" },
 
-                // ── CERRAJERÍA ────────────────────────────────────────────────────
                 new Producto { Codigo = "CAN-019", Nombre = "Candado de Latón Forte 50mm",         Categoria = "Cerrajería", PrecioUnitario = 26.00m, StockActual = 12.0m, StockMinimo = 5.0m,  CuMax = 40.0m,  UnidadMedida = "Unidad" },
                 new Producto { Codigo = "BIS-046", Nombre = "Bisagra Alum. Capuchina 3\" (Par)",   Categoria = "Cerrajería", PrecioUnitario = 5.50m,  StockActual = 30.0m, StockMinimo = 12.0m, CuMax = 100.0m, UnidadMedida = "Par" },
                 new Producto { Codigo = "PAS-047", Nombre = "Pasador Aldaba de Acero 4\"",         Categoria = "Cerrajería", PrecioUnitario = 7.00m,  StockActual = 25.0m, StockMinimo = 10.0m, CuMax = 80.0m,  UnidadMedida = "Unidad" },

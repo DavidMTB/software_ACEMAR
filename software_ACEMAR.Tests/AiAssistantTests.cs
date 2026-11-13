@@ -26,7 +26,7 @@ namespace software_ACEMAR.Tests
         [TestCleanup]
         public void Cleanup()
         {
-            // Restaurar la clave original existente en la máquina local si había una
+
             if (!string.IsNullOrWhiteSpace(_originalKey))
             {
                 var service = new AiAssistantService();
@@ -67,7 +67,6 @@ namespace software_ACEMAR.Tests
             Assert.IsTrue(service.TieneApiKeyConfigurada());
             Assert.AreEqual(testKey, service.ObtenerApiKey());
 
-            // Limpiar al finalizar para no dejar claves de prueba
             service.GuardarApiKey(string.Empty);
             Assert.IsFalse(service.TieneApiKeyConfigurada());
         }
@@ -76,7 +75,7 @@ namespace software_ACEMAR.Tests
         public async Task AiAssistantService_ModoLocalHeuristico_GeneraInformeValido()
         {
             var service = new AiAssistantService();
-            // Asegurar que no hay clave para probar el modo heurístico offline seguro
+
             service.GuardarApiKey(string.Empty);
 
             string diagnostico = await service.GenerarDiagnosticoEjecutivoAsync("General");
@@ -112,12 +111,11 @@ namespace software_ACEMAR.Tests
         public async Task AiAssistantViewModel_GenerarDiagnostico_AgregaMensajes()
         {
             var service = new AiAssistantService();
-            service.GuardarApiKey(string.Empty); // Modo heurístico local rápido
+            service.GuardarApiKey(string.Empty); 
             var vm = new AiAssistantViewModel(service);
 
             vm.GenerarDiagnosticoGeneralCommand.Execute(null);
 
-            // Esperar que termine el procesamiento asíncrono
             int intentos = 0;
             while (vm.EstaCargando && intentos < 30)
             {
@@ -145,7 +143,7 @@ namespace software_ACEMAR.Tests
         public async Task AiAssistantService_ConsultaProductoLocal_RespondeDetalleArena()
         {
             var service = new AiAssistantService();
-            service.GuardarApiKey(string.Empty); // Probar motor local inteligente
+            service.GuardarApiKey(string.Empty); 
 
             string resp = await service.ConsultarAsistenteAsync("cuanto queda de arena");
 
@@ -169,7 +167,7 @@ namespace software_ACEMAR.Tests
         public async Task AiAssistantService_ConsultaTiposDeArena_DevuelveArenasRegistradas()
         {
             var service = new AiAssistantService();
-            service.GuardarApiKey(string.Empty); // Probar motor local inteligente
+            service.GuardarApiKey(string.Empty); 
 
             string resp = await service.ConsultarAsistenteAsync("dime todos los tipos de arena que vendemos");
 
@@ -180,7 +178,7 @@ namespace software_ACEMAR.Tests
         [TestMethod]
         public async Task AiAssistantService_ConsultaUltimaVenta_DevuelveInformacionVenta()
         {
-            // Asegurar que existe al menos una venta para consultar
+
             using (var ctx = new AppDbContext())
             {
                 if (!ctx.Ventas.Any())
@@ -217,14 +215,12 @@ namespace software_ACEMAR.Tests
             var provs = ctx.Proveedores.ToList();
             Assert.IsTrue(provs.Count >= 10, "Deben existir al menos 10 proveedores simulados realistas.");
 
-            // Verificar proveedores clave peruanos
             Assert.IsTrue(provs.Any(p => p.Nombre.Contains("UNACEM")), "Debe existir proveedor UNACEM.");
             Assert.IsTrue(provs.Any(p => p.Nombre.Contains("Aceros Arequipa")), "Debe existir proveedor Aceros Arequipa.");
             Assert.IsTrue(provs.Any(p => p.Nombre.Contains("Florida") || p.Nombre.Contains("Cantera")), "Debe existir proveedor de cantera.");
             Assert.IsTrue(provs.Any(p => p.Nombre.Contains("Pavco")), "Debe existir proveedor Pavco.");
             Assert.IsTrue(provs.Any(p => p.Nombre.Contains("Indeco")), "Debe existir proveedor Indeco.");
 
-            // Verificar vinculación en ProductosProveedores
             var relaciones = ctx.ProductosProveedores.ToList();
             Assert.IsTrue(relaciones.Any(), "Los productos deben estar vinculados con sus proveedores habituales.");
         }

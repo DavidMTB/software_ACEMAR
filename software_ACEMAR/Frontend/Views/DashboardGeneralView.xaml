@@ -9,7 +9,7 @@
              Background="#F4F6F0">
 
     <UserControl.Resources>
-        <!-- Estilo de Botón Atajo Directo -->
+
         <Style x:Key="ShortcutButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="#354318" />
             <Setter Property="Foreground" Value="#FFFFFF" />
@@ -68,9 +68,6 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Margin="18">
 
-            <!-- ================================================================= -->
-            <!-- 1. CABECERA & BOTÓN DE ACTUALIZACIÓN EN TIEMPO REAL              -->
-            <!-- ================================================================= -->
             <Border Background="#1D2611" CornerRadius="10" Padding="16,14" Margin="0,0,0,16"
                     ToolTip="Panel Principal de Control: Visualice el estado general de su ferretería en tiempo real.">
                 <Grid>
@@ -114,12 +111,8 @@
                 </Grid>
             </Border>
 
-            <!-- ================================================================= -->
-            <!-- 2. KPI TARJETAS PRINCIPALES (CON BOTONES ATAJOS)                  -->
-            <!-- ================================================================= -->
             <UniformGrid Columns="4" Margin="0,0,0,16">
 
-                <!-- KPI 1: Ventas del Día -->
                 <Border Background="#FFFFFF" CornerRadius="8" BorderBrush="#DCDEC8" BorderThickness="1" Margin="0,0,8,0" Padding="14"
                         ToolTip="Monto total en Soles cobrado por ventas realizadas el día de hoy.">
                     <Grid>
@@ -145,7 +138,6 @@
                     </Grid>
                 </Border>
 
-                <!-- KPI 2: Créditos & Fiados Pendientes -->
                 <Border Background="#FFFFFF" CornerRadius="8" BorderBrush="#DCDEC8" BorderThickness="1" Margin="4,0,4,0" Padding="14"
                         ToolTip="Monto total acumulado que los clientes deben a la ferretería en fiados/créditos.">
                     <Grid>
@@ -171,7 +163,6 @@
                     </Grid>
                 </Border>
 
-                <!-- KPI 3: Alerta de Stock Bajo & Lotes -->
                 <Border Background="#FFFFFF" CornerRadius="8" BorderBrush="#DCDEC8" BorderThickness="1" Margin="4,0,4,0" Padding="14"
                         ToolTip="Resumen de alertas: productos que se están agotando y lotes próximos a vencer.">
                     <Grid>
@@ -200,7 +191,6 @@
                     </Grid>
                 </Border>
 
-                <!-- KPI 4: Arqueo de Caja Chica -->
                 <Border Background="#FFFFFF" CornerRadius="8" BorderBrush="#DCDEC8" BorderThickness="1" Margin="8,0,0,0" Padding="14"
                         ToolTip="Dinero físico total que debe haber actualmente en la caja de la ferretería.">
                     <Grid>
@@ -227,9 +217,6 @@
                 </Border>
             </UniformGrid>
 
-            <!-- ================================================================= -->
-            <!-- 3. FILA 1 DE GRÁFICOS: DONAS / DONUT & BARRAS VERTICALES          -->
-            <!-- ================================================================= -->
             <Grid Margin="0,0,0,16">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -237,7 +224,6 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- GRÁFICO 1: DONUT / DISTRIBUCIÓN DE MEDIOS DE PAGO -->
                 <Border Grid.Column="0" Background="#FFFFFF" CornerRadius="10" BorderBrush="#DCDEC8" BorderThickness="1" Padding="16"
                         ToolTip="Muestra la proporción de dinero cobrado en Efectivo, Yape/Plin/Digital y Fiado.">
                     <Grid>
@@ -261,30 +247,25 @@
                                     ToolTip="Ir a la auditoría de ventas procesadas." />
                         </Grid>
 
-                        <!-- Contenido Gráfico Dona Vectorial -->
                         <Grid Grid.Row="1" Margin="0,16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="150" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
 
-                            <!-- Dona Visual de Anillos Concéntricos Dinámicos -->
                             <Grid Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center" Width="130" Height="130"
                                   ToolTip="Visualización porcentual de cobros del mes: Verde=Efectivo, Azul=Digital (Yape/Plin), Naranja=Crédito.">
-                                <!-- Anillo Base Gris -->
+
                                 <Ellipse Width="92" Height="92" Stroke="#ECEFE6" StrokeThickness="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                
-                                <!-- Arco Verde (Efectivo) -->
+
                                 <Path Stroke="#2E7D32" StrokeThickness="16" Data="{Binding ArcoEfectivoGeometry}" 
                                       StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"
                                       ToolTip="{Binding TooltipEfectivo}" />
-                                
-                                <!-- Arco Azul (Digital: Yape / Plin / Transferencia) -->
+
                                 <Path Stroke="#0288D1" StrokeThickness="16" Data="{Binding ArcoDigitalGeometry}" 
                                       StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"
                                       ToolTip="{Binding TooltipDigital}" />
-                                
-                                <!-- Arco Naranja (Crédito / Fiado) -->
+
                                 <Path Stroke="#E65100" StrokeThickness="16" Data="{Binding ArcoCreditoGeometry}" 
                                       StrokeStartLineCap="Flat" StrokeEndLineCap="Flat"
                                       ToolTip="{Binding TooltipCredito}" />
@@ -297,7 +278,6 @@
                                 </StackPanel>
                             </Grid>
 
-                            <!-- Leyenda de Distribución -->
                             <ItemsControl Grid.Column="1" ItemsSource="{Binding MediosPagoDistribucion}" VerticalAlignment="Center" Margin="10,0,0,0">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -329,7 +309,6 @@
                     </Grid>
                 </Border>
 
-                <!-- GRÁFICO 2: BARRAS VERTICALES / VENTAS 7 DÍAS -->
                 <Border Grid.Column="2" Background="#FFFFFF" CornerRadius="10" BorderBrush="#DCDEC8" BorderThickness="1" Padding="16"
                         ToolTip="Muestra la comparación de ventas diarias durante los últimos 7 días.">
                     <Grid>
@@ -353,7 +332,6 @@
                                     ToolTip="Abrir el punto de venta." />
                         </Grid>
 
-                        <!-- Barras Verticales -->
                         <ItemsControl Grid.Row="1" ItemsSource="{Binding VentasUltimos7Dias}" Margin="0,16">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -368,10 +346,10 @@
                                             <RowDefinition Height="*" />
                                             <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
-                                        <!-- Valor Monto sobre la barra -->
+
                                         <TextBlock Grid.Row="0" Text="{Binding MontoFormateado}" FontSize="9" FontWeight="Bold" 
                                                    Foreground="#354318" HorizontalAlignment="Center" Margin="0,0,0,4" />
-                                        <!-- Barra Vertical -->
+
                                         <Border Grid.Row="1" Height="{Binding AlturaBarra}" Width="24" CornerRadius="4,4,0,0" 
                                                 HorizontalAlignment="Center" VerticalAlignment="Bottom">
                                             <Border.Background>
@@ -381,7 +359,7 @@
                                                 </LinearGradientBrush>
                                             </Border.Background>
                                         </Border>
-                                        <!-- Etiqueta Día -->
+
                                         <TextBlock Grid.Row="2" Text="{Binding Dia}" FontSize="9" FontWeight="ExtraBold" 
                                                    Foreground="#666666" HorizontalAlignment="Center" Margin="0,6,0,0" />
                                     </Grid>
@@ -395,9 +373,6 @@
                 </Border>
             </Grid>
 
-            <!-- ================================================================= -->
-            <!-- 4. FILA 2 DE GRÁFICOS: BARRAS HORIZONTALES & CERRUCHO DE PICOS     -->
-            <!-- ================================================================= -->
             <Grid Margin="0,0,0,16">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -405,7 +380,6 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- GRÁFICO 3: BARRAS HORIZONTALES / TOP PRODUCTOS MÁS VENDIDOS -->
                 <Border Grid.Column="0" Background="#FFFFFF" CornerRadius="10" BorderBrush="#DCDEC8" BorderThickness="1" Padding="16"
                         ToolTip="Lista de los 5 productos más vendidos de la ferretería por total recaudado.">
                     <Grid>
@@ -429,7 +403,6 @@
                                     ToolTip="Ver lista completa de productos y precios." />
                         </Grid>
 
-                        <!-- Lista de Barras Horizontales -->
                         <ItemsControl Grid.Row="1" ItemsSource="{Binding TopProductosMasVendidos}" Margin="0,14">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -447,7 +420,6 @@
                                             </StackPanel>
                                         </Grid>
 
-                                        <!-- Barra de Progreso Horizontal Gradiente -->
                                         <Border Height="10" Background="#EAECE4" CornerRadius="5" Margin="0,3,0,0">
                                             <ProgressBar Value="{Binding PorcentajeBarra}" Maximum="100" Height="10" Foreground="#4A5D23" Background="Transparent" BorderThickness="0" />
                                         </Border>
@@ -461,7 +433,6 @@
                     </Grid>
                 </Border>
 
-                <!-- GRÁFICO 4: VENTAS POR HORAS DEL DÍA (OPCIÓN A: HORARIOS DE DEMANDA) -->
                 <Border Grid.Column="2" Background="#FFFFFF" CornerRadius="10" BorderBrush="#DCDEC8" BorderThickness="1" Padding="16"
                         ToolTip="Distribución de ventas por horarios del día. Permite identificar los tramos de mayor afluencia.">
                     <Grid>
@@ -471,7 +442,6 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <!-- Cabecera de la Tarjeta -->
                         <Grid Grid.Row="0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -481,8 +451,7 @@
                                 <TextBlock Text="⏰ " FontSize="16" />
                                 <TextBlock Text="Ventas por Horas del Día" FontSize="13" FontWeight="Bold" Foreground="#1E2514" />
                             </StackPanel>
-                            
-                            <!-- Badge de Horario Pico -->
+
                             <Border Grid.Column="1" Background="{Binding BackgroundBadgePico}" CornerRadius="12" Padding="8,3"
                                     BorderBrush="#DCDEC8" BorderThickness="1"
                                     ToolTip="Horario con mayor volumen de ventas recaudado.">
@@ -490,9 +459,8 @@
                             </Border>
                         </Grid>
 
-                        <!-- Contenedor del Gráfico de Barras de Horas -->
                         <Grid Grid.Row="1" Margin="0,12" Height="140">
-                            <!-- Líneas de fondo guías tenues -->
+
                             <UniformGrid Rows="4" Columns="1" Margin="0,0,0,24">
                                 <Border BorderBrush="#F0F2EB" BorderThickness="0,0,0,1" />
                                 <Border BorderBrush="#F0F2EB" BorderThickness="0,0,0,1" />
@@ -500,7 +468,6 @@
                                 <Border BorderBrush="#F0F2EB" BorderThickness="0,0,0,1" />
                             </UniformGrid>
 
-                            <!-- Columnas / Barras por cada tramo horario -->
                             <ItemsControl ItemsSource="{Binding VentasPorHoras}" Margin="0,0,0,2">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
@@ -515,19 +482,16 @@
                                                 <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
 
-                                            <!-- Barra Vertical con Monto encima -->
                                             <StackPanel Grid.Row="0" VerticalAlignment="Bottom" HorizontalAlignment="Center">
-                                                <!-- Monto sobre la barra -->
+
                                                 <TextBlock Text="{Binding MontoFormateado}" FontSize="9" FontWeight="Bold" 
                                                            Foreground="{Binding ColorMontoTexto}" HorizontalAlignment="Center" Margin="0,0,0,3" />
 
-                                                <!-- Barra Visual -->
                                                 <Border Width="28" Height="{Binding AlturaBarra}" CornerRadius="5,5,1,1"
                                                         Background="{Binding PincelBarra}"
                                                         BorderBrush="{Binding BordeBarra}" BorderThickness="1" />
                                             </StackPanel>
 
-                                            <!-- Etiqueta de Hora abajo -->
                                             <TextBlock Grid.Row="1" Text="{Binding RangoHora}" FontSize="10" FontWeight="SemiBold" 
                                                        Foreground="#556049" HorizontalAlignment="Center" Margin="0,6,0,0" />
                                         </Grid>
@@ -542,16 +506,13 @@
                 </Border>
             </Grid>
 
-            <!-- ================================================================= -->
-            <!-- 5. SECCIÓN DE ATAJOS RÁPIDOS A TODAS LAS PESTAÑAS DEL SISTEMA     -->
-            <!-- ================================================================= -->
             <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#DCDEC8" BorderThickness="1" Padding="16"
                     ToolTip="Accesos directos con un solo clic a todas las secciones del sistema.">
                 <StackPanel>
                     <TextBlock Text="🚀 ATAJOS RÁPIDOS A TODAS LAS SECCIONES" FontSize="13" FontWeight="Black" Foreground="#1E2514" Margin="0,0,0,12" />
 
                     <UniformGrid Columns="3" Margin="0">
-                        <!-- Atajo 1: POS -->
+
                         <Button Command="{Binding NavegarACommand}" CommandParameter="POS"
                                 Style="{StaticResource SecondaryShortcutButtonStyle}" Margin="4" Padding="12,10"
                                 ToolTip="Abrir la pantalla de cobro y ventas del Punto de Venta.">
@@ -561,7 +522,6 @@
                             </StackPanel>
                         </Button>
 
-                        <!-- Atajo 2: Inventario -->
                         <Button Command="{Binding NavegarACommand}" CommandParameter="Inventario"
                                 Style="{StaticResource SecondaryShortcutButtonStyle}" Margin="4" Padding="12,10"
                                 ToolTip="Ver existencias, stock mínimo y valorización de inventario.">
@@ -571,7 +531,6 @@
                             </StackPanel>
                         </Button>
 
-                        <!-- Atajo 3: Catálogo -->
                         <Button Command="{Binding NavegarACommand}" CommandParameter="Catalogo"
                                 Style="{StaticResource SecondaryShortcutButtonStyle}" Margin="4" Padding="12,10"
                                 ToolTip="Administrar la lista de productos y cambiar precios.">
@@ -581,7 +540,6 @@
                             </StackPanel>
                         </Button>
 
-                        <!-- Atajo 4: Créditos -->
                         <Button Command="{Binding NavegarACommand}" CommandParameter="Creditos"
                                 Style="{StaticResource SecondaryShortcutButtonStyle}" Margin="4" Padding="12,10"
                                 ToolTip="Ver clientes fiados, registrar abonos y consultar deudas.">
@@ -591,7 +549,6 @@
                             </StackPanel>
                         </Button>
 
-                        <!-- Atajo 5: Proformas -->
                         <Button Command="{Binding NavegarACommand}" CommandParameter="Proformas"
                                 Style="{StaticResource SecondaryShortcutButtonStyle}" Margin="4" Padding="12,10"
                                 ToolTip="Crear cotizaciones y proformas para clientes.">
@@ -601,7 +558,6 @@
                             </StackPanel>
                         </Button>
 
-                        <!-- Atajo 6: Arqueo Caja -->
                         <Button Command="{Binding NavegarACommand}" CommandParameter="Caja"
                                 Style="{StaticResource SecondaryShortcutButtonStyle}" Margin="4" Padding="12,10"
                                 ToolTip="Realizar arqueos, cuadres y cierre de caja diario.">
@@ -611,7 +567,6 @@
                             </StackPanel>
                         </Button>
 
-                        <!-- Atajo 7: Lotes -->
                         <Button Command="{Binding NavegarACommand}" CommandParameter="Lotes"
                                 Style="{StaticResource SecondaryShortcutButtonStyle}" Margin="4" Padding="12,10"
                                 ToolTip="Registrar nuevos lotes de compras, costos y vencimientos.">
@@ -621,7 +576,6 @@
                             </StackPanel>
                         </Button>
 
-                        <!-- Atajo 8: Proveedores -->
                         <Button Command="{Binding NavegarACommand}" CommandParameter="Proveedores"
                                 Style="{StaticResource SecondaryShortcutButtonStyle}" Margin="4" Padding="12,10"
                                 ToolTip="Consultar teléfonos, datos y directorio de proveedores.">
@@ -631,7 +585,6 @@
                             </StackPanel>
                         </Button>
 
-                        <!-- Atajo 9: Auditoría -->
                         <Button Command="{Binding NavegarACommand}" CommandParameter="Auditoria"
                                 Style="{StaticResource SecondaryShortcutButtonStyle}" Margin="4" Padding="12,10"
                                 ToolTip="Revisar el historial de auditoría y modificar ventas.">

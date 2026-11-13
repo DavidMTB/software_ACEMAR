@@ -15,16 +15,13 @@
         AutomationProperties.Name="Ventana Principal Ferretería ACEMAR"
         AutomationProperties.HelpText="Sistema de gestión integral para punto de venta, inventario FIFO por lotes, crédito, proveedores y auditoría de ventas">
 
-
-
     <Window.Resources>
-        <!-- Converters para navegación y visibilidad -->
+
         <views:ActiveTabBackgroundConverter x:Key="ActiveBgConv" />
         <views:ActiveTabBorderConverter x:Key="ActiveBorderConv" />
         <views:ActiveTabForegroundConverter x:Key="ActiveFgConv" />
         <views:ActiveTabIconForegroundConverter x:Key="ActiveIconFgConv" />
 
-        <!-- DataTemplates implícitos para ViewModels -->
         <DataTemplate DataType="{x:Type vm:DashboardGeneralViewModel}">
             <views:DashboardGeneralView />
         </DataTemplate>
@@ -65,29 +62,25 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <!-- Menú Lateral Oscuro Adaptable (Verde Militar #1D2611) -->
+
             <ColumnDefinition Width="250" />
-            <!-- Contenedor Principal de Vistas -->
+
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <!-- ============================================================== -->
-        <!-- MENÚ LATERAL IZQUIERDO - ADAPTABLE Y RESPONSIVO (#1D2611)       -->
-        <!-- ============================================================== -->
         <Border Grid.Column="0" Background="#1D2611" BorderBrush="#141B0B" BorderThickness="0,0,1,0">
             <Grid>
                 <Grid.RowDefinitions>
-                    <!-- Cabecera Marca ACEMAR -->
+
                     <RowDefinition Height="Auto" />
-                    <!-- Separador Estético -->
+
                     <RowDefinition Height="Auto" />
-                    <!-- Botones de Navegación con ScrollViewer Adaptable -->
+
                     <RowDefinition Height="*" />
-                    <!-- Panel de Seguridad / Usuario Activo -->
+
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <!-- 1. BRANDING ACEMAR & ICONO VERDE BD CONECTADA -->
                 <Border Grid.Row="0" Background="#151C0C" Padding="16,16">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -106,7 +99,6 @@
                             <TextBlock Text="FERRETERÍA &amp; ALMACÉN" FontSize="10" FontWeight="Bold" Foreground="#BCE08A" Margin="0,1,0,0" />
                         </StackPanel>
 
-                        <!-- Indicador Punto Verde BD Local Activa -->
                         <Ellipse Grid.Column="2" Width="10" Height="10" Fill="#4CAF50" VerticalAlignment="Center" Margin="6,0,0,0"
                                  ToolTip="Base de Datos SQLite Local Activa &amp; Operativa" />
                     </Grid>
@@ -114,12 +106,10 @@
 
                 <Separator Grid.Row="1" Background="#354318" Height="1" Margin="0" />
 
-                <!-- 2. BOTONES DE NAVEGACIÓN MODULAR -->
                 <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="8,8,8,0" Focusable="False">
                     <StackPanel>
                         <TextBlock Text="ESTADÍSTICAS Y PANEL GENERAL" FontSize="9" FontWeight="ExtraBold" Foreground="#A9BF88" Margin="8,0,0,6" />
 
-                        <!-- 0. Dashboard General -->
                         <Button Command="{Binding NavegarDashboardGeneralCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,8" FontSize="12" FontWeight="Bold"
                                 Background="{Binding IsDashboardGeneralActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsDashboardGeneralActive, Converter={StaticResource ActiveFgConv}}"
                                 BorderBrush="{Binding IsDashboardGeneralActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Dashboard Analítico, Gráficos &amp; Accesos Directos">
@@ -131,7 +121,6 @@
                             </Grid>
                         </Button>
 
-                        <!-- Asistente IA Copilot -->
                         <Button Command="{Binding NavegarAiAssistantCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,8" FontSize="12" FontWeight="Bold"
                                 Background="{Binding IsAiAssistantActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsAiAssistantActive, Converter={StaticResource ActiveFgConv}}"
                                 BorderBrush="{Binding IsAiAssistantActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Asistente Ejecutivo con Inteligencia Artificial Google Gemini">
@@ -145,7 +134,6 @@
 
                         <TextBlock Text="OPERACIONES Y MOSTRADOR" FontSize="9" FontWeight="ExtraBold" Foreground="#A9BF88" Margin="8,4,0,6" />
 
-                        <!-- 1. Punto de Venta (POS) -->
                         <Button Command="{Binding NavegarPosCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
                                 Background="{Binding IsPosActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsPosActive, Converter={StaticResource ActiveFgConv}}"
                                 BorderBrush="{Binding IsPosActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Punto de Venta (POS) - Despacho Multimedida &amp; FIFO">
@@ -157,7 +145,6 @@
                             </Grid>
                         </Button>
 
-                        <!-- 2. Inventario Inteligente (Dashboard) -->
                         <Button Command="{Binding NavegarDashboardCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
                                 Background="{Binding IsDashboardActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsDashboardActive, Converter={StaticResource ActiveFgConv}}"
                                 BorderBrush="{Binding IsDashboardActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Inventario &amp; CuMax Almacén">
@@ -169,7 +156,6 @@
                             </Grid>
                         </Button>
 
-                        <!-- 3. Lotes & FIFO -->
                         <Button Command="{Binding NavegarLotesCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
                                 Background="{Binding IsLotesActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsLotesActive, Converter={StaticResource ActiveFgConv}}"
                                 BorderBrush="{Binding IsLotesActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Gestión de Lotes y Vencimientos FIFO">
@@ -181,7 +167,6 @@
                             </Grid>
                         </Button>
 
-                        <!-- 4. Catálogo y Precios (CRUD) -->
                         <Button Command="{Binding NavegarProductCrudCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
                                 Background="{Binding IsProductCrudActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsProductCrudActive, Converter={StaticResource ActiveFgConv}}"
                                 BorderBrush="{Binding IsProductCrudActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Catálogo de Productos y Precios Masivos">
@@ -193,7 +178,6 @@
                             </Grid>
                         </Button>
 
-                        <!-- 5. Proveedores -->
                         <Button Command="{Binding NavegarProveedoresCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
                                 Background="{Binding IsProveedoresActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsProveedoresActive, Converter={StaticResource ActiveFgConv}}"
                                 BorderBrush="{Binding IsProveedoresActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Directorio y Tiempos de Reposición de Proveedores">
@@ -207,7 +191,6 @@
 
                         <TextBlock Text="FINANZAS Y CONTROL AUDITADO" FontSize="9" FontWeight="ExtraBold" Foreground="#A9BF88" Margin="8,8,0,6" />
 
-                        <!-- 6. Créditos y Fiados -->
                         <Button Command="{Binding NavegarCreditsCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
                                 Background="{Binding IsCreditsActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsCreditsActive, Converter={StaticResource ActiveFgConv}}"
                                 BorderBrush="{Binding IsCreditsActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Gestión de Créditos y Cuentas por Cobrar">
@@ -219,7 +202,6 @@
                             </Grid>
                         </Button>
 
-                        <!-- 7. Proformas -->
                         <Button Command="{Binding NavegarProformasCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
                                 Background="{Binding IsProformasActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsProformasActive, Converter={StaticResource ActiveFgConv}}"
                                 BorderBrush="{Binding IsProformasActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Proformas y Cotizaciones Comerciales">
@@ -231,7 +213,6 @@
                             </Grid>
                         </Button>
 
-                        <!-- 8. Arqueo de Caja -->
                         <Button Command="{Binding NavegarCashRegisterCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
                                 Background="{Binding IsCashRegisterActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsCashRegisterActive, Converter={StaticResource ActiveFgConv}}"
                                 BorderBrush="{Binding IsCashRegisterActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Arqueo y Cierre Diario de Caja">
@@ -243,7 +224,6 @@
                             </Grid>
                         </Button>
 
-                        <!-- 9. Corrección / Auditoría de Ventas -->
                         <Button Command="{Binding NavegarVentasCorreccionCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
                                 Background="{Binding IsVentasCorreccionActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsVentasCorreccionActive, Converter={StaticResource ActiveFgConv}}"
                                 BorderBrush="{Binding IsVentasCorreccionActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Auditoría y Corrección de Ventas Emitidas">
@@ -257,7 +237,6 @@
 
                         <TextBlock Text="CONFIGURACIÓN Y SEGURIDAD" FontSize="9" FontWeight="ExtraBold" Foreground="#A9BF88" Margin="8,8,0,6" />
 
-                        <!-- 10. Gestión de Usuarios y Vendedores (Panel Admin) -->
                         <Button Command="{Binding NavegarUsuariosCommand}" HorizontalContentAlignment="Left" Padding="8,8" Margin="0,0,0,4" FontSize="12" FontWeight="Bold"
                                 Background="{Binding IsUsuariosActive, Converter={StaticResource ActiveBgConv}}" Foreground="{Binding IsUsuariosActive, Converter={StaticResource ActiveFgConv}}"
                                 BorderBrush="{Binding IsUsuariosActive, Converter={StaticResource ActiveBorderConv}}" BorderThickness="1.5" ToolTip="Gestión de Usuarios, Permisos y Vendedores (Exclusivo Administrador)">
@@ -271,7 +250,6 @@
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- 3. PERFIL DE USUARIO Y ESTADO DE SESIÓN -->
                 <Border Grid.Row="3" Background="#151C0C" Padding="12,10" Margin="8,0,8,8" CornerRadius="8"
                         BorderBrush="#2D3B16" BorderThickness="1">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -287,18 +265,14 @@
             </Grid>
         </Border>
 
-        <!-- ============================================================== -->
-        <!-- ÁREA PRINCIPAL DERECHA - ENTORNO DE TRABAJO Y BARRA SUPERIOR   -->
-        <!-- ============================================================== -->
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
-                <!-- Barra Superior con Título y Estado -->
+
                 <RowDefinition Height="55" />
-                <!-- ContentControl con Vista Activa en Card Container Adaptable -->
+
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- BARRA SUPERIOR DE LA APLICACIÓN -->
             <Border Grid.Row="0" Background="#FFFFFF" BorderBrush="#DCDEC8" BorderThickness="0,0,0,1" Padding="20,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -306,12 +280,10 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- Título dinámico de la Vista Actual -->
                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
                         <TextBlock Text="{Binding TituloVistaActual}" FontSize="18" FontWeight="Black" Foreground="#1E2514" TextTrimming="CharacterEllipsis" />
                     </StackPanel>
 
-                    <!-- Botón Interactivo de Cambio de Rol y Estación de Trabajo -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button Command="{Binding AlternarModoAdminCommand}"
                                 Padding="12,6" Margin="0,0,10,0"
@@ -347,7 +319,6 @@
                             </Button.Style>
                         </Button>
 
-                        <!-- Botón Cerrar Sesión -->
                         <Button Command="{Binding CerrarSesionCommand}"
                                 Padding="10,6" Margin="0,0,10,0"
                                 Background="#FFEBEE" Foreground="#C62828" BorderBrush="#FFCDD2" BorderThickness="1"
@@ -366,9 +337,6 @@
                 </Grid>
             </Border>
 
-            <!-- ============================================================== -->
-            <!-- CARD CONTAINER RESPONSIVO PARA VISTAS (BOUNDED DESKTOP VIEW)   -->
-            <!-- ============================================================== -->
             <Grid Grid.Row="1" Margin="10">
                 <Border Background="#FFFFFF" CornerRadius="10" BorderBrush="#DCDEC8" BorderThickness="1" SnapsToDevicePixels="True">
                     <Border.Effect>

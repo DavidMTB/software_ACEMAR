@@ -12,7 +12,7 @@ namespace software_ACEMAR.Services
     public class MovimientoCaja
     {
         public DateTime FechaHora { get; set; }
-        public string Tipo { get; set; } = string.Empty; // "Venta Efectivo", "Venta Fiado", "Abono Cobrado", "Gasto Lote"
+        public string Tipo { get; set; } = string.Empty; 
         public string Documento { get; set; } = string.Empty;
         public string Detalle { get; set; } = string.Empty;
         public decimal Monto { get; set; }
@@ -75,32 +75,27 @@ namespace software_ACEMAR.Services
 
             await using var context = new AppDbContext();
 
-            // 1. Ventas del rango con sus detalles
             var ventasDelRango = await context.Ventas
                 .AsNoTracking()
                 .Include(v => v.Detalles)
                 .Where(v => v.Fecha >= inicio && v.Fecha < fin)
                 .ToListAsync(cancellationToken);
 
-            // 2. Abonos del rango
             var abonosDelRango = await context.AbonosCredito
                 .AsNoTracking()
                 .Where(a => a.Fecha >= inicio && a.Fecha < fin)
                 .ToListAsync(cancellationToken);
 
-            // 3. Nuevos lotes de compra en el rango (Gastos de inversión)
             var lotesDelRango = await context.LotesProducto
                 .AsNoTracking()
                 .Include(l => l.Producto)
                 .Where(l => l.FechaIngreso >= inicio && l.FechaIngreso < fin)
                 .ToListAsync(cancellationToken);
 
-            // Cargar diccionario de clientes para nombres de abonos
             var clientesDict = await context.ClientesCredito
                 .AsNoTracking()
                 .ToDictionaryAsync(c => c.Id, c => c.Nombre, cancellationToken);
 
-            // Calcular Costo de Ventas (COGS)
             decimal costoVentasTotal = 0;
             foreach (var v in ventasDelRango)
             {
@@ -138,7 +133,6 @@ namespace software_ACEMAR.Services
                 TotalCostoVentas = Math.Round(costoVentasTotal, 2)
             };
 
-            // Construir lista cronológica de movimientos
             var movimientos = new List<MovimientoCaja>();
 
             foreach (var v in ventasDelRango)

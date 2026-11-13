@@ -26,8 +26,7 @@ namespace software_ACEMAR.ViewModels
 
         private string _unidadMedidaSeleccionada = "Unidad";
 
-        // Venta Efectivo vs Crédito
-        private string _tipoVentaSeleccionado = "Efectivo"; // "Efectivo" o "Credito"
+        private string _tipoVentaSeleccionado = "Efectivo"; 
         private ClienteCredito? _clienteCreditoSeleccionado;
         private string _nombreClienteProforma = "Cliente Mostrador";
 
@@ -247,7 +246,7 @@ namespace software_ACEMAR.ViewModels
             {
                 string unidad = string.IsNullOrWhiteSpace(UnidadMedidaSeleccionada) ? ProductoSeleccionado.UnidadMedida : UnidadMedidaSeleccionada;
                 decimal precioFifo = _salesService.ObtenerPrecioVigente(ProductoSeleccionado.Id);
-                
+
                 if (precioFifo > 0 && string.Equals(unidad, ProductoSeleccionado.UnidadMedida, StringComparison.OrdinalIgnoreCase))
                 {
                     PrecioUnitarioSeleccionado = precioFifo;
@@ -271,7 +270,6 @@ namespace software_ACEMAR.ViewModels
                 return;
             }
 
-            // Regla POS-02 (Fracciones)
             if (!decimal.TryParse(CantidadTexto.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal cantidad)
                 && !decimal.TryParse(CantidadTexto, out cantidad))
             {
@@ -302,14 +300,12 @@ namespace software_ACEMAR.ViewModels
             decimal cantBaseNueva = cantidad * factor;
             decimal cantBaseTotalSolicitada = cantBaseExistente + cantBaseNueva;
 
-            // Regla INV-01 (Bloqueo de Venta por Stock Insuficiente)
             if (cantBaseTotalSolicitada > ProductoSeleccionado.StockActual)
             {
                 MessageBox.Show($"Stock insuficiente. El producto '{ProductoSeleccionado.Nombre}' cuenta con {ProductoSeleccionado.StockActual:0.##} {ProductoSeleccionado.UnidadMedida} en stock (se requieren {cantBaseTotalSolicitada:0.##} {ProductoSeleccionado.UnidadMedida} para {cantidad:0.##} {unidad}).", "Validación de Inventario", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            // Control de Regla de Stock Mínimo / Punto de Reorden
             decimal stockRestante = ProductoSeleccionado.StockActual - cantBaseTotalSolicitada;
             if (ProductoSeleccionado.StockMinimo > 0 && stockRestante < ProductoSeleccionado.StockMinimo)
             {
@@ -396,7 +392,6 @@ namespace software_ACEMAR.ViewModels
                 return;
             }
 
-            // Validar stock disponible y alerta de stock mínimo agrupando por producto
             var requeridosPorProducto = TicketActual
                 .GroupBy(item => item.ProductoId)
                 .ToDictionary(
@@ -442,7 +437,6 @@ namespace software_ACEMAR.ViewModels
                 }
             }
 
-            // Si es venta a crédito, validar cliente y su límite disponible
             if (EsVentaCredito)
             {
                 if (ClienteCreditoSeleccionado == null)
@@ -451,7 +445,6 @@ namespace software_ACEMAR.ViewModels
                     return;
                 }
 
-                // Regla de seguridad de fiados CRE-01
                 if (!_authService.PuedeAccederCreditos(out string errPermiso))
                 {
                     MessageBox.Show(errPermiso, "Seguridad de Fiados", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -495,7 +488,6 @@ namespace software_ACEMAR.ViewModels
                 return;
             }
 
-            // ── Generar y guardar la Boleta en PDF en segundo plano (sin abrir visor automáticamente) ──
             try
             {
                 byte[] pdfBytes = _pdfService.GenerarPdfBoletaVenta(venta);
@@ -503,7 +495,7 @@ namespace software_ACEMAR.ViewModels
             }
             catch (Exception exPdf)
             {
-                // Silencioso o log interno para no interrumpir el flujo del cajero
+
                 System.Diagnostics.Debug.WriteLine($"Error al guardar PDF en disco: {exPdf.Message}");
             }
 
@@ -544,7 +536,6 @@ namespace software_ACEMAR.ViewModels
                 return;
             }
 
-            // ── Generar y guardar PDF de Proforma ─────────────────────────────────
             try
             {
                 byte[] pdfBytes = _pdfService.GenerarPdfProforma(proforma);

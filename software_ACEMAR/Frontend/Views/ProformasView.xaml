@@ -14,7 +14,6 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- CABECERA Y FILTRO DE ESTADO -->
         <Grid Grid.Row="0" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -51,7 +50,6 @@
             </StackPanel>
         </Grid>
 
-        <!-- CONTENIDO PRINCIPAL: LISTA DE PROFORMAS Y DETALLE -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1.3*" />
@@ -59,7 +57,6 @@
                 <ColumnDefinition Width="1*" />
             </Grid.ColumnDefinitions>
 
-            <!-- TABLA DE PROFORMAS -->
             <Border Grid.Column="0" Background="#FFFFFF" CornerRadius="8" BorderBrush="#DCE3D6" BorderThickness="1" Padding="12">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.06" Color="#1E2514" />
@@ -79,7 +76,7 @@
                           BorderThickness="1"
                           RowHeight="36"
                           FontSize="13">
-                    
+
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Número" Binding="{Binding NumeroProforma}" Width="120" FontWeight="Bold" />
                         <DataGridTextColumn Header="Fecha" Binding="{Binding Fecha, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="120" />
@@ -127,7 +124,6 @@
                 </DataGrid>
             </Border>
 
-            <!-- DETALLE DE LA PROFORMA SELECCIONADA -->
             <Border Grid.Column="2" Background="#FFFFFF" CornerRadius="8" BorderBrush="#DCE3D6" BorderThickness="1" Padding="12">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.06" Color="#1E2514" />
@@ -144,7 +140,6 @@
 
                     <TextBlock Grid.Row="0" Text="Detalle de Cotización" FontSize="16" FontWeight="Bold" Foreground="#1E2514" />
 
-                    <!-- Información de la Proforma -->
                     <Border Grid.Row="1" Background="#F8FAF5" CornerRadius="6" Padding="10" Margin="0,8,0,10" BorderBrush="#DCE3D6" BorderThickness="1">
                         <StackPanel>
                             <Grid>
@@ -165,7 +160,6 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Lista de Ítems -->
                     <DataGrid Grid.Row="2" 
                               ItemsSource="{Binding ProformaSeleccionada.Detalles}" 
                               AutoGenerateColumns="False" 
@@ -180,7 +174,7 @@
                               RowHeight="32"
                               FontSize="12" 
                               Margin="0,0,0,10">
-                        
+
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Producto" Binding="{Binding ProductoNombre}" Width="*" FontWeight="SemiBold" />
                             <DataGridTextColumn Header="Cant." Binding="{Binding Cantidad, StringFormat={}{0:0.##}}" Width="50" />
@@ -189,7 +183,6 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <!-- Total -->
                     <Border Grid.Row="3" Background="#F4F7EF" CornerRadius="6" Padding="10" Margin="0,0,0,10">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -202,7 +195,6 @@
                         </Grid>
                     </Border>
 
-                    <!-- Botones de Acción -->
                     <Grid Grid.Row="4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />

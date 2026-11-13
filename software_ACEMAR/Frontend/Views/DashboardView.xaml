@@ -15,7 +15,6 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- FILA 0: TARJETAS KPI DE RESUMEN INTELIGENTE -->
         <Grid Grid.Row="0" Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
@@ -27,7 +26,6 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <!-- KPI 1: Total Productos -->
             <Border Grid.Column="0" Background="#FFFFFF" CornerRadius="8" Padding="12" BorderBrush="#DCE3D6" BorderThickness="1"
                     ToolTip="Número total de productos registrados en el catálogo de la ferretería.">
                 <Border.Effect>
@@ -40,7 +38,6 @@
                 </StackPanel>
             </Border>
 
-            <!-- KPI 2: Alerta Stock Bajo / Crítico -->
             <Border Grid.Column="2" Background="#FFF5F5" CornerRadius="8" Padding="12" BorderBrush="#FFCDD2" BorderThickness="1.5"
                     ToolTip="Cantidad de productos cuyo stock disponible es menor o igual a su límite de seguridad.">
                 <Border.Effect>
@@ -56,7 +53,6 @@
                 </StackPanel>
             </Border>
 
-            <!-- KPI 3: Ventas del Día -->
             <Border Grid.Column="4" Background="#F0FDF4" CornerRadius="8" Padding="12" BorderBrush="#DCFCE7" BorderThickness="1.5"
                     ToolTip="Resumen de ingresos del día desglosados en efectivo y fiados por cobrar.">
                 <Border.Effect>
@@ -74,7 +70,6 @@
                 </StackPanel>
             </Border>
 
-            <!-- KPI 4: Valorización Inventario & Botón Refresco -->
             <Border Grid.Column="6" Background="#F8FAF5" CornerRadius="8" Padding="12" BorderBrush="#DCE3D6" BorderThickness="1"
                     ToolTip="Valor económico total estimado de toda la mercadería almacenada.">
                 <Grid>
@@ -97,7 +92,6 @@
             </Border>
         </Grid>
 
-        <!-- FILA 1: TABLA PRINCIPAL DE INVENTARIO -->
         <Border Grid.Row="1" Background="#FFFFFF" CornerRadius="8" BorderBrush="#DCE3D6" BorderThickness="1" Padding="12" Margin="0,0,0,10">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.06" Color="#1E2514" />
@@ -109,7 +103,6 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <!-- Cabecera de la tabla y filtro rápido -->
                 <Grid Grid.Row="0" Margin="0,0,0,10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -121,7 +114,6 @@
                         <TextBlock Text="Las filas destacadas en color rojo indican productos que requieren reposición urgente." FontSize="11" Foreground="#556049" Margin="0,1,0,0" />
                     </StackPanel>
 
-                    <!-- Buscador en inventario -->
                     <Border Grid.Column="1" Background="#F8FAF5" CornerRadius="6" BorderBrush="#C5D1BC" BorderThickness="1" Width="240" Padding="6,2"
                             ToolTip="Escriba aquí para buscar productos en el almacén por nombre o código.">
                         <Grid>
@@ -141,7 +133,6 @@
                     </Border>
                 </Grid>
 
-                <!-- DataGrid con Lógica Visual de Alerta -->
                 <DataGrid Grid.Row="1" 
                           ItemsSource="{Binding Inventario}" 
                           SelectedItem="{Binding ProductoSeleccionado}"
@@ -180,7 +171,7 @@
                         <DataGridTextColumn Header="Código" Binding="{Binding Codigo}" Width="80" FontWeight="Bold" />
                         <DataGridTextColumn Header="Nombre del Producto" Binding="{Binding Nombre}" Width="*" />
                         <DataGridTextColumn Header="Categoría" Binding="{Binding Categoria}" Width="110" />
-                        
+
                         <DataGridTemplateColumn Header="Stock Actual" Width="95" SortMemberPath="StockActual">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -226,7 +217,6 @@
             </Grid>
         </Border>
 
-        <!-- FILA 2: BANNER Y RESTRICCIÓN DE INGRESO DE STOCK POR LOTES FIFO -->
         <Border Grid.Row="2" Background="#F4F7EF" CornerRadius="8" BorderBrush="#C5D1BC" BorderThickness="1.5" Padding="14"
                 ToolTip="Recordatorio de regla de inventario: Todos los nuevos ingresos de stock se deben registrar mediante lotes con proveedor y costo de compra.">
             <Grid>

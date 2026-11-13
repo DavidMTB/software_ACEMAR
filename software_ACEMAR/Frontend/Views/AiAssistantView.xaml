@@ -14,23 +14,20 @@
 
     <Grid Margin="12">
         <Grid.RowDefinitions>
-            <!-- Fila 0: Header & Estado -->
+
             <RowDefinition Height="Auto" />
-            <!-- Fila 1: Panel de Configuración Colapsable -->
+
             <RowDefinition Height="Auto" />
-            <!-- Fila 2: Barra de Acciones Rápidas / Prompts Predefinidos -->
+
             <RowDefinition Height="Auto" />
-            <!-- Fila 3: Contenedor Principal de Conversación -->
+
             <RowDefinition Height="*" />
-            <!-- Fila 4: Indicador de Carga / Spinner -->
+
             <RowDefinition Height="Auto" />
-            <!-- Fila 5: Caja de Entrada y Envío -->
+
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- ============================================================== -->
-        <!-- FILA 0: ENCABEZADO EJECUTIVO Y ESTADO DE CONEXIÓN              -->
-        <!-- ============================================================== -->
         <Border Grid.Row="0" Background="#FFFFFF" CornerRadius="8" Padding="14,10" BorderBrush="#DCE3D6" BorderThickness="1" Margin="0,0,0,8">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.05" Color="#1E2514" />
@@ -66,9 +63,6 @@
             </Grid>
         </Border>
 
-        <!-- ============================================================== -->
-        <!-- FILA 1: PANEL COLAPSABLE DE CONFIGURACIÓN API KEY GEMINI       -->
-        <!-- ============================================================== -->
         <Border Grid.Row="1" Background="#FFFBEB" CornerRadius="8" Padding="12" BorderBrush="#F59E0B" BorderThickness="1" Margin="0,0,0,8"
                 Visibility="{Binding MostrarConfiguracion, Converter={StaticResource BoolToVis}}">
             <Grid>
@@ -99,9 +93,6 @@
             </Grid>
         </Border>
 
-        <!-- ============================================================== -->
-        <!-- FILA 2: ACCIONES RÁPIDAS (PROMPTS EJECUTIVOS PREDEFINIDOS)     -->
-        <!-- ============================================================== -->
         <Border Grid.Row="2" Background="#FFFFFF" CornerRadius="8" Padding="10,8" BorderBrush="#DCE3D6" BorderThickness="1" Margin="0,0,0,8">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -124,9 +115,6 @@
             </Grid>
         </Border>
 
-        <!-- ============================================================== -->
-        <!-- FILA 3: ÁREA PRINCIPAL DE CHAT / HISTORIAL CONVERSACIONAL      -->
-        <!-- ============================================================== -->
         <Border Grid.Row="3" Background="#FFFFFF" CornerRadius="8" BorderBrush="#DCE3D6" BorderThickness="1" Padding="12">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.04" Color="#1E2514" />
@@ -155,7 +143,6 @@
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
 
-                                    <!-- Cabecera de la burbuja (Emisor + Hora) -->
                                     <Grid Grid.Row="0" Margin="0,0,0,6">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
@@ -170,7 +157,6 @@
                                         <TextBlock Grid.Column="1" Text="{Binding HoraFormateada}" FontSize="10" Foreground="#64748B" VerticalAlignment="Center" />
                                     </Grid>
 
-                                    <!-- Contenido del Mensaje -->
                                     <TextBox Grid.Row="1" 
                                              Text="{Binding Contenido, Mode=OneWay}" 
                                              IsReadOnly="True" 
@@ -182,7 +168,6 @@
                                              FontFamily="Segoe UI"
                                              Cursor="Arrow" />
 
-                                    <!-- Botón copiar respuesta (Solo para respuestas de la IA) -->
                                     <Button Grid.Row="2" 
                                             HorizontalAlignment="Right" 
                                             Margin="0,6,0,0"
@@ -216,9 +201,6 @@
             </ScrollViewer>
         </Border>
 
-        <!-- ============================================================== -->
-        <!-- FILA 4: INDICADOR DE PROCESAMIENTO / CARGA                     -->
-        <!-- ============================================================== -->
         <Border Grid.Row="4" Background="#EAF0E1" CornerRadius="6" Padding="10,6" Margin="0,6,0,6"
                 Visibility="{Binding EstaCargando, Converter={StaticResource BoolToVis}}">
             <Grid>
@@ -235,9 +217,6 @@
             </Grid>
         </Border>
 
-        <!-- ============================================================== -->
-        <!-- FILA 5: CAJA DE ENTRADA Y ENVÍO DE CONSULTA LIBRE              -->
-        <!-- ============================================================== -->
         <Border Grid.Row="5" Background="#FFFFFF" CornerRadius="8" Padding="8" BorderBrush="#DCE3D6" BorderThickness="1" Margin="0,4,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>

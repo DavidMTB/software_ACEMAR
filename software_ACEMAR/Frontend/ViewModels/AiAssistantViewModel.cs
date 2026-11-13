@@ -63,7 +63,6 @@ namespace software_ACEMAR.ViewModels
             ApiKeyInput = _aiService.ObtenerApiKey();
             ActualizarEstadoConexion();
 
-            // Mensaje de bienvenida inicial
             Mensajes.Add(new ChatMessageItem
             {
                 Emisor = "ACEMAR IA (Gemini)",

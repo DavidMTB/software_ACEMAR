@@ -3,10 +3,7 @@ using System.IO;
 
 namespace software_ACEMAR.Services
 {
-    /// <summary>
-    /// Generador ligero de imágenes QR Code en formato de mapa de bits para representaciones impresas SUNAT.
-    /// Crea una matriz matricial QR válida codificada en memoria sin dependencias externas.
-    /// </summary>
+
     public static class QrCodeHelper
     {
         public static byte[] GenerarQrCodeBytes(string texto, int tamanoMatriz = 25)
@@ -16,25 +13,21 @@ namespace software_ACEMAR.Services
                 int mod = tamanoMatriz < 21 ? 25 : tamanoMatriz;
                 bool[,] grid = new bool[mod, mod];
 
-                // 1. Patrones de búsqueda de esquina (Finder Patterns 7x7)
                 DibujarFinderPattern(grid, 0, 0);
                 DibujarFinderPattern(grid, mod - 7, 0);
                 DibujarFinderPattern(grid, 0, mod - 7);
 
-                // 2. Patrones de tiempo (Timing Patterns en fila 6 y columna 6)
                 for (int i = 8; i < mod - 8; i++)
                 {
                     grid[6, i] = (i % 2 == 0);
                     grid[i, 6] = (i % 2 == 0);
                 }
 
-                // 3. Patrón de alineación central (Alignment pattern 5x5) si mod >= 25
                 if (mod >= 25)
                 {
                     DibujarAlignmentPattern(grid, mod - 9, mod - 9);
                 }
 
-                // 4. Codificar datos de la cadena de texto SUNAT en las celdas disponibles
                 byte[] bytesTexto = System.Text.Encoding.UTF8.GetBytes(texto ?? "SUNAT_ACEMAR");
                 int bitIndex = 0;
 
@@ -114,16 +107,14 @@ namespace software_ACEMAR.Services
             int imageSize = rowSize * totalDim;
             int fileSize = 54 + imageSize;
 
-            // Encabezado BMP de 14 bytes
             writer.Write((byte)'B'); writer.Write((byte)'M');
             writer.Write(fileSize);
             writer.Write((short)0); writer.Write((short)0);
             writer.Write(54);
 
-            // DIB Header de 40 bytes
             writer.Write(40);
             writer.Write(totalDim);
-            writer.Write(-totalDim); // Top-down
+            writer.Write(-totalDim); 
             writer.Write((short)1);
             writer.Write((short)24);
             writer.Write(0);
@@ -146,9 +137,9 @@ namespace software_ACEMAR.Services
                     }
 
                     byte color = isBlack ? (byte)0 : (byte)255;
-                    writer.Write(color); // B
-                    writer.Write(color); // G
-                    writer.Write(color); // R
+                    writer.Write(color); 
+                    writer.Write(color); 
+                    writer.Write(color); 
                 }
 
                 int pad = rowSize - (totalDim * 3);

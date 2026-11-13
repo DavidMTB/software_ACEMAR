@@ -17,7 +17,6 @@ namespace software_ACEMAR.ViewModels
         private Usuario? _usuarioSeleccionado;
         private string _busquedaTexto = string.Empty;
 
-        // Propiedades de Formulario de Registro / Edición
         private int _formId;
         private string _formNombreUsuario = string.Empty;
         private string _formPassword = string.Empty;

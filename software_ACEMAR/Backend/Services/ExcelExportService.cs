@@ -56,18 +56,14 @@ namespace software_ACEMAR.Services
                 }
                 catch
                 {
-                    // Fallback en caso de que no se cargue DB
+
                 }
 
                 using var workbook = new XLWorkbook();
 
-                // -------------------------------------------------------------
-                // HOJA 1: RESUMEN CONTABLE Y FINANCIERO
-                // -------------------------------------------------------------
                 var wsResumen = workbook.Worksheets.Add("RESUMEN CONTABLE");
                 wsResumen.ShowGridLines = true;
 
-                // Banner Superior Institucional
                 wsResumen.Range("A1:C1").Merge();
                 wsResumen.Cell("A1").Value = "FERRETERÍA & ALMACÉN ACEMAR S.A.C.";
                 wsResumen.Cell("A1").Style.Font.Bold = true;
@@ -86,7 +82,6 @@ namespace software_ACEMAR.Services
                 wsResumen.Cell("A2").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
                 wsResumen.Row(2).Height = 20;
 
-                // Bloque de Metadatos
                 int row = 4;
                 wsResumen.Cell(row, 1).Value = "Período Evaluado:";
                 wsResumen.Cell(row, 1).Style.Font.Bold = true;
@@ -108,7 +103,6 @@ namespace software_ACEMAR.Services
                 wsResumen.Cell(row, 1).Style.Font.Bold = true;
                 wsResumen.Cell(row, 2).Value = usuario;
 
-                // Tabla de Balance Contable
                 row += 2;
                 wsResumen.Cell(row, 1).Value = "CONCEPTO CONTABLE";
                 wsResumen.Cell(row, 2).Value = "MONTO (S/)";
@@ -158,9 +152,6 @@ namespace software_ACEMAR.Services
 
                 wsResumen.Columns().AdjustToContents();
 
-                // -------------------------------------------------------------
-                // HOJA 2: REGISTRO DE VENTAS
-                // -------------------------------------------------------------
                 var wsVentas = workbook.Worksheets.Add("VENTAS");
                 wsVentas.ShowGridLines = true;
 
@@ -209,7 +200,6 @@ namespace software_ACEMAR.Services
                         rV++;
                     }
 
-                    // Fila de Totales con fórmula Excel
                     wsVentas.Cell(rV, 1).Value = "TOTALES DE VENTAS";
                     wsVentas.Cell(rV, 1).Style.Font.Bold = true;
 
@@ -234,9 +224,6 @@ namespace software_ACEMAR.Services
                 wsVentas.SheetView.FreezeRows(3);
                 wsVentas.Columns().AdjustToContents();
 
-                // -------------------------------------------------------------
-                // HOJA 3: DETALLE DE PRODUCTOS VENDIDOS
-                // -------------------------------------------------------------
                 var wsDetalles = workbook.Worksheets.Add("DETALLE DE PRODUCTOS");
                 wsDetalles.ShowGridLines = true;
 
@@ -306,9 +293,6 @@ namespace software_ACEMAR.Services
                 wsDetalles.SheetView.FreezeRows(3);
                 wsDetalles.Columns().AdjustToContents();
 
-                // -------------------------------------------------------------
-                // HOJA 4: COMPRAS Y LOTES DE PRODUCTOS
-                // -------------------------------------------------------------
                 var wsLotes = workbook.Worksheets.Add("COMPRAS Y LOTES");
                 wsLotes.ShowGridLines = true;
 
@@ -375,9 +359,6 @@ namespace software_ACEMAR.Services
                 wsLotes.SheetView.FreezeRows(3);
                 wsLotes.Columns().AdjustToContents();
 
-                // -------------------------------------------------------------
-                // HOJA 5: MOVIMIENTOS CRONOLÓGICOS DE CAJA
-                // -------------------------------------------------------------
                 var wsMov = workbook.Worksheets.Add("MOVIMIENTOS DE CAJA");
                 wsMov.ShowGridLines = true;
 
@@ -420,7 +401,6 @@ namespace software_ACEMAR.Services
                 wsMov.SheetView.FreezeRows(3);
                 wsMov.Columns().AdjustToContents();
 
-                // Guardar archivo Excel .xlsx
                 workbook.SaveAs(rutaArchivo);
                 return true;
             }
@@ -438,7 +418,6 @@ namespace software_ACEMAR.Services
             {
                 var sb = new StringBuilder();
 
-                // Encabezado principal del documento de Hoja de Cálculo
                 sb.AppendLine("FERRETERÍA & ALMACÉN ACEMAR S.A.C.;REPORTE CONTABLE Y CIERRE DE CAJA EN HOJA DE CÁLCULO");
                 sb.AppendLine($"Período de Evaluación;{tituloPeriodo}");
                 sb.AppendLine($"Rango de Fechas;{resumen.Fecha:dd/MM/yyyy}{(resumen.FechaHasta.HasValue ? " al " + resumen.FechaHasta.Value.ToString("dd/MM/yyyy") : "")}");
@@ -446,7 +425,6 @@ namespace software_ACEMAR.Services
                 sb.AppendLine($"Usuario Operador;{usuario}");
                 sb.AppendLine();
 
-                // Sección 1: Cuadro Resumen Contable y Balance Ejecutivo
                 sb.AppendLine("RESUMEN CONTABLE Y CONTABILIDAD GENERAL;MONTO (S/)");
                 sb.AppendLine($"Fondo / Monto de Apertura en Caja;{resumen.MontoApertura:F2}");
                 sb.AppendLine($"(+) Total Ventas en Efectivo Mostrador;{resumen.TotalVentasEfectivo:F2}");
@@ -460,7 +438,6 @@ namespace software_ACEMAR.Services
                 sb.AppendLine($"(=) BALANCE FINAL GENERAL EN CAJA;{resumen.TotalEfectivoCaja:F2}");
                 sb.AppendLine();
 
-                // Sección 2: Tabla Detallada Cronológica de Movimientos
                 sb.AppendLine("DETALLE CRONOLÓGICO DE MOVIMIENTOS, REGISTROS Y VENTAS");
                 sb.AppendLine("FECHA Y HORA;TIPO MOVIMIENTO;COMPROBANTE / DOC;DETALLE / OBSERVACIONES;NATURALEZA;MONTO (S/)");
 
@@ -477,7 +454,6 @@ namespace software_ACEMAR.Services
                     }
                 }
 
-                // Guardar con BOM UTF-8 (\uFEFF) para apertura perfecta directa en Excel / Hojas de Cálculo
                 using (var sw = new StreamWriter(rutaArchivo, false, new UTF8Encoding(true)))
                 {
                     sw.Write(sb.ToString());

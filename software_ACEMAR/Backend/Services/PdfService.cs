@@ -31,7 +31,6 @@ namespace software_ACEMAR.Services
     {
         private readonly string _documentFolder;
 
-        // Datos oficiales institucionales del emisor para SUNAT
         private const string EMISOR_RAZON_SOCIAL = "FERRETERÍA & COMERCIAL ACEMAR S.A.C.";
         private const string EMISOR_NOMBRE_COMERCIAL = "FERRETERÍA ACEMAR";
         private const string EMISOR_RUC = "20601234567";
@@ -41,21 +40,20 @@ namespace software_ACEMAR.Services
 
         public PdfService()
         {
-            // Configurar licencia comunitaria de QuestPDF
+
             QuestPDF.Settings.License = LicenseType.Community;
             QuestPDF.Settings.UseSystemFonts = true;
             QuestPDF.Settings.ThrowOnMissingFontFamilies = false;
 
             string rutaDocumentos = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             _documentFolder = Path.Combine(rutaDocumentos, "ACEMAR_Comprobantes");
-            
+
             if (!Directory.Exists(_documentFolder))
             {
                 Directory.CreateDirectory(_documentFolder);
             }
         }
 
-        // ── 1. GENERACIÓN DE BOLETA DE VENTA ELECTRÓNICA (FORMATO A4 SUNAT) ───────
         public byte[] GenerarPdfBoletaVenta(Venta venta)
         {
             var (serie, correlativo, comprobanteFormateado) = ObtenerSerieYCorrelativo(venta);
@@ -70,7 +68,6 @@ namespace software_ACEMAR.Services
             string clienteDoc = venta.ClienteCredito?.Documento ?? "Sin Documento";
             string tipoDocClienteStr = (clienteDoc != "Sin Documento" && clienteDoc.Length == 11) ? "RUC" : (clienteDoc != "Sin Documento" ? "DNI" : "-");
 
-            // Generar cadena de datos estructurada SUNAT para el QR
             string qrSunatData = $"{EMISOR_RUC}|03|{serie}|{correlativo}|{igv:F2}|{total:F2}|{venta.Fecha:yyyy-MM-dd}|{(tipoDocClienteStr == "RUC" ? "6" : (tipoDocClienteStr == "DNI" ? "1" : "-"))}|{clienteDoc}|";
             byte[] qrBytes = QrCodeHelper.GenerarQrCodeBytes(qrSunatData);
 
@@ -83,7 +80,6 @@ namespace software_ACEMAR.Services
                     page.PageColor(Colors.White);
                     page.DefaultTextStyle(x => x.FontSize(9.5f).FontFamily("Segoe UI"));
 
-                    // Encabezado Institucional Emisor + RUC Comprobante
                     page.Header().Row(row =>
                     {
                         row.RelativeItem().Column(col =>
@@ -103,10 +99,9 @@ namespace software_ACEMAR.Services
                         });
                     });
 
-                    // Cuerpo principal del documento
                     page.Content().PaddingVertical(10).Column(col =>
                     {
-                        // Datos del Adquirente y la Transacción
+
                         col.Item().Border(1).BorderColor("#CBD5E1").Background("#F1F5F9").Padding(8).Row(r =>
                         {
                             r.RelativeItem().Column(c =>
@@ -126,18 +121,17 @@ namespace software_ACEMAR.Services
 
                         col.Item().Height(8);
 
-                        // Tabla Profesional de Productos Vendidos
                         col.Item().Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.ConstantColumn(24);  // #
-                                columns.ConstantColumn(65);  // Código
-                                columns.RelativeColumn(3);   // Descripción
-                                columns.ConstantColumn(55);  // Cantidad
-                                columns.ConstantColumn(55);  // U.Med.
-                                columns.ConstantColumn(70);  // P.Unit
-                                columns.ConstantColumn(75);  // Subtotal
+                                columns.ConstantColumn(24);  
+                                columns.ConstantColumn(65);  
+                                columns.RelativeColumn(3);   
+                                columns.ConstantColumn(55);  
+                                columns.ConstantColumn(55);  
+                                columns.ConstantColumn(70);  
+                                columns.ConstantColumn(75);  
                             });
 
                             table.Header(header =>
@@ -174,7 +168,6 @@ namespace software_ACEMAR.Services
 
                         col.Item().Height(8);
 
-                        // Totales Resumen Tributario SUNAT + Monto en Letras + QR Code
                         col.Item().Row(r =>
                         {
                             r.RelativeItem().Column(c =>
@@ -212,7 +205,6 @@ namespace software_ACEMAR.Services
                         });
                     });
 
-                    // Pie de Página Oficial
                     page.Footer().AlignCenter().Column(c =>
                     {
                         c.Item().LineHorizontal(0.5f).LineColor("#CBD5E1");
@@ -224,7 +216,6 @@ namespace software_ACEMAR.Services
             return doc.GeneratePdf();
         }
 
-        // ── 2. GENERACIÓN DE TICKET TÉRMICO PDF (FORMATO ANCHO 80MM) ───────────────
         public byte[] GenerarPdfTicketTermico(Venta venta)
         {
             var (serie, correlativo, comprobanteFormateado) = ObtenerSerieYCorrelativo(venta);
@@ -252,7 +243,7 @@ namespace software_ACEMAR.Services
 
                     page.Content().Column(col =>
                     {
-                        // Encabezado Térmico
+
                         col.Item().AlignCenter().Text(EMISOR_NOMBRE_COMERCIAL).Bold().FontSize(12).FontColor("#000000");
                         col.Item().AlignCenter().Text(EMISOR_RAZON_SOCIAL).FontSize(7.5f);
                         col.Item().AlignCenter().Text($"R.U.C. N° {EMISOR_RUC}").Bold().FontSize(9);
@@ -260,7 +251,6 @@ namespace software_ACEMAR.Services
                         col.Item().AlignCenter().Text("Teléfono: 94301837").FontSize(7);
                         col.Item().LineHorizontal(0.5f).LineColor("#000000");
 
-                        // Datos del Comprobante
                         col.Item().AlignCenter().Text("BOLETA DE VENTA ELECTRÓNICA").Bold().FontSize(9);
                         col.Item().AlignCenter().Text(comprobanteFormateado).Bold().FontSize(10);
                         col.Item().LineHorizontal(0.5f);
@@ -275,7 +265,6 @@ namespace software_ACEMAR.Services
                         col.Item().Text($"Forma de Pago: {(venta.TipoVenta == TipoVentaConsts.Credito ? "A CRÉDITO" : "AL CONTADO")}");
                         col.Item().LineHorizontal(0.5f);
 
-                        // Ítems de la Venta (Optimizado para Papel Térmico)
                         if (venta.Detalles != null)
                         {
                             foreach (var item in venta.Detalles)
@@ -295,7 +284,6 @@ namespace software_ACEMAR.Services
 
                         col.Item().LineHorizontal(0.5f);
 
-                        // Totales Tributarios SUNAT
                         col.Item().Row(r => { r.RelativeItem().Text("OP. GRAVADA:"); r.ConstantItem(55).AlignRight().Text($"S/ {opGravada:N2}"); });
                         col.Item().Row(r => { r.RelativeItem().Text("I.G.V. (18%):"); r.ConstantItem(55).AlignRight().Text($"S/ {igv:N2}"); });
                         col.Item().LineHorizontal(0.5f);
@@ -309,7 +297,6 @@ namespace software_ACEMAR.Services
                         col.Item().Text($"SON: {ConvertirMontoATexto(total)}").FontSize(7).Italic();
                         col.Item().LineHorizontal(0.5f);
 
-                        // QR Code y Leyenda SUNAT
                         col.Item().AlignCenter().Width(65).Height(65).Image(qrBytes);
                         col.Item().AlignCenter().Text("Representación impresa de la").FontSize(6.5f);
                         col.Item().AlignCenter().Text("Boleta de Venta Electrónica.").Bold().FontSize(7);
@@ -321,7 +308,6 @@ namespace software_ACEMAR.Services
             return doc.GeneratePdf();
         }
 
-        // ── 3. GENERACIÓN DE PROFORMA COMERCIAL EN PDF ───────────────────────────
         public byte[] GenerarPdfProforma(Proforma proforma)
         {
             decimal total = proforma.Total;
@@ -341,7 +327,6 @@ namespace software_ACEMAR.Services
                     page.PageColor(Colors.White);
                     page.DefaultTextStyle(x => x.FontSize(9.5f).FontFamily("Segoe UI"));
 
-                    // Encabezado Corporativo Institucional ACEMAR
                     page.Header().Row(row =>
                     {
                         row.RelativeItem().Column(col =>
@@ -361,13 +346,11 @@ namespace software_ACEMAR.Services
                         });
                     });
 
-                    // Contenido Principal
                     page.Content().PaddingVertical(10).Column(col =>
                     {
                         col.Item().LineHorizontal(1).LineColor("#1E3A8A");
                         col.Item().Height(6);
 
-                        // Cuadro de Datos del Cliente y Cotización
                         col.Item().Border(1).BorderColor("#CBD5E1").Background("#F8FAFC").Padding(8).Row(r =>
                         {
                             r.RelativeItem().Column(c =>
@@ -386,7 +369,6 @@ namespace software_ACEMAR.Services
 
                         col.Item().Height(10);
 
-                        // Tabla Estilizada de Productos Cotizados
                         col.Item().Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
@@ -428,7 +410,6 @@ namespace software_ACEMAR.Services
 
                         col.Item().Height(10);
 
-                        // Monto en Letras y Desglose Tributario Proforma
                         col.Item().Row(r =>
                         {
                             r.RelativeItem().Column(c =>
@@ -449,7 +430,6 @@ namespace software_ACEMAR.Services
                         });
                     });
 
-                    // Pie de Página
                     page.Footer().AlignCenter().Column(c =>
                     {
                         c.Item().LineHorizontal(0.5f).LineColor("#CBD5E1");
@@ -467,7 +447,6 @@ namespace software_ACEMAR.Services
             return Encoding.UTF8.GetBytes(html);
         }
 
-        // ── 4. GUARDAR PDF EN DISCO ───────────────────────────────────────────────
         public string GuardarPdf(byte[] pdfBytes, string subfolder, string nombreArchivo)
         {
             if (!nombreArchivo.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
@@ -486,7 +465,6 @@ namespace software_ACEMAR.Services
             return fullPath;
         }
 
-        // ── 5. GUARDAR Y ABRIR EN VISOR DEL SISTEMA ──────────────────────────────
         public string GuardarYAbrirPdf(byte[] pdfBytes, string subfolder, string nombreArchivo)
         {
             string fullPath = GuardarPdf(pdfBytes, subfolder, nombreArchivo);
@@ -504,7 +482,6 @@ namespace software_ACEMAR.Services
             return fullPath;
         }
 
-        // ── 6. MÉTODOS HTML HISTÓRICOS Y DE RESPALDO ──────────────────────────────
         public string GenerarHtmlProforma(Proforma proforma)
         {
             var sb = new StringBuilder();
@@ -542,8 +519,6 @@ namespace software_ACEMAR.Services
             await File.WriteAllTextAsync(fullPath, htmlContent, Encoding.UTF8);
             return fullPath;
         }
-
-        // ── 7. MÉTODOS AUXILIARES Y FORMATO DE TEXTO ─────────────────────────────
 
         private static (string Serie, string Correlativo, string Formateado) ObtenerSerieYCorrelativo(Venta venta)
         {

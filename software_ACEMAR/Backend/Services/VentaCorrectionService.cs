@@ -128,7 +128,6 @@ namespace software_ACEMAR.Services
                 if ((DateTime.Now - venta.Fecha).TotalDays > LIMITE_DIAS_CORRECCION)
                     return (false, $"Solo se pueden corregir ventas procesadas en los últimos {LIMITE_DIAS_CORRECCION} días.");
 
-                // Guardar foto previa para auditoría en JSON
                 string datosPreviosJson = JsonSerializer.Serialize(new
                 {
                     venta.Total,
@@ -144,7 +143,6 @@ namespace software_ACEMAR.Services
                     })
                 });
 
-                // 1. Revertir stock de lotes anteriores de forma atómica dentro del mismo DbContext
                 foreach (var d in venta.Detalles)
                 {
                     var prod = await ctx.Productos.FindAsync(d.ProductoId);
@@ -166,11 +164,9 @@ namespace software_ACEMAR.Services
                     }
                 }
 
-                // 2. Eliminar detalles viejos
                 ctx.DetallesVenta.RemoveRange(venta.Detalles);
                 venta.Detalles.Clear();
 
-                // 3. Consumir stock para nuevos detalles atómicamente
                 decimal nuevoTotal = 0;
                 foreach (var nd in nuevosDetalles)
                 {
@@ -227,7 +223,6 @@ namespace software_ACEMAR.Services
                     venta.Detalles.Add(detalleNuevo);
                 }
 
-                // 4. Si fue venta a crédito, ajustar la diferencia de deuda
                 if (venta.TipoVenta == TipoVentaConsts.Credito && venta.ClienteCreditoId.HasValue)
                 {
                     var cliente = await ctx.ClientesCredito.FindAsync(venta.ClienteCreditoId.Value);
@@ -261,7 +256,6 @@ namespace software_ACEMAR.Services
                     })
                 });
 
-                // Registrar auditoría
                 var auditoria = new VentaAuditoria
                 {
                     VentaId           = ventaId,
@@ -317,7 +311,6 @@ namespace software_ACEMAR.Services
                     })
                 });
 
-                // Revertir stock de lotes atómicamente dentro del mismo DbContext
                 foreach (var d in venta.Detalles)
                 {
                     var prod = await ctx.Productos.FindAsync(d.ProductoId);
@@ -336,7 +329,6 @@ namespace software_ACEMAR.Services
                     if (prod != null) prod.StockActual += cantBaseRev;
                 }
 
-                // Ajustar crédito si aplica
                 if (venta.TipoVenta == TipoVentaConsts.Credito && venta.ClienteCreditoId.HasValue)
                 {
                     var cliente = await ctx.ClientesCredito.FindAsync(venta.ClienteCreditoId.Value);

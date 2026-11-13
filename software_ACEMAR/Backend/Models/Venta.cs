@@ -13,9 +13,6 @@ namespace software_ACEMAR.Models
         public const string Credito  = "Credito";
     }
 
-    /// <summary>
-    /// Entidad de Dominio que representa un comprobante / ticket de venta en el Punto de Venta (POS).
-    /// </summary>
     public class Venta
     {
         public int Id { get; set; }
@@ -33,9 +30,6 @@ namespace software_ACEMAR.Models
         [MaxLength(100)]
         public string UsuarioVendedor { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Tipo de venta para clasificación y arqueo de caja ("Efectivo" vs "Credito").
-        /// </summary>
         [Required]
         [MaxLength(20)]
         public string TipoVenta { get; set; } = TipoVentaConsts.Efectivo;
@@ -45,38 +39,23 @@ namespace software_ACEMAR.Models
         [MaxLength(150)]
         public string? ClienteNombre { get; set; }
 
-        // Propiedad de navegación relacional en EF Core
         [ForeignKey(nameof(ClienteCreditoId))]
         public ClienteCredito? ClienteCredito { get; set; }
 
-        // Colección de renglones / productos vendidos
         public List<DetalleVenta> Detalles { get; set; } = new();
 
-        // ── Campos de auditoría de modificación ──────────────────────────
-
-        /// <summary>Indica si esta venta fue modificada después de procesarse.</summary>
         public bool FueModificada { get; set; } = false;
 
-        /// <summary>Fecha en que se realizó la última modificación, si aplica.</summary>
         public DateTime? FechaModificacion { get; set; }
 
-        /// <summary>Registros de auditoría de todos los cambios realizados a esta venta.</summary>
         public List<VentaAuditoria> Auditorias { get; set; } = new();
 
-        // ─────────────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Recalcula el total de la venta sumando los subtotales redondeados de sus detalles.
-        /// </summary>
         public decimal RecalcularTotal()
         {
             Total = Math.Round(Detalles?.Sum(d => d.Subtotal) ?? 0m, 2);
             return Total;
         }
 
-        /// <summary>
-        /// Revisa la validez del objeto Venta antes de persistir.
-        /// </summary>
         public bool EsValida(out string error)
         {
             error = string.Empty;
