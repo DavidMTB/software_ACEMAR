@@ -30,6 +30,39 @@ namespace software_ACEMAR.Services
         public string Modelo { get; set; } = "gemini-flash-lite-latest";
     }
 
+    public class ProductoInfoContexto
+    {
+        public string Codigo { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
+        public string Categoria { get; set; } = string.Empty;
+        public decimal StockActual { get; set; }
+        public decimal StockMinimo { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public string UnidadMedida { get; set; } = string.Empty;
+        public string ProveedorHabitual { get; set; } = string.Empty;
+    }
+
+    public class VentaInfoContexto
+    {
+        public string NumeroComprobante { get; set; } = string.Empty;
+        public DateTime Fecha { get; set; }
+        public decimal Total { get; set; }
+        public string TipoVenta { get; set; } = string.Empty;
+        public string Cliente { get; set; } = string.Empty;
+        public List<string> Items { get; set; } = new();
+    }
+
+    public class ProveedorInfoContexto
+    {
+        public string Nombre { get; set; } = string.Empty;
+        public string Contacto { get; set; } = string.Empty;
+        public string Telefono { get; set; } = string.Empty;
+        public string WhatsApp { get; set; } = string.Empty;
+        public string Correo { get; set; } = string.Empty;
+        public string Direccion { get; set; } = string.Empty;
+        public string LineasSuministro { get; set; } = string.Empty;
+    }
+
     public class DatosContextoNegocio
     {
         public int TotalProductos { get; set; }
@@ -47,6 +80,12 @@ namespace software_ACEMAR.Services
         public List<string> ClientesMayorDeuda { get; set; } = new();
         public int LotesActivos { get; set; }
         public int LotesPorAgotarse { get; set; }
+
+        // Contexto completo para grounding estricto
+        public List<ProductoInfoContexto> CatalogoProductos { get; set; } = new();
+        public List<VentaInfoContexto> HistorialVentasRecientes { get; set; } = new();
+        public List<ProveedorInfoContexto> DirectorioProveedores { get; set; } = new();
+        public string EstadoCajaResumen { get; set; } = string.Empty;
     }
 
     public class AiAssistantService : IAiAssistantService
@@ -178,37 +217,89 @@ namespace software_ACEMAR.Services
         {
             string apiKey = _config.ApiKey.Trim();
 
-            // Construir contexto empresarial
+            // Construir contexto empresarial exhaustivo y grounded desde SQLite
             var sbContexto = new StringBuilder();
-            sbContexto.AppendLine("DATOS ACTUALES DEL NEGOCIO (FERRETERÍA & ALMACÉN ACEMAR):");
-            sbContexto.AppendLine($"- Catálogo total de productos: {datos.TotalProductos}");
-            sbContexto.AppendLine($"- Productos con stock crítico (en o bajo el mínimo): {datos.ProductosStockBajo}");
-            if (datos.ListaProductosStockCritico.Any())
+            sbContexto.AppendLine("================================================================================");
+            sbContexto.AppendLine("BASE DE DATOS VIVA DEL SISTEMA - FERRETERÍA & ALMACÉN ACEMAR S.A.C.");
+            sbContexto.AppendLine("================================================================================");
+            sbContexto.AppendLine();
+
+            // 1. Resumen financiero y comercial
+            sbContexto.AppendLine("--- 1. RESUMEN FINANCIERO Y COMERCIAL SEMANAL ---");
+            sbContexto.AppendLine($"- Total productos en catálogo: {datos.TotalProductos}");
+            sbContexto.AppendLine($"- Ventas últimos 7 días: S/ {datos.TotalVentasSemana:N2} en {datos.CantidadTicketsSemana} comprobantes (Ticket promedio: S/ {datos.TicketPromedioSemana:N2})");
+            sbContexto.AppendLine($"  * Efectivo: S/ {datos.VentasEfectivoSemana:N2} | Digitales: S/ {datos.VentasDigitalSemana:N2} | Crédito: S/ {datos.VentasCreditoSemana:N2}");
+            if (!string.IsNullOrWhiteSpace(datos.EstadoCajaResumen))
             {
-                sbContexto.AppendLine("  * Ítems críticos: " + string.Join("; ", datos.ListaProductosStockCritico.Take(8)));
+                sbContexto.AppendLine($"- Estado de Caja Registradora: {datos.EstadoCajaResumen}");
             }
-            sbContexto.AppendLine($"- Ventas últimos 7 días: S/ {datos.TotalVentasSemana:N2} ({datos.CantidadTicketsSemana} transacciones, Ticket Promedio: S/ {datos.TicketPromedioSemana:N2})");
-            sbContexto.AppendLine($"  * Ventas Efectivo: S/ {datos.VentasEfectivoSemana:N2} | Digitales: S/ {datos.VentasDigitalSemana:N2} | Crédito/Fiados: S/ {datos.VentasCreditoSemana:N2}");
-            if (datos.TopProductosVendidos.Any())
+            sbContexto.AppendLine();
+
+            // 2. Historial de ventas recientes
+            sbContexto.AppendLine("--- 2. HISTORIAL DE VENTAS RECIENTES (ORDEN CRONOLÓGICO DECRECIENTE) ---");
+            if (datos.HistorialVentasRecientes.Any())
             {
-                sbContexto.AppendLine("  * Más vendidos: " + string.Join(", ", datos.TopProductosVendidos));
+                var ultVenta = datos.HistorialVentasRecientes.First();
+                sbContexto.AppendLine($"* ÚLTIMA VENTA REALIZADA: Comprobante {ultVenta.NumeroComprobante} el {ultVenta.Fecha:dd/MM/yyyy HH:mm:ss} | Cliente: {ultVenta.Cliente} | Pago: {ultVenta.TipoVenta} | TOTAL: S/ {ultVenta.Total:N2}");
+                sbContexto.AppendLine($"  Detalle de ítems vendidos: {string.Join("; ", ultVenta.Items)}");
+                sbContexto.AppendLine();
+
+                sbContexto.AppendLine("* Lista de comprobantes recientes:");
+                foreach (var vta in datos.HistorialVentasRecientes.Take(20))
+                {
+                    sbContexto.AppendLine($"  - [{vta.NumeroComprobante}] {vta.Fecha:dd/MM/yyyy HH:mm} | Total: S/ {vta.Total:N2} ({vta.TipoVenta}) | Cliente: {vta.Cliente} | Productos: {string.Join(", ", vta.Items)}");
+                }
             }
-            sbContexto.AppendLine($"- Deuda activa en créditos (Fiados): S/ {datos.DeudaTotalClientes:N2} repartida en {datos.ClientesConDeuda} clientes.");
-            if (datos.ClientesMayorDeuda.Any())
+            else
             {
-                sbContexto.AppendLine("  * Clientes con mayor deuda: " + string.Join("; ", datos.ClientesMayorDeuda.Take(5)));
+                sbContexto.AppendLine("No hay ventas registradas aún en el sistema.");
             }
-            sbContexto.AppendLine($"- Lotes de compra activos: {datos.LotesActivos} (Lotes próximos a agotarse: {datos.LotesPorAgotarse})");
+            sbContexto.AppendLine();
+
+            // 3. Catálogo completo de productos con stock y precios
+            sbContexto.AppendLine("--- 3. CATÁLOGO COMPLETO DE PRODUCTOS EN BASE DE DATOS (STOCK Y PRECIOS REALES) ---");
+            foreach (var p in datos.CatalogoProductos)
+            {
+                string alerta = (p.StockMinimo > 0 && p.StockActual <= p.StockMinimo) ? " [ALERTA STOCK BAJO]" : "";
+                sbContexto.AppendLine($"[{p.Codigo}] {p.Nombre} | Categoría: {p.Categoria} | Stock Actual: {p.StockActual:0.##} {p.UnidadMedida} (Mínimo: {p.StockMinimo:0.##}) | Precio Venta: S/ {p.PrecioUnitario:N2} | Proveedor: {p.ProveedorHabitual}{alerta}");
+            }
+            sbContexto.AppendLine();
+
+            // 4. Directorio de proveedores
+            sbContexto.AppendLine("--- 4. DIRECTORIO DE PROVEEDORES ASOCIADOS Y LÍNEAS DE SUMINISTRO ---");
+            foreach (var pr in datos.DirectorioProveedores)
+            {
+                sbContexto.AppendLine($"• {pr.Nombre} | Contacto: {pr.Contacto} | Tel: {pr.Telefono} / WS: {pr.WhatsApp} | Correo: {pr.Correo} | Dirección: {pr.Direccion} | Suministro: {pr.LineasSuministro}");
+            }
+            sbContexto.AppendLine();
+
+            // 5. Cartera de créditos
+            sbContexto.AppendLine("--- 5. CARTERA DE CLIENTES DE CRÉDITO Y FIADOS PENDIENTES ---");
+            sbContexto.AppendLine($"- Deuda total activa por cobrar: S/ {datos.DeudaTotalClientes:N2} en {datos.ClientesConDeuda} clientes con saldo deudor.");
+            foreach (var c in datos.ClientesMayorDeuda)
+            {
+                sbContexto.AppendLine($"  - 👤 {c}");
+            }
+            sbContexto.AppendLine("================================================================================");
 
             string systemInstruction = 
-                "Eres el Asistente Ejecutivo de Inteligencia Artificial para la Gerencia de 'Ferretería & Almacén ACEMAR S.A.C.' (potenciado por Google Gemini).\n" +
-                "Tu objetivo es dar asesoría empresarial, diagnósticos de ventas, responder dudas sobre productos/stock, control de inventario FIFO y alertas financieras basadas en los datos reales del negocio.\n" +
-                "Reglas de respuesta:\n" +
-                "1. Sé profesional, claro, analítico y directo, utilizando viñetas y formato estructurado.\n" +
-                "2. Si te preguntan por stock o precios de productos específicos (ej: 'cuánto queda de arena'), responde con precisión según los datos o aclara si necesitas el código/nombre exacto.\n" +
-                "3. Si te saludan (ej: 'hola'), saluda amablemente como el Asistente IA de ACEMAR e indica brevemente en qué puedes colaborar hoy.\n" +
-                "4. Menciona montos en soles peruanos (S/) y cantidades con sus unidades cuando sea relevante.\n" +
-                "5. Brinda recomendaciones prácticas que un dueño o administrador de ferretería pueda aplicar inmediatamente.";
+                "Eres el Asistente Ejecutivo de Inteligencia Artificial para la Gerencia de 'Ferretería & Almacén ACEMAR S.A.C.' (potenciado por Google Gemini).\n\n" +
+                "TU ALCANCE Y ESPECIALIDAD:\n" +
+                "- Tu función es asistir al gerente y vendedores en la toma de decisiones, control de almacén FIFO, auditorías de stock, historial de ventas, cartera de créditos y compras a proveedores.\n" +
+                "- Toda tu atención debe estar CENTRADA EXCLUSIVAMENTE en Ferretería ACEMAR y en los datos suministrados.\n\n" +
+                "REGLAS CRÍTICAS DE RESPUESTA (GROUNDING Y VERACIDAD ESTRICTA):\n" +
+                "1. NUNCA INVENTES DATOS NI PRODUCTOS:\n" +
+                "   - Tu conocimiento de inventario, ventas, clientes y proveedores proviene ÚNICAMENTE de la base de datos viva incluida en este prompt.\n" +
+                "   - NUNCA inventes productos, marcas, códigos, precios ni ventas inexistentes.\n" +
+                "   - Si te preguntan por un producto que no está en el catálogo, indica con precisión: \"El producto '[nombre]' no está registrado en el catálogo de Ferretería ACEMAR.\"\n" +
+                "   - Si te piden \"todos los tipos de arena que vendemos\", busca en el catálogo todos los productos que contengan 'arena' (ej: Arena Gruesa Lavada [ARE-003], Arena Fina Cantera [ARE-004]) y presenta sus códigos, stock disponible, unidades y precios sin inventar ningún otro.\n\n" +
+                "2. CONSULTAS SOBRE VENTAS RECIENTES:\n" +
+                "   - Si te preguntan \"¿cuál fue la última venta?\" o \"lista de las últimas ventas\", NUNCA digas que no puedes verlas. Revisa la sección 'HISTORIAL DE VENTAS RECIENTES' y detalla el número de comprobante, fecha, hora, cliente, forma de pago, monto total en soles (S/) y los productos vendidos.\n\n" +
+                "3. PROVEEDORES Y REPOSICIÓN:\n" +
+                "   - Si consultan a quién se le compra un producto o datos de contacto de proveedores, revisa la sección 'DIRECTORIO DE PROVEEDORES ASOCIADOS' y la columna 'Proveedor' del catálogo.\n\n" +
+                "4. FORMATO PROFESIONAL:\n" +
+                "   - Responde siempre con profesionalismo, claridad y viñetas estructuradas en Markdown.\n" +
+                "   - Utiliza la moneda nacional de Perú (S/ Soles) y las unidades de medida reales (Bolsa, Metros, Kg, Unidad, Ciento, Par, etc.).";
 
             var contents = new List<object>();
 
@@ -237,8 +328,8 @@ namespace software_ACEMAR.Services
                 contents = contents,
                 generationConfig = new
                 {
-                    temperature = 0.4,
-                    maxOutputTokens = 1500
+                    temperature = 0.2,
+                    maxOutputTokens = 2048
                 }
             };
 
@@ -314,6 +405,7 @@ namespace software_ACEMAR.Services
 
         private async Task<string> GenerarRespuestaHeuristicaLocalAsync(string solicitud, DatosContextoNegocio datos, string encabezadoAviso)
         {
+            await Task.Yield();
             string s = solicitud.Trim().ToLowerInvariant();
 
             // 1. Saludos
@@ -322,26 +414,131 @@ namespace software_ACEMAR.Services
                 return $"{encabezadoAviso}\n\n" +
                        "👋 ¡Hola! Soy el **Asistente de IA (Gemini)** de Ferretería ACEMAR.\n\n" +
                        "Puedo ayudarte con:\n" +
-                       "• **Consultar stock y precios** (ej: *'¿Cuánto queda de arena?'*, *'Precio de cemento'*).\n" +
+                       "• **Ventas recientes** (ej: *'¿Cuál fue la última venta?'*, *'Lista de las últimas ventas'*).\n" +
+                       "• **Consultar stock, precios y marcas** (ej: *'¿Dime todos los tipos de arena que vendemos?'*, *'Stock de cemento'*).\n" +
+                       "• **Proveedores y reposición** (ej: *'¿Quién es nuestro proveedor de fierro?'*, *'Proveedores registrados'*).\n" +
                        "• **Estado de deudas y fiados** (ej: *'¿Quiénes son los clientes que más deben?'*).\n" +
                        "• **Diagnósticos gerenciales** (puedes usar los botones de arriba para auditorías inmediatas).\n\n" +
                        "¿Qué consulta o reporte necesitas revisar hoy?";
             }
 
-            // 2. Consulta específica de Productos / Stock (ej: "¿Cuánto queda de arena?", "precio de fierro", etc.)
+            // 2. Consulta de Ventas Recientes / Última Venta
+            bool esPeticionVentas = s.Contains("ultima venta") || s.Contains("última venta") || 
+                                    s.Contains("ultimas ventas") || s.Contains("últimas ventas") || 
+                                    s.Contains("lista de venta") || s.Contains("historial de venta") ||
+                                    (s.Contains("venta") && (s.Contains("reciente") || s.Contains("ayer") || s.Contains("hoy") || s.Contains("comprobante") || s.Contains("boleta") || s.Contains("ticket") || s.Contains("lista")));
+
+            if (esPeticionVentas && datos.HistorialVentasRecientes.Any())
+            {
+                var sbVentas = new StringBuilder();
+                sbVentas.AppendLine(encabezadoAviso);
+                sbVentas.AppendLine();
+
+                bool esSoloUnaVenta = (s.Contains("la ultima") || s.Contains("la última") || s.Contains("cual fue") || s.Contains("cuál fue") || s == "ultima venta" || s == "última venta") && !s.Contains("lista") && !s.Contains("todas");
+
+                if (esSoloUnaVenta)
+                {
+                    var ult = datos.HistorialVentasRecientes.First();
+                    sbVentas.AppendLine("🧾 **INFORMACIÓN DE LA ÚLTIMA VENTA REGISTRADA:**");
+                    sbVentas.AppendLine("─────────────────────────────────────────────────────────────────");
+                    sbVentas.AppendLine($"• **Comprobante:** #{ult.NumeroComprobante}");
+                    sbVentas.AppendLine($"• **Fecha y Hora:** {ult.Fecha:dd/MM/yyyy HH:mm:ss}");
+                    sbVentas.AppendLine($"• **Cliente:** {ult.Cliente}");
+                    sbVentas.AppendLine($"• **Modalidad de Pago:** {ult.TipoVenta}");
+                    sbVentas.AppendLine($"• **TOTAL VENTA:** **S/ {ult.Total:N2}**");
+                    sbVentas.AppendLine();
+                    sbVentas.AppendLine("📦 **Detalle de Materiales Vendidos:**");
+                    foreach (var it in ult.Items)
+                    {
+                        sbVentas.AppendLine($"  - {it}");
+                    }
+                    return sbVentas.ToString();
+                }
+
+                sbVentas.AppendLine($"📋 **HISTORIAL DE ÚLTIMAS VENTAS REGISTRADAS ({Math.Min(10, datos.HistorialVentasRecientes.Count)} más recientes):**");
+                sbVentas.AppendLine("─────────────────────────────────────────────────────────────────");
+                foreach (var vta in datos.HistorialVentasRecientes.Take(10))
+                {
+                    sbVentas.AppendLine($"• **[{vta.NumeroComprobante}]** {vta.Fecha:dd/MM/yyyy HH:mm} | **S/ {vta.Total:N2}** ({vta.TipoVenta})");
+                    sbVentas.AppendLine($"  👤 Cliente: {vta.Cliente}");
+                    if (vta.Items.Any())
+                    {
+                        sbVentas.AppendLine($"  📦 Ítems: {string.Join(", ", vta.Items.Take(3))}{(vta.Items.Count > 3 ? "..." : "")}");
+                    }
+                    sbVentas.AppendLine();
+                }
+                return sbVentas.ToString();
+            }
+
+            // 3. Consulta de Proveedores
+            bool esPeticionProveedores = s.Contains("proveedor") || s.Contains("proveedores") || 
+                                          s.Contains("a quien compramos") || s.Contains("quien nos vende") || 
+                                          s.Contains("contacto de") || s.Contains("telefono de");
+
+            if (esPeticionProveedores && datos.DirectorioProveedores.Any())
+            {
+                var sbProv = new StringBuilder();
+                sbProv.AppendLine(encabezadoAviso);
+                sbProv.AppendLine();
+                sbProv.AppendLine($"🏭 **DIRECTORIO DE PROVEEDORES DE FERRETERÍA ACEMAR ({datos.DirectorioProveedores.Count} registrados):**");
+                sbProv.AppendLine("─────────────────────────────────────────────────────────────────");
+
+                var provsFiltrados = datos.DirectorioProveedores
+                    .Where(p => s.Contains(p.Nombre.ToLowerInvariant()) || 
+                                s.Split(' ').Any(w => w.Length > 4 && (p.Nombre.ToLowerInvariant().Contains(w) || p.LineasSuministro.ToLowerInvariant().Contains(w))))
+                    .ToList();
+
+                var provsAMostrar = provsFiltrados.Any() ? provsFiltrados : datos.DirectorioProveedores.Take(8).ToList();
+
+                foreach (var pr in provsAMostrar)
+                {
+                    sbProv.AppendLine($"• **{pr.Nombre}**");
+                    sbProv.AppendLine($"  - Contacto: {pr.Contacto}");
+                    if (!string.IsNullOrWhiteSpace(pr.Telefono) || !string.IsNullOrWhiteSpace(pr.WhatsApp))
+                    {
+                        sbProv.AppendLine($"  - Teléfono / WhatsApp: {pr.Telefono} / {pr.WhatsApp}");
+                    }
+                    if (!string.IsNullOrWhiteSpace(pr.Correo))
+                    {
+                        sbProv.AppendLine($"  - Correo: {pr.Correo}");
+                    }
+                    if (!string.IsNullOrWhiteSpace(pr.LineasSuministro))
+                    {
+                        sbProv.AppendLine($"  - Materiales: {pr.LineasSuministro}");
+                    }
+                    sbProv.AppendLine();
+                }
+                return sbProv.ToString();
+            }
+
+            // 4. Consulta de Caja Registradora
+            if (s.Contains("caja") || s.Contains("arqueo") || s.Contains("efectivo en caja"))
+            {
+                var sbCaja = new StringBuilder();
+                sbCaja.AppendLine(encabezadoAviso);
+                sbCaja.AppendLine();
+                sbCaja.AppendLine("💵 **ESTADO DE CAJA REGISTRADORA ACEMAR:**");
+                sbCaja.AppendLine("─────────────────────────────────────────────────────────────────");
+                sbCaja.AppendLine(!string.IsNullOrWhiteSpace(datos.EstadoCajaResumen) 
+                    ? $"• {datos.EstadoCajaResumen}" 
+                    : "No se encontró arqueo registrado recientemente.");
+                return sbCaja.ToString();
+            }
+
+            // 5. Consulta específica de Productos / Stock (ej: "¿Cuánto queda de arena?", "dime todos los tipos de arena", "precio de fierro", etc.)
             bool esPeticionDiagnostico = s.Contains("diagnóstico") || s.Contains("diagnostico") || s.Contains("ejecutivo") || s.Contains("auditoría") || s.Contains("auditoria");
 
             if (!esPeticionDiagnostico)
             {
-                await using var ctx = new AppDbContext();
-                var todosProductos = await ctx.Productos.AsNoTracking().ToListAsync();
+                var palabrasClave = s.Split(new[] { ' ', '?', '¿', ',', '.', ':', '!' }, StringSplitOptions.RemoveEmptyEntries)
+                                     .Where(w => w.Length >= 3 && w != "dime" && w != "todos" && w != "tipos" && w != "cuanto" && w != "queda" && w != "precio" && w != "para" && w != "como" && w != "donde" && w != "vendemos")
+                                     .ToList();
 
-                // Buscar si la consulta menciona algún producto de la base de datos
-                var coincidencias = todosProductos.Where(p =>
+                var coincidencias = datos.CatalogoProductos.Where(p =>
                     s.Contains(p.Nombre.ToLowerInvariant()) ||
                     s.Contains(p.Codigo.ToLowerInvariant()) ||
                     (!string.IsNullOrWhiteSpace(p.Categoria) && s.Contains(p.Categoria.ToLowerInvariant())) ||
-                    p.Nombre.ToLowerInvariant().Split(' ').Any(palabra => palabra.Length > 3 && s.Contains(palabra))
+                    palabrasClave.Any(k => p.Nombre.ToLowerInvariant().Contains(k) || p.Categoria.ToLowerInvariant().Contains(k) || p.Codigo.ToLowerInvariant().Contains(k))
                 ).ToList();
 
                 if (coincidencias.Any())
@@ -349,32 +546,28 @@ namespace software_ACEMAR.Services
                     var sbProd = new StringBuilder();
                     sbProd.AppendLine(encabezadoAviso);
                     sbProd.AppendLine();
-                    sbProd.AppendLine($"📦 **CONSULTA DE STOCK Y PRECIOS EN ALMACÉN ({coincidencias.Count} producto(s) encontrado(s)):**");
+                    sbProd.AppendLine($"📦 **CONSULTA DE PRODUCTOS Y STOCK EN ALMACÉN ({coincidencias.Count} resultado(s)):**");
                     sbProd.AppendLine("─────────────────────────────────────────────────────────────────");
 
-                    foreach (var p in coincidencias.Take(5))
+                    foreach (var p in coincidencias)
                     {
                         string estadoAlerta = (p.StockMinimo > 0 && p.StockActual <= p.StockMinimo) 
                             ? "🚨 STOCK CRÍTICO (≤ Mínimo)" 
-                            : "✅ Stock Adecuado";
+                            : "✅ Stock Disponible";
 
                         sbProd.AppendLine($"• **{p.Nombre}** [{p.Codigo}]");
-                        sbProd.AppendLine($"  - Stock Disponible: **{p.StockActual:0.##} {p.UnidadMedida}** ({estadoAlerta})");
+                        sbProd.AppendLine($"  - Stock en Almacén: **{p.StockActual:0.##} {p.UnidadMedida}** ({estadoAlerta})");
                         sbProd.AppendLine($"  - Stock de Seguridad Mínimo: {p.StockMinimo:0.##} {p.UnidadMedida}");
                         sbProd.AppendLine($"  - Precio Unitario de Venta: **S/ {p.PrecioUnitario:N2}**");
                         sbProd.AppendLine($"  - Categoría: {p.Categoria}");
+                        sbProd.AppendLine($"  - Proveedor Habitual: {p.ProveedorHabitual}");
                         sbProd.AppendLine();
-                    }
-
-                    if (coincidencias.Count > 5)
-                    {
-                        sbProd.AppendLine($"*(Y {coincidencias.Count - 5} productos más coincidentes en catálogo).*");
                     }
 
                     return sbProd.ToString();
                 }
 
-                // 3. Consulta de Deudas / Créditos / Fiados
+                // 6. Consulta de Deudas / Créditos / Fiados
                 if (s.Contains("deuda") || s.Contains("fiado") || s.Contains("credito") || s.Contains("moros") || s.Contains("cobrar"))
                 {
                     var sbCred = new StringBuilder();
@@ -399,7 +592,7 @@ namespace software_ACEMAR.Services
                 }
             }
 
-            // 4. Informe Ejecutivo General Heurístico
+            // 7. Informe Ejecutivo General Heurístico
             var sb = new StringBuilder();
             sb.AppendLine(encabezadoAviso);
             sb.AppendLine();
@@ -465,8 +658,30 @@ namespace software_ACEMAR.Services
 
             try
             {
-                var productos = await ctx.Productos.AsNoTracking().ToListAsync(cancellationToken);
+                // 1. Catálogo completo de productos con proveedor habitual
+                var productos = await ctx.Productos
+                    .AsNoTracking()
+                    .Include(p => p.ProductosProveedor)
+                    .ThenInclude(pp => pp.Proveedor)
+                    .OrderBy(p => p.Categoria)
+                    .ThenBy(p => p.Nombre)
+                    .ToListAsync(cancellationToken);
+
                 datos.TotalProductos = productos.Count;
+
+                datos.CatalogoProductos = productos.Select(p => new ProductoInfoContexto
+                {
+                    Codigo = p.Codigo,
+                    Nombre = p.Nombre,
+                    Categoria = p.Categoria ?? "General",
+                    StockActual = p.StockActual,
+                    StockMinimo = p.StockMinimo,
+                    PrecioUnitario = p.PrecioUnitario,
+                    UnidadMedida = string.IsNullOrWhiteSpace(p.UnidadMedida) ? "Unidad" : p.UnidadMedida,
+                    ProveedorHabitual = p.ProductosProveedor?.FirstOrDefault(pp => pp.EsHabitual)?.Proveedor?.Nombre 
+                                        ?? p.ProductosProveedor?.FirstOrDefault()?.Proveedor?.Nombre 
+                                        ?? "Distribuidor General"
+                }).ToList();
 
                 var criticos = productos
                     .Where(p => p.StockMinimo > 0 && p.StockActual <= p.StockMinimo)
@@ -478,12 +693,36 @@ namespace software_ACEMAR.Services
                     $"{p.Nombre} (Stock: {p.StockActual:0.##} {p.UnidadMedida} / Mín: {p.StockMinimo:0.##})"
                 ).ToList();
 
-                var hace7Dias = DateTime.Today.AddDays(-6);
-                var ventasSemana = await ctx.Ventas
+                // 2. Historial de ventas recientes (las últimas 30 ventas con detalle de productos)
+                var ventasRecientes = await ctx.Ventas
                     .AsNoTracking()
                     .Include(v => v.Detalles)
-                    .Where(v => v.Fecha >= hace7Dias)
+                    .Include(v => v.ClienteCredito)
+                    .OrderByDescending(v => v.Fecha)
+                    .Take(30)
                     .ToListAsync(cancellationToken);
+
+                datos.HistorialVentasRecientes = ventasRecientes.Select(v => new VentaInfoContexto
+                {
+                    NumeroComprobante = !string.IsNullOrWhiteSpace(v.NumeroTicket) ? v.NumeroTicket : $"TKT-{v.Id:D6}",
+                    Fecha = v.Fecha,
+                    Total = v.Total,
+                    TipoVenta = v.TipoVenta ?? "Efectivo",
+                    Cliente = v.ClienteCredito?.Nombre ?? (!string.IsNullOrWhiteSpace(v.ClienteNombre) ? v.ClienteNombre : "Público Mostrador"),
+                    Items = v.Detalles?.Select(d => $"{d.Cantidad:0.##} {d.UnidadMedida} x {d.ProductoNombre} (P.U: S/ {d.PrecioUnitario:N2})").ToList() ?? new List<string>()
+                }).ToList();
+
+                // 3. Ventas de los últimos 7 días para métricas consolidadas
+                var hace7Dias = DateTime.Today.AddDays(-6);
+                var ventasSemana = ventasRecientes.Where(v => v.Fecha >= hace7Dias).ToList();
+                if (!ventasSemana.Any())
+                {
+                    ventasSemana = await ctx.Ventas
+                        .AsNoTracking()
+                        .Include(v => v.Detalles)
+                        .Where(v => v.Fecha >= hace7Dias)
+                        .ToListAsync(cancellationToken);
+                }
 
                 datos.CantidadTicketsSemana = ventasSemana.Count;
                 datos.TotalVentasSemana = Math.Round(ventasSemana.Sum(v => v.Total), 2);
@@ -506,6 +745,20 @@ namespace software_ACEMAR.Services
 
                 datos.TopProductosVendidos = topProds;
 
+                // 4. Directorio de proveedores
+                var proveedores = await ctx.Proveedores.AsNoTracking().ToListAsync(cancellationToken);
+                datos.DirectorioProveedores = proveedores.Select(pr => new ProveedorInfoContexto
+                {
+                    Nombre = pr.Nombre,
+                    Contacto = pr.Contacto ?? "",
+                    Telefono = pr.Telefono ?? "",
+                    WhatsApp = pr.WhatsApp ?? "",
+                    Correo = pr.Correo ?? "",
+                    Direccion = pr.Direccion ?? "",
+                    LineasSuministro = pr.Observaciones ?? ""
+                }).ToList();
+
+                // 5. Clientes de crédito y fiados
                 var clientesCredito = await ctx.ClientesCredito.AsNoTracking().ToListAsync(cancellationToken);
                 var conDeuda = clientesCredito.Where(c => c.DeudaActual > 0).OrderByDescending(c => c.DeudaActual).ToList();
                 datos.ClientesConDeuda = conDeuda.Count;
@@ -514,9 +767,17 @@ namespace software_ACEMAR.Services
                     $"{c.Nombre} (Debe: S/ {c.DeudaActual:N2} de S/ {c.LimiteCredito:N2})"
                 ).ToList();
 
+                // 6. Lotes activos
                 var lotes = await ctx.LotesProducto.AsNoTracking().Where(l => l.Estado == "Activo").ToListAsync(cancellationToken);
                 datos.LotesActivos = lotes.Count;
                 datos.LotesPorAgotarse = lotes.Count(l => l.CantidadDisponible <= (l.CantidadInicial * 0.20m));
+
+                // 7. Estado de caja registradora
+                var ultimoArqueo = await ctx.ArqueosCaja.AsNoTracking().OrderByDescending(a => a.FechaHoraRegistro).FirstOrDefaultAsync(cancellationToken);
+                if (ultimoArqueo != null)
+                {
+                    datos.EstadoCajaResumen = $"Arqueo #{ultimoArqueo.Id} ({ultimoArqueo.FechaHoraRegistro:dd/MM/yyyy HH:mm}): Apertura S/ {ultimoArqueo.MontoApertura:N2} | Ventas Efec: S/ {ultimoArqueo.TotalVentasEfectivo:N2} | Abonos Efec: S/ {ultimoArqueo.TotalAbonosEfectivo:N2} | Total Efectivo en Caja: S/ {ultimoArqueo.TotalEfectivoEnCaja:N2}";
+                }
             }
             catch (Exception ex)
             {

@@ -175,10 +175,13 @@ namespace software_ACEMAR.Data
 
             // Seed de datos iniciales solo si están vacíos
             SeedProductos();
+            GarantizarArenaFina();
+            SeedProveedores();
             SeedLotesIniciales();
             SeedClientesCredito();
             SeedUsuarios();
             AjustarUnidadesBase();
+            VincularProveedoresALotes();
 
             SaveChanges();
         }
@@ -233,6 +236,240 @@ namespace software_ACEMAR.Data
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Garantiza la existencia de Arena Fina Cantera para consultas de stock de áridos.
+        /// </summary>
+        private void GarantizarArenaFina()
+        {
+            var pArenaFina = Productos.FirstOrDefault(p => p.Codigo == "ARE-004" || p.Nombre.ToLower().Contains("arena fina"));
+            if (pArenaFina == null)
+            {
+                Productos.Add(new Producto
+                {
+                    Codigo = "ARE-004",
+                    Nombre = "Arena Fina Cantera",
+                    Categoria = "Construcción",
+                    PrecioUnitario = 70.00m,
+                    StockActual = 12.0m,
+                    StockMinimo = 4.0m,
+                    CuMax = 35.0m,
+                    UnidadMedida = "Metros",
+                    UnidadesPermitidas = "[\"Metros\",\"Bolsa\",\"Carretilla\",\"Lata\",\"Volquetada\"]",
+                    PreciosPorUnidad = "{\"Metros\":70.0,\"Bolsa\":7.0,\"Carretilla\":12.0,\"Lata\":3.0,\"Volquetada\":280.0}",
+                    FactoresPorUnidad = "{\"Metros\":1.0,\"Bolsa\":0.04,\"Carretilla\":0.08,\"Lata\":0.02,\"Volquetada\":4.0}"
+                });
+                SaveChanges();
+            }
+        }
+
+        /// <summary>
+        /// Seed de proveedores realistas del sector ferretero y de construcción peruano.
+        /// </summary>
+        private void SeedProveedores()
+        {
+            if (Proveedores.Any()) return;
+
+            var listaProveedores = new List<Proveedor>
+            {
+                new Proveedor
+                {
+                    Nombre = "UNACEM Perú S.A.A. (Cementos Sol & Andino)",
+                    Contacto = "Ing. Roberto Mendoza - Ventas Corporativas",
+                    Telefono = "01-217-0200",
+                    WhatsApp = "981-234-567",
+                    Correo = "ventas.distribuidores@unacem.pe",
+                    Direccion = "Av. Atocongo 2440, Villa María del Triunfo, Lima",
+                    Observaciones = "Distribuidor mayorista de Cemento Sol Tipo I, Cemento Andino Tipo V, Yeso Blanco Industrial y Mortero Klaukol.",
+                    FechaRegistro = DateTime.Now.AddMonths(-6)
+                },
+                new Proveedor
+                {
+                    Nombre = "Corporación Aceros Arequipa S.A. (CAASA)",
+                    Contacto = "Lic. Carlos Alva - Asesor Comercial Ferretero",
+                    Telefono = "01-517-1800",
+                    WhatsApp = "994-567-890",
+                    Correo = "pedidos.construccion@acerosarequipa.pe",
+                    Direccion = "Av. Enrique Meiggs 297, Parque Industrial, Callao",
+                    Observaciones = "Suministro directo de fierro corrugado 3/8\", fierro 1/2\", mallas electrosoldadas y alambrón de construcción.",
+                    FechaRegistro = DateTime.Now.AddMonths(-6)
+                },
+                new Proveedor
+                {
+                    Nombre = "Cantera & Agregados La Florida S.A.C.",
+                    Contacto = "Don Walter Benítez - Despacho de Áridos",
+                    Telefono = "01-387-4521",
+                    WhatsApp = "975-312-468",
+                    Correo = "despacho@agregadoslaflorida.pe",
+                    Direccion = "Km 22 Carretera Central, Chaclacayo / Cantera Jicamarca",
+                    Observaciones = "Extracción y flete directo de arena gruesa lavada, arena fina de cantera, piedra chancada y hormigón en volquetes de 4m³ a 15m³.",
+                    FechaRegistro = DateTime.Now.AddMonths(-5)
+                },
+                new Proveedor
+                {
+                    Nombre = "Ladrillera Cerámicos del Norte & Pirámide S.A.C.",
+                    Contacto = "Arq. Elena Morales - Distribución Mayorista",
+                    Telefono = "01-614-7800",
+                    WhatsApp = "987-654-321",
+                    Correo = "mayorista@ladrillosdelnorte.com.pe",
+                    Direccion = "Autopista Ramiro Prialé Km 6.5, Huachipa, Lima",
+                    Observaciones = "Fabricación y entrega de ladrillo King Kong 18 huecos, ladrillo pandereta y bloquetas de concreto de 15cm.",
+                    FechaRegistro = DateTime.Now.AddMonths(-5)
+                },
+                new Proveedor
+                {
+                    Nombre = "Pavco Wavin Perú S.A.",
+                    Contacto = "Ing. Luis Fernando Ramos - División Edificaciones",
+                    Telefono = "01-627-5000",
+                    WhatsApp = "998-112-233",
+                    Correo = "contacto.ferreterias@pavcowavin.com.pe",
+                    Direccion = "Calle Manuel Gonzales Olaechea 339, San Isidro, Lima",
+                    Observaciones = "Líder en tuberías de PVC agua potable Clase 10, tubos de desagüe, codos 90°, tees y accesorios sanitarios.",
+                    FechaRegistro = DateTime.Now.AddMonths(-5)
+                },
+                new Proveedor
+                {
+                    Nombre = "Indeco by Nexans Perú S.A.",
+                    Contacto = "Ing. Miguel Ángel Durand - Canal Ferretero",
+                    Telefono = "01-712-5000",
+                    WhatsApp = "993-445-566",
+                    Correo = "cotizaciones.indeco@nexans.com",
+                    Direccion = "Av. Mariscal Oscar R. Benavides 2015, Lima",
+                    Observaciones = "Conductor eléctrico certificado de cobre: cable mellizo 2x14, cable Indeco THW 14 AWG, alambre sólido para instalaciones seguras.",
+                    FechaRegistro = DateTime.Now.AddMonths(-4)
+                },
+                new Proveedor
+                {
+                    Nombre = "Bticino & Legrand Perú S.A.",
+                    Contacto = "Lic. Patricia Valdivia - Ventas Retail",
+                    Telefono = "01-613-2600",
+                    WhatsApp = "991-887-766",
+                    Correo = "ventas.peru@bticino.com",
+                    Direccion = "Av. Javier Prado Este 560, Of. 1201, San Isidro, Lima",
+                    Observaciones = "Mecanismos eléctricos Matix: interruptores simples, tomacorrientes dobles con tierra, cajas octogonales PVC y conduit.",
+                    FechaRegistro = DateTime.Now.AddMonths(-4)
+                },
+                new Proveedor
+                {
+                    Nombre = "Fijaciones & Pernos Industriales S.A.C. (Fischer & Hilti Perú)",
+                    Contacto = "Ing. Gustavo Poma - Soporte Técnico",
+                    Telefono = "01-425-6789",
+                    WhatsApp = "976-554-433",
+                    Correo = "ventas@fijacionesindustriales.pe",
+                    Direccion = "Av. Guillermo Dansey 450, Centro de Lima (Galerías Ferreteras)",
+                    Observaciones = "Distribuidor de clavos de acero 2\", clavos de madera 3\", tornillos autoperforantes, tacos Fischer SX10 y anclaje químico Hilti RE 500.",
+                    FechaRegistro = DateTime.Now.AddMonths(-4)
+                },
+                new Proveedor
+                {
+                    Nombre = "Qroma S.A. (Pinturas Vencedor / CPP)",
+                    Contacto = "Sr. Jorge Cáceres - Supervisor Comercial",
+                    Telefono = "01-612-6000",
+                    WhatsApp = "989-223-344",
+                    Correo = "pedidos.vencedor@qroma.com.pe",
+                    Direccion = "Av. César Vallejo 1851, El Agustino, Lima",
+                    Observaciones = "Pintura Látex Vencedor Blanco, esmaltes sintéticos alquídicos, brochas Atlas, rodillos de lana y lijas al agua.",
+                    FechaRegistro = DateTime.Now.AddMonths(-3)
+                },
+                new Proveedor
+                {
+                    Nombre = "Stanley Black & Decker / Bosch Herramientas Perú",
+                    Contacto = "Sr. Daniel Huamán - Distribución Herramientas",
+                    Telefono = "01-512-3400",
+                    WhatsApp = "982-990-011",
+                    Correo = "herramientas.profesionales@bosch.pe",
+                    Direccion = "Av. Primavera 2160, Santiago de Surco, Lima",
+                    Observaciones = "Discos de corte metal Norton 4 1/2\", discos diamantados Bosch, llaves francesas Stanley, martillos de fibra y carretillas Truper.",
+                    FechaRegistro = DateTime.Now.AddMonths(-3)
+                },
+                new Proveedor
+                {
+                    Nombre = "Cerrajería & Candados Forte S.A.C.",
+                    Contacto = "Sr. Andrés Villanueva - Ejecutivo de Cuenta",
+                    Telefono = "01-336-7080",
+                    WhatsApp = "997-665-544",
+                    Correo = "distribucion@forte.com.pe",
+                    Direccion = "Av. Los Frutales 419, Ate Vitarte, Lima",
+                    Observaciones = "Candados de latón Forte 50mm, bisagras capuchina 3\", pasadores aldaba de acero y perfiles ángulo de aluminio.",
+                    FechaRegistro = DateTime.Now.AddMonths(-3)
+                },
+                new Proveedor
+                {
+                    Nombre = "Griferías FV & Sanitarios del Perú S.A.",
+                    Contacto = "Lic. Mónica Salazar - Asesora de Proyectos",
+                    Telefono = "01-447-8900",
+                    WhatsApp = "996-332-211",
+                    Correo = "atencion.ferreterias@fvperu.com.pe",
+                    Direccion = "Av. Tomás Marsano 1411, Surquillo, Lima",
+                    Observaciones = "Llaves de paso 1/2\" de bronce FV, sifones de lavatorio PVC 1 1/2\", pegamento PVC Oatey y accesorios de gasfitería.",
+                    FechaRegistro = DateTime.Now.AddMonths(-2)
+                }
+            };
+
+            Proveedores.AddRange(listaProveedores);
+            SaveChanges();
+        }
+
+        /// <summary>
+        /// Vincula de forma inteligente cada producto con su proveedor habitual y
+        /// actualiza los lotes activos sin proveedor asignado.
+        /// </summary>
+        private void VincularProveedoresALotes()
+        {
+            if (!Proveedores.Any()) return;
+
+            var provUnacem = Proveedores.FirstOrDefault(p => p.Nombre.Contains("UNACEM"));
+            var provAceros = Proveedores.FirstOrDefault(p => p.Nombre.Contains("Aceros Arequipa"));
+            var provCantera = Proveedores.FirstOrDefault(p => p.Nombre.Contains("Florida") || p.Nombre.Contains("Cantera"));
+            var provLadrillos = Proveedores.FirstOrDefault(p => p.Nombre.Contains("Ladrillera") || p.Nombre.Contains("Pirámide"));
+            var provPavco = Proveedores.FirstOrDefault(p => p.Nombre.Contains("Pavco"));
+            var provIndeco = Proveedores.FirstOrDefault(p => p.Nombre.Contains("Indeco"));
+            var provBticino = Proveedores.FirstOrDefault(p => p.Nombre.Contains("Bticino"));
+            var provFijaciones = Proveedores.FirstOrDefault(p => p.Nombre.Contains("Fijaciones") || p.Nombre.Contains("Pernos"));
+            var provQroma = Proveedores.FirstOrDefault(p => p.Nombre.Contains("Qroma") || p.Nombre.Contains("Vencedor"));
+            var provBosch = Proveedores.FirstOrDefault(p => p.Nombre.Contains("Bosch") || p.Nombre.Contains("Stanley"));
+            var provForte = Proveedores.FirstOrDefault(p => p.Nombre.Contains("Forte"));
+            var provFV = Proveedores.FirstOrDefault(p => p.Nombre.Contains("FV"));
+
+            var productos = Productos.ToList();
+            foreach (var prod in productos)
+            {
+                Proveedor? prov = prod.Categoria switch
+                {
+                    "Construcción" => prod.Codigo.StartsWith("CEM") || prod.Codigo.StartsWith("YES") || prod.Codigo.StartsWith("MOR") ? provUnacem :
+                                     prod.Codigo.StartsWith("FIE") || prod.Codigo.StartsWith("MAL") ? provAceros :
+                                     prod.Codigo.StartsWith("ARE") || prod.Codigo.StartsWith("PIE") || prod.Codigo.StartsWith("HOR") ? provCantera :
+                                     provLadrillos,
+                    "Fijaciones" => provFijaciones,
+                    "Gasfitería" => prod.Codigo.StartsWith("LLA") || prod.Codigo.StartsWith("SIF") || prod.Codigo.StartsWith("PEG") ? provFV : provPavco,
+                    "Electricidad" => prod.Codigo.StartsWith("CAB") ? provIndeco : provBticino,
+                    "Herramientas" => provBosch,
+                    "Pinturas" => provQroma,
+                    "Cerrajería" => provForte,
+                    _ => provUnacem ?? Proveedores.First()
+                };
+
+                if (prov != null)
+                {
+                    if (!ProductosProveedores.Any(pp => pp.ProductoId == prod.Id && pp.ProveedorId == prov.Id))
+                    {
+                        ProductosProveedores.Add(new ProductoProveedor
+                        {
+                            ProductoId = prod.Id,
+                            ProveedorId = prov.Id,
+                            EsHabitual = true
+                        });
+                    }
+
+                    var lotesSinProv = LotesProducto.Where(l => l.ProductoId == prod.Id && l.ProveedorId == null).ToList();
+                    foreach (var lote in lotesSinProv)
+                    {
+                        lote.ProveedorId = prov.Id;
+                    }
+                }
+            }
+            SaveChanges();
         }
 
         private void SeedLotesIniciales()
@@ -387,6 +624,10 @@ namespace software_ACEMAR.Data
                 new Producto { Codigo = "ARE-003", Nombre = "Arena Gruesa Lavada",             Categoria = "Construcción", PrecioUnitario = 65.00m, StockActual = 10.0m,    StockMinimo = 2.0m,  CuMax = 30.0m,  UnidadMedida = "Metros",
                                UnidadesPermitidas = "[\"Metros\",\"Bolsa\",\"Carretilla\",\"Lata\",\"Volquetada\"]",
                                PreciosPorUnidad = "{\"Metros\":65.0,\"Bolsa\":6.50,\"Carretilla\":10.0,\"Lata\":2.50,\"Volquetada\":260.0}",
+                               FactoresPorUnidad = "{\"Metros\":1.0,\"Bolsa\":0.04,\"Carretilla\":0.08,\"Lata\":0.02,\"Volquetada\":4.0}" },
+                new Producto { Codigo = "ARE-004", Nombre = "Arena Fina Cantera",              Categoria = "Construcción", PrecioUnitario = 70.00m, StockActual = 12.0m,    StockMinimo = 4.0m,  CuMax = 35.0m,  UnidadMedida = "Metros",
+                               UnidadesPermitidas = "[\"Metros\",\"Bolsa\",\"Carretilla\",\"Lata\",\"Volquetada\"]",
+                               PreciosPorUnidad = "{\"Metros\":70.0,\"Bolsa\":7.0,\"Carretilla\":12.0,\"Lata\":3.0,\"Volquetada\":280.0}",
                                FactoresPorUnidad = "{\"Metros\":1.0,\"Bolsa\":0.04,\"Carretilla\":0.08,\"Lata\":0.02,\"Volquetada\":4.0}" },
                 new Producto { Codigo = "LAD-004", Nombre = "Ladrillo King Kong 18 Huecos",   Categoria = "Construcción", PrecioUnitario = 1.20m,  StockActual = 1200.0m, StockMinimo = 500.0m, CuMax = 3000.0m, UnidadMedida = "Unidad" },
                 new Producto { Codigo = "YES-023", Nombre = "Yeso Blanco Industrial (20kg)",  Categoria = "Construcción", PrecioUnitario = 12.50m, StockActual = 28.0m,   StockMinimo = 10.0m, CuMax = 80.0m,  UnidadMedida = "Bolsa" },

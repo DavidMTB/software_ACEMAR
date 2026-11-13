@@ -166,6 +166,70 @@ namespace software_ACEMAR.Tests
         }
 
         [TestMethod]
+        public async Task AiAssistantService_ConsultaTiposDeArena_DevuelveArenasRegistradas()
+        {
+            var service = new AiAssistantService();
+            service.GuardarApiKey(string.Empty); // Probar motor local inteligente
+
+            string resp = await service.ConsultarAsistenteAsync("dime todos los tipos de arena que vendemos");
+
+            Assert.IsFalse(string.IsNullOrWhiteSpace(resp));
+            Assert.IsTrue(resp.Contains("Arena"), "Debe listar productos de arena.");
+        }
+
+        [TestMethod]
+        public async Task AiAssistantService_ConsultaUltimaVenta_DevuelveInformacionVenta()
+        {
+            // Asegurar que existe al menos una venta para consultar
+            using (var ctx = new AppDbContext())
+            {
+                if (!ctx.Ventas.Any())
+                {
+                    ctx.Ventas.Add(new Models.Venta
+                    {
+                        NumeroTicket = "TKT-000001",
+                        Fecha = DateTime.Now,
+                        Total = 150.00m,
+                        TipoVenta = "Efectivo",
+                        ClienteNombre = "Juan Prueba",
+                        UsuarioVendedor = "Gerente"
+                    });
+                    ctx.SaveChanges();
+                }
+            }
+
+            var service = new AiAssistantService();
+            service.GuardarApiKey(string.Empty);
+
+            string respUltima = await service.ConsultarAsistenteAsync("cual fue la ultima venta");
+            Assert.IsFalse(string.IsNullOrWhiteSpace(respUltima));
+            Assert.IsTrue(respUltima.Contains("Comprobante") || respUltima.Contains("VENTA") || respUltima.Contains("TKT"), "Debe responder con información de la última venta.");
+
+            string respLista = await service.ConsultarAsistenteAsync("lista de las ultimas ventas");
+            Assert.IsFalse(string.IsNullOrWhiteSpace(respLista));
+            Assert.IsTrue(respLista.Contains("VENTAS") || respLista.Contains("TKT"), "Debe listar las ventas recientes.");
+        }
+
+        [TestMethod]
+        public void AiAssistantService_ProveedoresRegistrados_ExistenYEstanVinculados()
+        {
+            using var ctx = new AppDbContext();
+            var provs = ctx.Proveedores.ToList();
+            Assert.IsTrue(provs.Count >= 10, "Deben existir al menos 10 proveedores simulados realistas.");
+
+            // Verificar proveedores clave peruanos
+            Assert.IsTrue(provs.Any(p => p.Nombre.Contains("UNACEM")), "Debe existir proveedor UNACEM.");
+            Assert.IsTrue(provs.Any(p => p.Nombre.Contains("Aceros Arequipa")), "Debe existir proveedor Aceros Arequipa.");
+            Assert.IsTrue(provs.Any(p => p.Nombre.Contains("Florida") || p.Nombre.Contains("Cantera")), "Debe existir proveedor de cantera.");
+            Assert.IsTrue(provs.Any(p => p.Nombre.Contains("Pavco")), "Debe existir proveedor Pavco.");
+            Assert.IsTrue(provs.Any(p => p.Nombre.Contains("Indeco")), "Debe existir proveedor Indeco.");
+
+            // Verificar vinculación en ProductosProveedores
+            var relaciones = ctx.ProductosProveedores.ToList();
+            Assert.IsTrue(relaciones.Any(), "Los productos deben estar vinculados con sus proveedores habituales.");
+        }
+
+        [TestMethod]
         public async Task AiAssistantService_LlamadaRealGemini_PruebaConexion()
         {
             string apiKey = ObtenerClaveParaPruebas();
@@ -178,11 +242,12 @@ namespace software_ACEMAR.Tests
             var service = new AiAssistantService();
             service.GuardarApiKey(apiKey);
 
-            string resp = await service.ConsultarAsistenteAsync("Di exactamente: PRUEBA CONEXION EXITOSA");
+            string resp = await service.ConsultarAsistenteAsync("Dime todos los tipos de arena que vendemos y su stock");
             Console.WriteLine("RESPUESTA GEMINI EN VIVO: " + resp);
 
             Assert.IsFalse(resp.StartsWith("⚠️ MODO DE RESPALDO"), $"Falló la API de Gemini: {resp}");
             Assert.IsFalse(string.IsNullOrWhiteSpace(resp));
+            Assert.IsTrue(resp.Contains("Arena") || resp.Contains("ARE-003") || resp.Contains("ARE-004"), "Gemini debe responder con los datos reales de arena de la BD.");
         }
     }
 }
